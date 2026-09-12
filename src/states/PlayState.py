@@ -5,7 +5,7 @@ dynamic lighting system, HUD, and game over / victory conditions.
 """
 
 import math
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import pygame
 from gale.input_handler import InputData
 
@@ -29,9 +29,15 @@ class PlayState(BaseState):
     def __init__(self, state_stack) -> None:
         super().__init__(state_stack)
         self.house = House()
-        self.player = Player(x=80, y=120)
-        # El Silbón starts patrolling in the central hallway of the cabin
-        self.monster = Monster(x=220, y=140, start_room="hallway")
+
+        # Andreas spawns at the authored player_spawn in FirstRoom (defaulting to 94, 129)
+        spawn_pos = (94.0, 129.0)
+        if self.house.current_room and self.house.current_room.player_spawn:
+            spawn_pos = self.house.current_room.player_spawn
+        self.player = Player(x=spawn_pos[0], y=spawn_pos[1])
+
+        # El Silbón spawns stalking in UpperHallway (as requested by level design)
+        self.monster = Monster(x=380.0, y=116.0, start_room="UpperHallway")
         
         self.lighting = LightingSystem()
         self.audio = AudioManager()
@@ -188,12 +194,27 @@ class PlayState(BaseState):
 
         self.projectiles = [p for p in self.projectiles if p.active]
 
+        # Calculate door-listening proximity: Andreas hears heavy breathing through the door
+        door_listening_proximity = 0.0
+        px, py = self.player.get_center()
+        for door in room.doors:
+            d_cx = door.x + door.width / 2.0
+            d_cy = door.y + door.height / 2.0
+            p_dist = math.hypot(px - d_cx, py - d_cy)
+            if p_dist < 50.0 and self.monster.current_room_name == door.target_room_name:
+                mx, my = self.monster.get_center()
+                m_dist = math.hypot(mx - door.target_spawn_x, my - door.target_spawn_y)
+                if m_dist < 180.0:
+                    prox = (1.0 - p_dist / 50.0) * (1.0 - m_dist / 180.0)
+                    door_listening_proximity = max(door_listening_proximity, prox)
+
         # Update dynamic audio system and proximity cues
         self.audio.update(
             self.player.get_center(),
             self.monster.get_center(),
             self.player.is_hidden,
             monster_in_same_room=monster_in_same_room,
+            door_listening_proximity=door_listening_proximity,
             dt=dt,
         )
 
@@ -202,7 +223,7 @@ class PlayState(BaseState):
         self.hud.update(dt)
 
         # Game Over Condition: caught by El Silbón in the same room while unhidden
-        is_safe_state = isinstance(self.monster.state_machine.current, (SilbonStunnedState, SilbonKnockingState))
+        is_safe_state = isinstance(self.monster.state_machine.current, SilbonStunnedState)
         if monster_in_same_room and not self.player.is_hidden and not is_safe_state:
             if self.player.get_rect().colliderect(self.monster.get_rect()):
                 self.state_stack.push(GameOverState(self.state_stack))
@@ -240,10 +261,22 @@ class PlayState(BaseState):
 
         for door in room.doors:
             if zone.colliderect(door.get_rect()):
+                # Check if El Silbón is lurking on the other side of this door
+                is_danger = False
+                if self.monster.current_room_name == door.target_room_name:
+                    mx, my = self.monster.get_center()
+                    m_dist = math.hypot(mx - door.target_spawn_x, my - door.target_spawn_y)
+                    if m_dist < 180.0:
+                        is_danger = True
+
                 if door.is_barred:
                     self.prompt_text = t("prompt_door_barred")
                 elif door.is_locked:
                     self.prompt_text = t("prompt_door_locked")
+                elif is_danger:
+                    self.prompt_text = t("prompt_open_door_danger")
+                elif getattr(door, "is_stairs", False):
+                    self.prompt_text = t("prompt_use_stairs")
                 else:
                     self.prompt_text = t("prompt_open_door")
                 return
@@ -254,24 +287,39 @@ class PlayState(BaseState):
 
         self.prompt_text = ""
 
+    def get_camera_offset(self) -> Tuple[int, int]:
+        room = self.house.current_room
+        if not room:
+            return (0, 0)
+        px, py = self.player.get_center()
+        cam_x = int(px - settings.VIRTUAL_WIDTH / 2.0)
+        cam_y = int(py - settings.VIRTUAL_HEIGHT / 2.0)
+        max_cam_x = max(0, room.width - settings.VIRTUAL_WIDTH)
+        max_cam_y = max(0, room.height - settings.VIRTUAL_HEIGHT)
+        cam_x = max(0, min(cam_x, max_cam_x))
+        cam_y = max(0, min(cam_y, max_cam_y))
+        return (cam_x, cam_y)
+
     def render(self, surface: pygame.Surface) -> None:
+        camera_offset = self.get_camera_offset()
+
         # 1. Draw current cabin room
-        self.house.render(surface)
+        self.house.render(surface, camera_offset)
 
         # 2. Draw room entities
-        self.player.render(surface)
+        self.player.render(surface, camera_offset)
         
         # El Silbón only renders when inside the player's room
         if self.monster.current_room_name == self.house.current_room.name:
-            self.monster.render(surface)
+            self.monster.render(surface, camera_offset)
 
         # 3. Draw projectiles
         for p in self.projectiles:
-            p.render(surface)
+            p.render(surface, camera_offset)
 
         # 4. Draw darkness and dynamic flashlight beam
         active_monster = self.monster if (self.monster.current_room_name == self.house.current_room.name) else None
-        self.lighting.render(surface, self.player, active_monster)
+        self.lighting.render(surface, self.player, active_monster, camera_offset)
 
         # 5. Draw top HUD and prompts
         self.hud.render(surface, self.player, self.audio, self.prompt_text)

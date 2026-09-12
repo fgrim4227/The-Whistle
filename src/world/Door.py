@@ -2,7 +2,7 @@
 Door class for room interconnections, supporting locks and wooden barricades.
 """
 
-from typing import Optional
+from typing import Optional, Tuple
 import pygame
 
 
@@ -20,6 +20,8 @@ class Door:
         is_barred: bool = False,
         required_key: Optional[str] = None,
         is_exit_door: bool = False,
+        render_graphic: bool = True,
+        is_stairs: bool = False,
     ) -> None:
         self.x = float(x)
         self.y = float(y)
@@ -32,6 +34,8 @@ class Door:
         self.is_barred = is_barred
         self.required_key = required_key
         self.is_exit_door = is_exit_door
+        self.render_graphic = render_graphic
+        self.is_stairs = is_stairs
 
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(int(self.x), int(self.y), self.width, self.height)
@@ -51,8 +55,18 @@ class Door:
     def unbar(self) -> None:
         self.is_barred = False
 
-    def render(self, surface: pygame.Surface) -> None:
-        rect = self.get_rect()
+    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
+        rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])
+        if not self.render_graphic:
+            # If the door visual is already baked into the tilemap, only draw barricade or padlock overlays
+            if self.is_barred:
+                pygame.draw.line(surface, (140, 95, 60), (rect.left + 2, rect.top + 4), (rect.right - 2, rect.bottom - 4), 4)
+                pygame.draw.line(surface, (140, 95, 60), (rect.left + 2, rect.bottom - 4), (rect.right - 2, rect.top + 4), 4)
+            elif self.is_locked:
+                pygame.draw.circle(surface, (230, 190, 40), (rect.centerx, rect.centery - 2), 4)
+                pygame.draw.rect(surface, (230, 190, 40), (rect.centerx - 3, rect.centery, 6, 6))
+            return
+
         # Door frame
         pygame.draw.rect(surface, (55, 40, 30), rect)
         

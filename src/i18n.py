@@ -40,6 +40,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_hide": "Presiona E para esconderte",
         "prompt_exit_hide": "Presiona E para salir del escondite",
         "prompt_open_door": "Presiona E para abrir",
+        "prompt_open_door_danger": "Presiona E para abrir (¡Se escucha respiración pesada al otro lado!)",
+        "prompt_use_stairs": "Presiona E para usar las escaleras",
         "prompt_door_locked": "La puerta está cerrada con llave.",
         "prompt_door_barred": "La puerta está bloqueada con tablones clavados.",
         "prompt_door_banging": "¡ALGO ESTÁ GOLPEANDO LA PUERTA VIOLENTAMENTE! ¡ESCÓNDETE!",
@@ -65,6 +67,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_door_locked": "Necesito encontrar una herramienta o la llave adecuada.",
         "thought_monster_stunned": "¡Le di! Debo correr antes de que se recupere.",
         "thought_monster_enraged": "¡Maldición! ¡Se enfureció, es demasiado rápido!",
+        "thought_stairs_blocked": "Las escaleras hacia la planta baja están bloqueadas por ahora...",
         
         # Objective Log
         "obj_title": "OBJETIVOS DE SUPERVIVENCIA",
@@ -123,6 +126,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_hide": "Press E to hide",
         "prompt_exit_hide": "Press E to exit hiding spot",
         "prompt_open_door": "Press E to open",
+        "prompt_open_door_danger": "Press E to open (Heavy breathing audible on the other side!)",
+        "prompt_use_stairs": "Press E to use the stairs",
         "prompt_door_locked": "The door is locked tight.",
         "prompt_door_barred": "The door is blocked with nailed planks.",
         "prompt_door_banging": "SOMETHING IS VIOLENTLY BANGING ON THE DOOR! HIDE!",
@@ -148,6 +153,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_door_locked": "I need to find the right key or a prying tool.",
         "thought_monster_stunned": "Direct hit! I must run before he recovers.",
         "thought_monster_enraged": "Damn it! He's enraged, he's moving way too fast!",
+        "thought_stairs_blocked": "The stairs down to the ground floor are blocked for now...",
         
         # Objective Log
         "obj_title": "SURVIVAL OBJECTIVES",

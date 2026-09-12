@@ -2,6 +2,7 @@
 NPC class (Friendly cabin survivor / guide).
 """
 
+from typing import Tuple, List, Optional
 import pygame
 from src.entities.BaseEntity import BaseEntity
 
@@ -13,13 +14,15 @@ class NPC(BaseEntity):
         self.dialogue_keys = dialogue_keys or ["thought_silbon_whistle"]
         self.dialogue_index = 0
 
-    def get_current_dialogue(self) -> str:
+    def get_next_dialogue(self) -> str:
+        if not self.dialogue_keys:
+            return ""
         key = self.dialogue_keys[self.dialogue_index]
         self.dialogue_index = (self.dialogue_index + 1) % len(self.dialogue_keys)
         return key
 
-    def render(self, surface: pygame.Surface) -> None:
-        rect = self.get_rect()
+    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
+        rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])
         # Light survivor clothing
         pygame.draw.rect(surface, (180, 160, 140), rect, border_radius=4)
         # Head

@@ -26,25 +26,28 @@ class LightingSystem:
         self.cone_length = 145.0
         self.cone_angle_deg = 50.0
 
-    def render(self, target_surface: pygame.Surface, player, monster) -> None:
+    def render(self, target_surface: pygame.Surface, player, monster, camera_offset: Tuple[int, int] = (0, 0)) -> None:
         """Renders the darkness layer and flashlight cutouts over target_surface."""
         # 1. Reset darkness layer and light subtraction mask
         self.darkness_surface.fill(self.ambient_darkness)
         self.light_mask.fill((0, 0, 0, 0))
 
+        ox, oy = camera_offset
         px, py = player.get_center()
+        spx = px - ox
+        spy = py - oy
 
         # 2. Build the light mask (light subtracts opacity from darkness)
         # When player is hidden inside wardrobe/table, NO halo or light is rendered
         if not player.is_hidden:
             if player.flashlight_on and player.battery > 0:
-                self._carve_flashlight_cone(px, py, player.direction)
+                self._carve_flashlight_cone(spx, spy, player.direction)
                 # Ambient radius around player when holding flashlight
-                pygame.draw.circle(self.light_mask, (0, 0, 0, 200), (int(px), int(py)), 30)
-                pygame.draw.circle(self.light_mask, (0, 0, 0, 240), (int(px), int(py)), 18)
+                pygame.draw.circle(self.light_mask, (0, 0, 0, 200), (int(spx), int(spy)), 30)
+                pygame.draw.circle(self.light_mask, (0, 0, 0, 240), (int(spx), int(spy)), 18)
             else:
                 # Faint residual visibility when flashlight is turned off (only when NOT hidden)
-                pygame.draw.circle(self.light_mask, (0, 0, 0, 130), (int(px), int(py)), 22)
+                pygame.draw.circle(self.light_mask, (0, 0, 0, 130), (int(spx), int(spy)), 22)
 
         # 3. Apply light cutout onto the darkness surface
         self.darkness_surface.blit(self.light_mask, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
@@ -57,9 +60,11 @@ class LightingSystem:
             mx, my = monster.get_center()
             dist = math.hypot(mx - px, my - py)
             if dist < 240.0:
+                smx = mx - ox
+                smy = my - oy
                 eye_color = (255, 30, 30) if monster.ai_state == "berserk" else (255, 215, 80)
-                pygame.draw.circle(target_surface, eye_color, (int(mx - 4), int(my - 14)), 2)
-                pygame.draw.circle(target_surface, eye_color, (int(mx + 4), int(my - 14)), 2)
+                pygame.draw.circle(target_surface, eye_color, (int(smx - 4), int(smy - 14)), 2)
+                pygame.draw.circle(target_surface, eye_color, (int(smx + 4), int(smy - 14)), 2)
 
     def _carve_flashlight_cone(self, px: float, py: float, direction: str) -> None:
         """Draws the flashlight beam onto the light mask."""

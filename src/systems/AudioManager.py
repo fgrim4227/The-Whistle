@@ -58,6 +58,7 @@ class AudioManager:
         monster_center: tuple,
         is_hidden: bool,
         monster_in_same_room: bool = True,
+        door_listening_proximity: float = 0.0,
         dt: float = 0.016,
     ) -> None:
         """
@@ -66,7 +67,8 @@ class AudioManager:
         - Folklore Paradox:
             * Farther real distance -> Louder perceived whistle (up to 0.85).
             * Closer real distance (< 80px) -> Faint whisper volume (down to 0.08).
-        - Breathing: Audible and panicking when the monster is very close (< 140px) or player hides.
+        - Breathing: Audible when monster is close (< 150px), player is hidden, or player listens at a door.
+        - Ambient Ducking: Lowers background ambience when listening closely to heavy breathing at a door.
         """
         dist = math.hypot(
             player_center[0] - monster_center[0],
@@ -95,11 +97,28 @@ class AudioManager:
         # Proximity alert flag for UI
         self.is_near_alert = (dist < 100.0 and monster_in_same_room)
 
-        # Panicked breathing modulation
+        # Ambient music volume ducking when listening closely at a door
+        ch_amb = settings.AUDIO_CHANNELS.get("ambience")
+        if ch_amb and ch_amb.get_busy():
+            if door_listening_proximity > 0.05:
+                # Duck ambient volume from 0.45 down towards 0.15 for acoustic clarity
+                ducked_vol = max(0.12, 0.45 * (1.0 - door_listening_proximity * 0.70))
+                ch_amb.set_volume(ducked_vol)
+            else:
+                ch_amb.set_volume(0.45)
+
+        # Panicked or door-listening breathing modulation
         ch_breath = settings.AUDIO_CHANNELS.get("silbon_breath")
         if ch_breath:
             if monster_in_same_room and (dist < 150.0 or is_hidden):
                 breath_vol = max(0.2, (1.0 - min(1.0, dist / 180.0)) * 0.90)
+                if not ch_breath.get_busy():
+                    settings.play_sound("breathing", loops=-1, volume=breath_vol, channel_name="silbon_breath")
+                else:
+                    ch_breath.set_volume(breath_vol)
+            elif door_listening_proximity > 0.05:
+                # Audible heavy breathing through wooden door
+                breath_vol = max(0.35, min(0.95, door_listening_proximity * 0.95))
                 if not ch_breath.get_busy():
                     settings.play_sound("breathing", loops=-1, volume=breath_vol, channel_name="silbon_breath")
                 else:

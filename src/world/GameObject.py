@@ -21,11 +21,11 @@ class GameObject:
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(int(self.x), int(self.y), self.width, self.height)
 
-    def render(self, surface: pygame.Surface) -> None:
+    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
         if self.is_picked:
             return
 
-        rect = self.get_rect()
+        rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])
         if self.obj_type == "battery":
             # Battery icon
             pygame.draw.rect(surface, (60, 180, 60), rect, border_radius=2)
@@ -76,6 +76,8 @@ class ThrowableProjectile:
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(int(self.x - self.radius), int(self.y - self.radius), self.radius * 2, self.radius * 2)
 
-    def render(self, surface: pygame.Surface) -> None:
+    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
         if self.active:
-            pygame.draw.circle(surface, (220, 210, 190), (int(self.x), int(self.y)), self.radius)
+            sx = int(self.x - camera_offset[0])
+            sy = int(self.y - camera_offset[1])
+            pygame.draw.circle(surface, (220, 210, 190), (sx, sy), self.radius)

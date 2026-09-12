@@ -18,12 +18,14 @@ class Room:
         display_name: str,
         cols: int = settings.GRID_COLS,
         rows: int = settings.GRID_ROWS,
+        build_walls: bool = True,
+        tile_size: int = settings.TILE_SIZE,
     ) -> None:
         self.name = name
         self.display_name = display_name
         self.cols = cols
         self.rows = rows
-        self.tile_size = settings.TILE_SIZE
+        self.tile_size = tile_size
         self.width = cols * self.tile_size
         self.height = rows * self.tile_size
 
@@ -33,12 +35,15 @@ class Room:
         self.hiding_spots: List[HidingSpot] = []
         self.npc: Optional[NPC] = None
         self.patrol_waypoints: List[Tuple[float, float]] = []
+        self.player_spawn: Optional[Tuple[float, float]] = None
+        self.background_surface: Optional[pygame.Surface] = None
 
-        # Weathered dark wood floor color
+        # Weathered dark wood floor color (fallback for procedural rooms)
         self.floor_color = (42, 32, 25)
         self.wall_color = (25, 20, 18)
 
-        self._build_perimeter_walls()
+        if build_walls:
+            self._build_perimeter_walls()
 
         self.boss = None
 
@@ -61,36 +66,40 @@ class Room:
         for door in self.doors:
             if door.is_locked or door.is_barred:
                 obs.append(door.get_rect())
-        # Add furniture and hiding spots
+        # Add furniture and hiding spots that are marked as solid
         for spot in self.hiding_spots:
-            obs.append(spot.get_rect())
+            if getattr(spot, "is_solid", True):
+                obs.append(spot.get_rect())
         return obs
 
-    def render(self, surface: pygame.Surface) -> None:
-        # Background / Cabin room floor
-        surface.fill(self.floor_color)
-        
-        # Wood floor plank groove lines
-        for y in range(0, self.height, self.tile_size):
-            pygame.draw.line(surface, (35, 26, 20), (0, y), (self.width, y), 1)
+    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
+        ox, oy = camera_offset
+        if self.background_surface:
+            # Render pre-baked Tiled graphic layers (Floors, Walls, Decors)
+            surface.blit(self.background_surface, (-ox, -oy))
+        else:
+            # Fallback procedural floor rendering
+            surface.fill(self.floor_color)
+            for y in range(0, self.height, self.tile_size):
+                pygame.draw.line(surface, (35, 26, 20), (-ox, y - oy), (self.width - ox, y - oy), 1)
 
-        # Draw boundary walls
-        for wall in self.solid_tiles:
-            pygame.draw.rect(surface, self.wall_color, wall)
-            pygame.draw.rect(surface, (15, 12, 10), wall, width=1)
+            for wall in self.solid_tiles:
+                w_rect = wall.move(-ox, -oy)
+                pygame.draw.rect(surface, self.wall_color, w_rect)
+                pygame.draw.rect(surface, (15, 12, 10), w_rect, width=1)
 
         # Draw doors
         for door in self.doors:
-            door.render(surface)
+            door.render(surface, camera_offset)
 
         # Draw hiding spots
         for spot in self.hiding_spots:
-            spot.render(surface)
+            spot.render(surface, camera_offset)
 
         # Draw floor items
         for item in self.items:
-            item.render(surface)
+            item.render(surface, camera_offset)
 
         # Draw NPC if present
         if self.npc:
-            self.npc.render(surface)
+            self.npc.render(surface, camera_offset)

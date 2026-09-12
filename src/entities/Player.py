@@ -4,7 +4,7 @@ Manages directional movement with collisions, spritesheet animations,
 flashlight, battery consumption, stealth hiding state, and inner monologues.
 """
 
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 import pygame
 from gale.animation import Animation
 from gale import frames
@@ -157,29 +157,33 @@ class Player(BaseEntity):
             if self.thought_timer <= 0.0:
                 self.current_thought = None
 
-    def render(self, surface: pygame.Surface) -> None:
+    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
         if self.is_hidden:
             return  # Hidden inside wardrobe/table
+
+        ox, oy = camera_offset
+        draw_x = int(self.x - ox)
+        draw_y = int(self.y - oy)
 
         # 1. Draw Andreas current animation frame
         if self.current_animation:
             frame = self.current_animation.get_current_frame()
             if isinstance(frame, pygame.Surface):
-                surface.blit(frame, (int(self.x), int(self.y)))
+                surface.blit(frame, (draw_x, draw_y))
             else:
-                pygame.draw.rect(surface, (40, 90, 160), self.get_rect())
+                pygame.draw.rect(surface, (40, 90, 160), self.get_rect().move(-ox, -oy))
         else:
-            pygame.draw.rect(surface, (40, 90, 160), self.get_rect())
+            pygame.draw.rect(surface, (40, 90, 160), self.get_rect().move(-ox, -oy))
 
         # 2. Flashlight origin indicator light if active
         if self.flashlight_on and self.battery > 0:
             beam_offsets = {
-                "down": (self.x + 8, self.y + 20),
-                "up": (self.x + 8, self.y + 10),
-                "left": (self.x + 2, self.y + 18),
-                "right": (self.x + 14, self.y + 18),
+                "down": (draw_x + 8, draw_y + 20),
+                "up": (draw_x + 8, draw_y + 10),
+                "left": (draw_x + 2, draw_y + 18),
+                "right": (draw_x + 14, draw_y + 18),
             }
-            bx, by = beam_offsets.get(self.direction, (self.x + 8, self.y + 20))
+            bx, by = beam_offsets.get(self.direction, (draw_x + 8, draw_y + 20))
             pygame.draw.circle(surface, (255, 250, 200), (int(bx), int(by)), 2)
 
         # 3. Inner monologue banner

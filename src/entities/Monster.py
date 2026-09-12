@@ -29,9 +29,9 @@ class SilbonBaseState(BaseState):
         """Processes AI decisions each frame. Overridden by subclasses."""
         pass
 
-    def render(self, surface: pygame.Surface) -> None:
+    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
         """Renders the entity sprite."""
-        self.monster.render_sprite(surface)
+        self.monster.render_sprite(surface, camera_offset)
 
 
 class SilbonPatrolState(SilbonBaseState):
@@ -110,24 +110,88 @@ class SilbonPatrolState(SilbonBaseState):
         if not current_room:
             return
 
+        # Ensure chosen doors lead only to rooms that actually exist in house.rooms
+        valid_doors = [
+            d for d in current_room.doors
+            if not d.is_exit_door and not d.is_barred and not d.is_locked
+            and d.target_room_name in house.rooms
+        ]
+        if not valid_doors:
+            return
+
         chosen_door = None
         # Prefer direct door to preferred room if available
         if target_room_preference:
             chosen_door = next(
-                (d for d in current_room.doors if d.target_room_name == target_room_preference and not d.is_barred and not d.is_locked),
+                (d for d in valid_doors if d.target_room_name == target_room_preference),
                 None
             )
-
-        # Otherwise, choose any open door that leads to another room (not exit)
-        if not chosen_door:
-            valid_doors = [
-                d for d in current_room.doors
-                if not d.is_exit_door and not d.is_barred and not d.is_locked
-            ]
-            chosen_door = random.choice(valid_doors) if valid_doors else None
+        if not chosen_door and valid_doors:
+            chosen_door = random.choice(valid_doors)
 
         if chosen_door:
-            self.monster.change_state("knocking", door=chosen_door, target_room=chosen_door.target_room_name)
+            self.monster.change_state("moving_to_door", door=chosen_door, target_room=chosen_door.target_room_name)
+
+
+class SilbonMovingToDoorState(SilbonBaseState):
+    """
+    State where El Silbón physically pathfinds and walks to a chosen door
+    before transitioning rooms. Eliminates visual teleportation across the map.
+    """
+    def enter(self, door, target_room: str, *args, **kwargs) -> None:
+        self.door = door
+        self.target_room = target_room
+        self.monster.speed = settings.MONSTER_PATROL_SPEED
+        self.timeout = 8.0  # Failsafe timer so geometry snags don't trap the monster
+        # Target the center of the door
+        self.target_x = self.door.x + self.door.width / 2.0
+        self.target_y = self.door.y + self.door.height / 2.0
+
+    def process_ai(self, house, player, dt: float) -> None:
+        player_room_name = house.current_room.name if house.current_room else "FirstRoom"
+        current_room = house.rooms.get(self.monster.current_room_name)
+
+        # 1. If player is in the same room and unhidden, detect and chase!
+        if self.monster.current_room_name == player_room_name and not player.is_hidden:
+            if self.monster.can_detect_player(player):
+                self.monster.change_state("chase")
+                return
+
+        # 2. Move towards the doorway
+        self.timeout -= dt
+        obstacles = current_room.get_obstacles() if current_room else []
+        door_rect = self.door.get_rect()
+        # Exclude the target door itself from blocking movement
+        obstacles = [obs for obs in obstacles if not obs.colliderect(door_rect)]
+
+        self.monster.move_towards(self.target_x, self.target_y, obstacles, dt)
+
+        # 3. Check if arrived at the doorway
+        mx, my = self.monster.get_center()
+        dist_to_door = math.hypot(mx - self.target_x, my - self.target_y)
+
+        # Arrived at door or timed out (to prevent geometry wedge)
+        if dist_to_door < 26.0 or self.timeout <= 0.0:
+            # Case A: If El Silbón is in a DIFFERENT room and intends to invade the PLAYER'S room:
+            # Knock loudly on the door from outside so the player hears it and has time to hide!
+            if self.monster.current_room_name != player_room_name and self.target_room == player_room_name:
+                self.monster.change_state("knocking", door=self.door, target_room=self.target_room)
+            else:
+                # Case B: Leaving player's room or wandering between other rooms:
+                # Open door, play creak audio, and transition to destination room
+                settings.play_sound("door_creak", loops=0, volume=0.8, channel_name="sfx")
+                self.monster.current_room_name = self.target_room
+                self.monster.x = self.door.target_spawn_x
+                self.monster.y = self.door.target_spawn_y
+                self.monster.current_wp_idx = 0
+                self.monster.vx = 0.0
+                self.monster.vy = 0.0
+                self.monster.is_moving = False
+
+                if self.monster.current_room_name == player_room_name and self.monster.can_detect_player(player):
+                    self.monster.change_state("chase")
+                else:
+                    self.monster.change_state("patrol")
 
 
 class SilbonKnockingState(SilbonBaseState):
@@ -138,7 +202,7 @@ class SilbonKnockingState(SilbonBaseState):
     def enter(self, door, target_room: str, *args, **kwargs) -> None:
         self.door = door
         self.target_room = target_room
-        self.timer = 10  # Duration of door knocking audio
+        self.timer = 5.0  # Dramatic 5-second door knocking warning
         self.monster.vx = 0.0
         self.monster.vy = 0.0
         self.monster.is_moving = False
@@ -147,6 +211,16 @@ class SilbonKnockingState(SilbonBaseState):
         settings.play_sound("knock_door", loops=0, volume=1.0, channel_name="knock")
 
     def process_ai(self, house, player, dt: float) -> None:
+        player_room_name = house.current_room.name if house.current_room else "FirstRoom"
+
+        # If the player is in the same room as the monster and unhidden:
+        # El Silbón immediately cancels knocking and attacks/chases (no zombie state)
+        if self.monster.current_room_name == player_room_name and not player.is_hidden:
+            dist = math.hypot(player.x - self.monster.x, player.y - self.monster.y)
+            if self.monster.can_detect_player(player) or dist < 140.0:
+                self.monster.change_state("chase")
+                return
+
         self.timer -= dt
         if self.timer <= 0.0:
             # Step through the door into the destination room
@@ -156,7 +230,6 @@ class SilbonKnockingState(SilbonBaseState):
             self.monster.current_wp_idx = 0
 
             # If player is in this room and visible, begin chasing
-            player_room_name = house.current_room.name if house.current_room else "bedroom"
             if self.monster.current_room_name == player_room_name and self.monster.can_detect_player(player):
                 self.monster.change_state("chase")
             else:
@@ -277,6 +350,7 @@ class Monster(BaseEntity):
         # Behavioral state machine (Princess Boss FSM pattern)
         self.state_machine = StateMachine({
             "patrol": lambda sm: SilbonPatrolState(self, sm),
+            "moving_to_door": lambda sm: SilbonMovingToDoorState(self, sm),
             "investigate": lambda sm: SilbonInvestigateState(self, sm),
             "knocking": lambda sm: SilbonKnockingState(self, sm),
             "chase": lambda sm: SilbonChaseState(self, sm),
@@ -404,24 +478,25 @@ class Monster(BaseEntity):
         if self.current_animation:
             self.current_animation.update(dt)
 
-    def render_sprite(self, surface: pygame.Surface) -> None:
+    def render_sprite(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
         """Renders the 64x64 frame centered over the entity's position."""
-        sprite_x = int(self.x - 20)
-        sprite_y = int(self.y - 12)
+        ox, oy = camera_offset
+        sprite_x = int(self.x - 20 - ox)
+        sprite_y = int(self.y - 12 - oy)
 
         if self.current_animation:
             frame = self.current_animation.get_current_frame()
             if isinstance(frame, pygame.Surface):
                 surface.blit(frame, (sprite_x, sprite_y))
             else:
-                pygame.draw.rect(surface, (160, 40, 40), self.get_rect())
+                pygame.draw.rect(surface, (160, 40, 40), self.get_rect().move(-ox, -oy))
         else:
-            pygame.draw.rect(surface, (160, 40, 40), self.get_rect())
+            pygame.draw.rect(surface, (160, 40, 40), self.get_rect().move(-ox, -oy))
 
         # Berserk visual effect: glowing crimson eyes
         if isinstance(self.state_machine.current, SilbonBerserkState):
-            pygame.draw.circle(surface, (255, 0, 0), (int(self.x + 8), int(self.y - 2)), 3)
-            pygame.draw.circle(surface, (255, 0, 0), (int(self.x + 16), int(self.y - 2)), 3)
+            pygame.draw.circle(surface, (255, 0, 0), (int(self.x + 8 - ox), int(self.y - 2 - oy)), 3)
+            pygame.draw.circle(surface, (255, 0, 0), (int(self.x + 16 - ox), int(self.y - 2 - oy)), 3)
 
-    def render(self, surface: pygame.Surface) -> None:
-        self.state_machine.current.render(surface)
+    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
+        self.state_machine.current.render(surface, camera_offset)
