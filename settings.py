@@ -72,6 +72,7 @@ COLOR_BLACK = (0, 0, 0)
 COLOR_WHITE = (255, 255, 255)
 COLOR_DARK_RED = (140, 20, 20)
 COLOR_BLOOD_RED = (180, 0, 0)
+COLOR_SILBON_RED = (184, 2, 0)  # Hex #b80200 from jumpscare artwork
 COLOR_GOLD = (230, 190, 40)
 COLOR_GRAY = (120, 120, 130)
 COLOR_DARK_BLUE = (12, 12, 22)
@@ -185,3 +186,8 @@ TEXTURES["player_dying"] = _load_image("characters/player/Andreas/Andreas dying.
 # Monster sprites (El Silbón)
 TEXTURES["silbon_walk"] = _load_image("characters/monster/silbon_walk.png")
 TEXTURES["silbon_idle"] = _load_image("characters/monster/silbon_idle.png")
+
+# Jumpscare textures
+TEXTURES["silbon_attack"] = _load_image("jumpscare/silbon_attack.png")
+TEXTURES["silbon_sad"] = _load_image("jumpscare/silbon_sad.png")
+TEXTURES["silbon_red"] = _load_image("jumpscare/silbon_red.png")

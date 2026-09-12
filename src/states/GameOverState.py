@@ -1,11 +1,11 @@
 """
 Game Over / Jumpscare state when caught by El Silbón.
-Plays both jumpscare sound effects (jumpscare1 + jumpscare2) simultaneously
-for visceral acoustic terror.
+Alternates between jumpscare imagery (silbon_attack, red flash screen, and subliminal silbon_sad)
+with violent screen shake and seamless background fills, backed by dual composite jumpscare audio.
 """
 
-import pygame
 import math
+import pygame
 from gale.input_handler import InputData
 
 import settings
@@ -17,7 +17,38 @@ class GameOverState(BaseState):
     def __init__(self, state_stack) -> None:
         super().__init__(state_stack)
         self.timer = 0.0
-        self.jumpscare_duration = 2.2
+        self.jumpscare_duration = 2.4
+        self.margin = 24
+
+        # Target dimensions with margin padding for screen shake without edge clipping
+        target_w = settings.VIRTUAL_WIDTH + self.margin * 2
+        target_h = settings.VIRTUAL_HEIGHT + self.margin * 2
+
+        # Scale jumpscare imagery
+        raw_attack = settings.TEXTURES.get("silbon_attack")
+        raw_sad = settings.TEXTURES.get("silbon_sad")
+        raw_red = settings.TEXTURES.get("silbon_red")
+
+        self.img_attack = (
+            pygame.transform.scale(raw_attack, (target_w, target_h))
+            if raw_attack
+            else None
+        )
+        self.img_sad = (
+            pygame.transform.scale(raw_sad, (target_w, target_h))
+            if raw_sad
+            else None
+        )
+        self.img_red = (
+            pygame.transform.scale(raw_red, (target_w, target_h))
+            if raw_red
+            else None
+        )
+
+        # Fallback for red flash if image is missing
+        if not self.img_red:
+            self.img_red = pygame.Surface((target_w, target_h))
+            self.img_red.fill(settings.COLOR_SILBON_RED)
 
     def enter(self, *args, **kwargs) -> None:
         self.timer = 0.0
@@ -48,25 +79,32 @@ class GameOverState(BaseState):
 
     def render(self, surface: pygame.Surface) -> None:
         if self.timer < self.jumpscare_duration:
-            # Jumpscare screen shake and blood-red flashing effect
-            shake_x = int(math.sin(self.timer * 60) * 6)
-            shake_y = int(math.cos(self.timer * 60) * 6)
-            intensity = int(180 + 75 * math.sin(self.timer * 35))
-            surface.fill((intensity, 0, 0))
+            # Violent screen shake with frequency decay
+            shake_amp = 8.0
+            shake_x = int(math.sin(self.timer * 72.0) * shake_amp)
+            shake_y = int(math.cos(self.timer * 64.0) * shake_amp)
 
-            center_x = settings.VIRTUAL_WIDTH // 2 + shake_x
-            center_y = settings.VIRTUAL_HEIGHT // 2 + shake_y
+            # Rapid 12-step alternation:
+            # - silbon_attack: dominant terror image (steps 0, 1, 3, 4, 8, 9, 10)
+            # - silbon_red: pure red background flash (#b80200) cushioning transitions (steps 2, 5, 7, 11)
+            # - silbon_sad: rare subliminal horror flash (step 6 only)
+            step = int(self.timer * 16.0) % 12
+            if step in (0, 1, 3, 4, 8, 9, 10):
+                active_img = self.img_attack
+                bg_color = settings.COLOR_BLACK
+            elif step == 6:
+                active_img = self.img_sad
+                bg_color = settings.COLOR_SILBON_RED
+            else:
+                active_img = self.img_red
+                bg_color = settings.COLOR_SILBON_RED
 
-            # Shadow silhouette of El Silbón lunging forward
-            pygame.draw.circle(surface, (15, 5, 5), (center_x, center_y - 25), 55)
-            # Wide-brim hat
-            pygame.draw.ellipse(surface, (50, 40, 20), (center_x - 50, center_y - 65, 100, 20))
-            # Glowing eyes
-            eye_col = (255, 255, 220) if int(self.timer * 20) % 2 == 0 else (255, 20, 20)
-            pygame.draw.circle(surface, eye_col, (center_x - 18, center_y - 30), 8)
-            pygame.draw.circle(surface, eye_col, (center_x + 18, center_y - 30), 8)
-            # Open terrifying maw
-            pygame.draw.arc(surface, (220, 20, 20), (center_x - 26, center_y - 12, 52, 40), math.pi, 2 * math.pi, 5)
+            # 1. Fill background with matching palette to eliminate letterbox/shake artifacts
+            surface.fill(bg_color)
+
+            # 2. Draw active jumpscare image offset by screen shake and margin
+            if active_img:
+                surface.blit(active_img, (-self.margin + shake_x, -self.margin + shake_y))
         else:
             # Black Game Over screen
             surface.fill(settings.COLOR_BLACK)
