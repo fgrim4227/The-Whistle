@@ -69,3 +69,7 @@ class HUD:
             bg_rect = p_surf.get_rect(center=(settings.VIRTUAL_WIDTH // 2, settings.VIRTUAL_HEIGHT - 16))
             pygame.draw.rect(surface, (0, 0, 0, 180), bg_rect.inflate(10, 4), border_radius=3)
             surface.blit(p_surf, bg_rect)
+
+        # 6. Character thoughts & NPC dialogue banner (rendered on top of lighting)
+        player.render_thought(surface, prompt_active=bool(prompt_text))
+

@@ -42,9 +42,9 @@ class SilbonPatrolState(SilbonBaseState):
     def enter(self, *args, **kwargs) -> None:
         self.monster.speed = settings.MONSTER_PATROL_SPEED
         # Longer room transition cooldown so player has breathing room to explore
-        self.room_change_cooldown = random.uniform(14.0, 24.0)
+        self.room_change_cooldown = random.uniform(2, 4)
         self.suspicion_timer = 0.0
-        self.hidden_leave_timer = random.uniform(4.0, 6.0)
+        self.hidden_leave_timer = random.uniform(6,8)
 
     def process_ai(self, house, player, dt: float) -> None:
         player_room_name = house.current_room.name if house.current_room else "bedroom"
@@ -68,7 +68,7 @@ class SilbonPatrolState(SilbonBaseState):
             if self.monster.can_detect_player(player):
                 # Generous reaction delay before committing to a full sprint chase
                 self.suspicion_timer += dt
-                if self.suspicion_timer >= 0.9:
+                if self.suspicion_timer >= 0.3:
                     self.monster.change_state("chase")
                     return
             else:
@@ -81,7 +81,7 @@ class SilbonPatrolState(SilbonBaseState):
         else:
             self.room_change_cooldown -= dt
             if self.room_change_cooldown <= 0.0:
-                self.room_change_cooldown = random.uniform(14.0, 22.0)
+                self.room_change_cooldown = random.uniform(5, 8)
                 self._leave_room(house, target_room_preference=player_room_name)
 
     def _patrol_room(self, current_room, dt: float, avoid_pos: Optional[Tuple[float, float]] = None) -> None:
@@ -99,7 +99,7 @@ class SilbonPatrolState(SilbonBaseState):
 
         self.monster.target_x, self.monster.target_y = wp
         mx, my = self.monster.get_center()
-        if math.hypot(wp[0] - mx, wp[1] - my) < 24.0:
+        if math.hypot(wp[0] - mx, wp[1] - my) < 16:
             self.monster.current_wp_idx = (self.monster.current_wp_idx + 1) % len(current_room.patrol_waypoints)
 
         obstacles = current_room.get_obstacles()
@@ -171,7 +171,7 @@ class SilbonMovingToDoorState(SilbonBaseState):
         dist_to_door = math.hypot(mx - self.target_x, my - self.target_y)
 
         # Arrived at door or timed out (to prevent geometry wedge)
-        if dist_to_door < 26.0 or self.timeout <= 0.0:
+        if dist_to_door < 16 or self.timeout <= 0.0:
             # Case A: If El Silbón is in a DIFFERENT room and intends to invade the PLAYER'S room:
             # Knock loudly on the door from outside so the player hears it and has time to hide!
             if self.monster.current_room_name != player_room_name and self.target_room == player_room_name:
@@ -179,7 +179,7 @@ class SilbonMovingToDoorState(SilbonBaseState):
             else:
                 # Case B: Leaving player's room or wandering between other rooms:
                 # Open door, play creak audio, and transition to destination room
-                settings.play_sound("door_creak", loops=0, volume=0.8, channel_name="sfx")
+                settings.play_sound("door_creak", loops=0, volume=3, channel_name="sfx")
                 self.monster.current_room_name = self.target_room
                 self.monster.x = self.door.target_spawn_x
                 self.monster.y = self.door.target_spawn_y
@@ -202,7 +202,7 @@ class SilbonKnockingState(SilbonBaseState):
     def enter(self, door, target_room: str, *args, **kwargs) -> None:
         self.door = door
         self.target_room = target_room
-        self.timer = 5.0  # Dramatic 5-second door knocking warning
+        self.timer = random.randint(2, 3) 
         self.monster.vx = 0.0
         self.monster.vy = 0.0
         self.monster.is_moving = False

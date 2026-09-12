@@ -159,7 +159,7 @@ class PlayState(BaseState):
 
         # 5. Check nearby NPC
         if room.npc and interact_zone.colliderect(room.npc.get_rect()):
-            dialogue_key = room.npc.get_current_dialogue()
+            dialogue_key = room.npc.get_next_dialogue()
             self.player.set_thought(dialogue_key, 4.5)
 
     def update(self, dt: float) -> None:

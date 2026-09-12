@@ -186,10 +186,46 @@ class Player(BaseEntity):
             bx, by = beam_offsets.get(self.direction, (draw_x + 8, draw_y + 20))
             pygame.draw.circle(surface, (255, 250, 200), (int(bx), int(by)), 2)
 
-        # 3. Inner monologue banner
-        if self.current_thought:
-            thought_text = t(self.current_thought)
-            txt_surf = settings.FONTS["small"].render(f'"{thought_text}"', True, (240, 240, 240))
-            bg_rect = txt_surf.get_rect(center=(settings.VIRTUAL_WIDTH // 2, settings.VIRTUAL_HEIGHT - 35))
-            pygame.draw.rect(surface, (0, 0, 0, 160), bg_rect.inflate(12, 6), border_radius=4)
-            surface.blit(txt_surf, bg_rect)
+    def render_thought(self, surface: pygame.Surface, prompt_active: bool = False) -> None:
+        """Renders character thoughts and dialogue banners in screen space on top of lighting."""
+        if not self.current_thought:
+            return
+
+        thought_text = t(self.current_thought)
+        font = settings.FONTS["small"]
+        max_w = settings.VIRTUAL_WIDTH - 48
+
+        # Word wrap into lines if text exceeds canvas width
+        words = f'"{thought_text}"'.split(" ")
+        lines = []
+        cur_line = []
+        for word in words:
+            test_line = " ".join(cur_line + [word])
+            if font.size(test_line)[0] <= max_w:
+                cur_line.append(word)
+            else:
+                if cur_line:
+                    lines.append(" ".join(cur_line))
+                cur_line = [word]
+        if cur_line:
+            lines.append(" ".join(cur_line))
+
+        if not lines:
+            return
+
+        rendered_lines = [font.render(l, True, (245, 245, 245)) for l in lines]
+        total_h = sum(r.get_height() for r in rendered_lines) + (len(rendered_lines) - 1) * 3
+        max_line_w = max(r.get_width() for r in rendered_lines)
+
+        base_y = settings.VIRTUAL_HEIGHT - 38 if prompt_active else settings.VIRTUAL_HEIGHT - 22
+        bg_rect = pygame.Rect(0, 0, max_line_w + 16, total_h + 8)
+        bg_rect.center = (settings.VIRTUAL_WIDTH // 2, base_y - (total_h - rendered_lines[0].get_height()) // 2)
+
+        pygame.draw.rect(surface, (0, 0, 0, 210), bg_rect, border_radius=4)
+        pygame.draw.rect(surface, (90, 85, 75), bg_rect, width=1, border_radius=4)
+
+        cur_y = bg_rect.top + 4
+        for r in rendered_lines:
+            r_rect = r.get_rect(centerx=bg_rect.centerx, top=cur_y)
+            surface.blit(r, r_rect)
+            cur_y += r.get_height() + 3

@@ -60,7 +60,7 @@ MONSTER_PATROL_SPEED = 70.0  # px/s
 MONSTER_CHASE_SPEED = 105.0  # px/s
 MONSTER_BERSERK_SPEED = 160.0  # px/s (+80% speed when enraged)
 
-BATTERY_DRAIN_RATE = 2.5  # Percentage per second while flashlight is ON
+BATTERY_DRAIN_RATE = 0.3  # Percentage per second while flashlight is ON
 BATTERY_RECHARGE_AMOUNT = 35.0  # Battery refill per picked-up battery item
 
 # Throw probabilities
