@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+.venv/
+venv/
+venv_win/
+.vscode/
+.idea/
+.DS_Store
+*.tiled-session
