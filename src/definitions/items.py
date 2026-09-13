@@ -50,9 +50,10 @@ def _draw_cabinet(surface: pygame.Surface, rect: pygame.Rect) -> None:
 
 
 def _draw_safe(surface: pygame.Surface, rect: pygame.Rect) -> None:
-    pygame.draw.rect(surface, (60, 60, 65), rect, border_radius=3)
-    pygame.draw.rect(surface, (30, 30, 34), rect, width=2, border_radius=3)
-    pygame.draw.circle(surface, (200, 190, 60), rect.center, 4, width=1)
+    #pygame.draw.rect(surface, (60, 60, 65), rect, border_radius=3)
+    #pygame.draw.rect(surface, (30, 30, 34), rect, width=2, border_radius=3)
+    #pygame.draw.circle(surface, (200, 190, 60), rect.center, 4, width=1)
+    pass
 
 
 ITEM_ARCHETYPES: Dict[str, Callable[[pygame.Surface, pygame.Rect], None]] = {

@@ -95,7 +95,7 @@ class PlayState(BaseState):
             return
 
         player_rect = self.player.get_rect()
-        interact_zone = player_rect.inflate(20, 20)
+        interact_zone = player_rect.inflate(24, 24)
 
         # 2. Check nearby hiding spots (wardrobes / tables)
         for spot in room.hiding_spots:
@@ -283,7 +283,7 @@ class PlayState(BaseState):
             self.prompt_text = t("prompt_exit_hide")
             return
 
-        zone = self.player.get_rect().inflate(20, 20)
+        zone = self.player.get_rect().inflate(24, 24)
         
         for spot in room.hiding_spots:
             if zone.colliderect(spot.get_rect()):

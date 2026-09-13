@@ -9,20 +9,30 @@ from src.definitions.items import ITEM_ARCHETYPES
 
 
 class GameObject:
-    def __init__(self, obj_type: str, x: float, y: float, is_collectible: bool = True) -> None:
+    def __init__(
+        self,
+        obj_type: str,
+        x: float,
+        y: float,
+        width: int = 16,
+        height: int = 16,
+        is_collectible: bool = True,
+        render_graphic: bool = True,
+    ) -> None:
         self.obj_type = obj_type  # "key", "battery", "crowbar", "throwable", "cabinet", "safe", ...
         self.x = float(x)
         self.y = float(y)
-        self.width = 16
-        self.height = 16
+        self.width = int(width)
+        self.height = int(height)
         self.is_collectible = is_collectible
+        self.render_graphic = render_graphic
         self.is_picked = False
 
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(int(self.x), int(self.y), self.width, self.height)
 
     def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
-        if self.is_picked:
+        if self.is_picked or not self.render_graphic:
             return
 
         rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])

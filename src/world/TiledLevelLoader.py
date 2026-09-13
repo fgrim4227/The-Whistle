@@ -168,8 +168,13 @@ class TiledLevelLoader:
                         oy = float(obj.get("y", 0))
                         props = {p.get("name"): p.get("value") for p in obj.get("properties", [])}
                         item_type = props.get("object") or obj.get("type")
+                        ow = int(float(obj.get("width", 16))) or 16
+                        oh = int(float(obj.get("height", 16))) or 16
+                        render_graphic = props.get("render_graphic", True)
                         if item_type in ITEM_ARCHETYPES:
-                            room.items.append(GameObject(item_type, ox, oy))
+                            room.items.append(
+                                GameObject(item_type, ox, oy, width=ow, height=oh, render_graphic=render_graphic)
+                            )
 
                         # Check if hiding spot object is authored in Tiled
                         spot_type = props.get("spot_type") or (item_type if item_type in ("wardrobe", "table") else None)
