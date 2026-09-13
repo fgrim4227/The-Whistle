@@ -19,7 +19,7 @@ class AudioManager:
         self.is_near_alert = False
         
         # Cooldown timer for periodic whistling bursts (not continuous loops)
-        self.whistle_cooldown = random.uniform(8.0, 15.0)
+        self.whistle_cooldown = random.uniform(4.0, 15.0)
 
     def start_ambient(self, track_name: Optional[str] = None) -> None:
         """Starts looping atmospheric cabin background music if not already playing."""
@@ -74,12 +74,15 @@ class AudioManager:
             player_center[0] - monster_center[0],
             player_center[1] - monster_center[1]
         )
-
-        max_range = 380.0
+        max_range = 500
         normalized = min(1.0, max(0.0, dist / max_range))
 
         # Modulate whistle volume inversely proportional to distance
-        whistle_vol = max(0.08, normalized * 0.85)
+        whistle_vol = max(0.08, normalized)
+        print("##################################################")
+        print(f"Distancia: {dist}")
+        print(f"Normalized: {normalized}")
+        print(f"whistle volume: {whistle_vol}")
 
         ch_whistle = settings.AUDIO_CHANNELS.get("silbon_whistle")
         if ch_whistle:
@@ -92,7 +95,7 @@ class AudioManager:
                 if self.whistle_cooldown <= 0.0:
                     self.play_silbon_whistle(volume=whistle_vol)
                     # Next whistle burst interval (14 to 24s silence)
-                    self.whistle_cooldown = random.uniform(14.0, 24.0)
+                    self.whistle_cooldown = random.uniform(4, 15)
 
         # Proximity alert flag for UI
         self.is_near_alert = (dist < 100.0 and monster_in_same_room)

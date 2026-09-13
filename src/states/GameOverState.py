@@ -60,7 +60,6 @@ class GameOverState(BaseState):
         # Trigger both jumpscare sounds concurrently at maximum volume
         settings.play_sound("jumpscare1", loops=0, volume=1.0, channel_name="jumpscare1")
         settings.play_sound("jumpscare2", loops=0, volume=1.0, channel_name="jumpscare2")
-
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if not input_data.pressed:
             return

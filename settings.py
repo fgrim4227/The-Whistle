@@ -109,14 +109,14 @@ def _load_sound(rel_path: str):
     return None
 
 SOUNDS["whistle"] = _load_sound("whistle.mp3")
-SOUNDS["breathing"] = _load_sound("breathing.mp3")
+SOUNDS["breathing"] = _load_sound("breathing.wav")
 SOUNDS["ambience1"] = _load_sound("ambient/ambience1.mp3")
 SOUNDS["ambience2"] = _load_sound("ambient/ambience2.mp3")
 SOUNDS["ambience3"] = _load_sound("ambient/ambience3.mp3")
 SOUNDS["knock_door"] = _load_sound("sfx/knock_door.mp3")
 SOUNDS["jumpscare1"] = _load_sound("sfx/jumpscare1.mp3")
 SOUNDS["jumpscare2"] = _load_sound("sfx/jumpscare2.mp3")
-
+SOUNDS["jumpscare3"] = _load_sound("sfx/screams.wav")
 # Dedicated Audio Channels (Ultimate Fantasy architecture pattern)
 AUDIO_CHANNELS = {
     "ambience": pygame.mixer.Channel(0) if pygame.mixer.get_init() else None,
