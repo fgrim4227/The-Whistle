@@ -79,10 +79,6 @@ class AudioManager:
 
         # Modulate whistle volume inversely proportional to distance
         whistle_vol = max(0.08, normalized)
-        print("##################################################")
-        print(f"Distancia: {dist}")
-        print(f"Normalized: {normalized}")
-        print(f"whistle volume: {whistle_vol}")
 
         ch_whistle = settings.AUDIO_CHANNELS.get("silbon_whistle")
         if ch_whistle:
