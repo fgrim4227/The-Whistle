@@ -1,4 +1,5 @@
 import settings
+from src.commands import PATROL
 from src.states.entity.MonsterBaseState import MonsterBaseState
 
 
@@ -12,7 +13,7 @@ class MonsterBerserkState(MonsterBaseState):
     def process_ai(self, house, player, dt: float) -> None:
         self.timer -= dt
         if self.timer <= 0.0:
-            self.monster.change_state("patrol")
+            PATROL(self.monster)
             return
 
         player_room_name = house.current_room.name if house.current_room else "bedroom"
@@ -22,4 +23,4 @@ class MonsterBerserkState(MonsterBaseState):
             obstacles = current_room.get_obstacles() if current_room else []
             self.monster.move_towards(px, py, obstacles, dt)
         else:
-            self.monster.change_state("patrol")
+            PATROL(self.monster)

@@ -3,6 +3,7 @@ import random
 from typing import Optional, Tuple
 
 import settings
+from src.commands import CHASE
 from src.states.entity.MonsterBaseState import MonsterBaseState
 
 
@@ -34,7 +35,7 @@ class MonsterPatrolState(MonsterBaseState):
             if self.monster.can_detect_player(player):
                 self.suspicion_timer += dt
                 if self.suspicion_timer >= 0.3:
-                    self.monster.change_state("chase")
+                    CHASE(self.monster)
                     return
             else:
                 self.suspicion_timer = max(0.0, self.suspicion_timer - dt * 1.5)

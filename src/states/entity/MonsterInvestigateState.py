@@ -1,6 +1,7 @@
 import math
 
 import settings
+from src.commands import CHASE, PATROL
 from src.states.entity.MonsterBaseState import MonsterBaseState
 
 
@@ -16,18 +17,18 @@ class MonsterInvestigateState(MonsterBaseState):
     def process_ai(self, house, player, dt: float) -> None:
         player_room_name = house.current_room.name if house.current_room else "bedroom"
         if self.monster.current_room_name != player_room_name:
-            self.monster.change_state("patrol")
+            PATROL(self.monster)
             return
 
         if self.monster.can_detect_player(player):
-            self.monster.change_state("chase")
+            CHASE(self.monster)
             return
 
         self.timer -= dt
         mx, my = self.monster.get_center()
         dist = math.hypot(self.target_x - mx, self.target_y - my)
         if dist < 16.0 or self.timer <= 0.0:
-            self.monster.change_state("patrol")
+            PATROL(self.monster)
             return
 
         current_room = house.rooms.get(self.monster.current_room_name)

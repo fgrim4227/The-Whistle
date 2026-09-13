@@ -2,6 +2,7 @@ import math
 import random
 
 import settings
+from src.commands import CHASE, PATROL
 from src.states.entity.MonsterBaseState import MonsterBaseState
 
 
@@ -26,7 +27,7 @@ class MonsterKnockingState(MonsterBaseState):
         if self.monster.current_room_name == player_room_name and not player.is_hidden:
             dist = math.hypot(player.x - self.monster.x, player.y - self.monster.y)
             if self.monster.can_detect_player(player) or dist < 140.0:
-                self.monster.change_state("chase")
+                CHASE(self.monster)
                 return
 
         self.timer -= dt
@@ -37,6 +38,6 @@ class MonsterKnockingState(MonsterBaseState):
             self.monster.current_wp_idx = 0
 
             if self.monster.current_room_name == player_room_name and self.monster.can_detect_player(player):
-                self.monster.change_state("chase")
+                CHASE(self.monster)
             else:
-                self.monster.change_state("patrol")
+                PATROL(self.monster)

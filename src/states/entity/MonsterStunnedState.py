@@ -1,3 +1,4 @@
+from src.commands import BERSERK
 from src.states.entity.MonsterBaseState import MonsterBaseState
 
 
@@ -14,4 +15,4 @@ class MonsterStunnedState(MonsterBaseState):
     def process_ai(self, house, player, dt: float) -> None:
         self.timer -= dt
         if self.timer <= 0.0:
-            self.monster.change_state("berserk")
+            BERSERK(self.monster)

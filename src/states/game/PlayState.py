@@ -5,7 +5,7 @@ dynamic lighting system, HUD, and game over / victory conditions.
 """
 
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 import pygame
 from gale.input_handler import InputData
 
@@ -44,7 +44,6 @@ class PlayState(BaseState):
         self.hud = HUD()
 
         self.projectiles: List[ThrowableProjectile] = []
-        self.pressed_inputs: Dict[str, bool] = {}
         self.prompt_text = ""
 
         self.objectives_progress = {
@@ -56,7 +55,7 @@ class PlayState(BaseState):
         }
 
     def enter(self, *args, **kwargs) -> None:
-        self.pressed_inputs.clear()
+        self.player.clear_held()
         # Start atmospheric cabin ambient background music
         self.audio.start_ambient()
 
@@ -65,31 +64,15 @@ class PlayState(BaseState):
         settings.stop_channel("silbon_breath")
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
-        if input_id in ("move_left", "move_right", "move_up", "move_down"):
-            self.pressed_inputs[input_id] = input_data.pressed
-            return
+        if input_data.pressed:
+            if input_id == "pause":
+                self.state_machine.push(PauseState(self.state_machine))
+                return
+            elif input_id == "objectives":
+                self.state_machine.push(ObjectiveState(self.state_machine, self.objectives_progress))
+                return
 
-        if not input_data.pressed:
-            return
-
-        if input_id == "pause":
-            self.state_machine.push(PauseState(self.state_machine))
-        elif input_id == "objectives":
-            self.state_machine.push(ObjectiveState(self.state_machine, self.objectives_progress))
-        elif input_id == "flashlight":
-            self.player.toggle_flashlight()
-        elif input_id in ("throw", "action"):
-            self._handle_throw()
-        elif input_id == "interact":
-            self._handle_interaction()
-        elif input_id == "cycle_item":
-            self.player.cycle_item()
-        elif input_id.startswith("slot_"):
-            try:
-                slot_idx = int(input_id.split("_")[1]) - 1
-                self.player.select_slot(slot_idx)
-            except Exception:
-                pass
+        self.player.command_bindings.dispatch(self.player, input_id, input_data)
 
     def _handle_throw(self) -> None:
         if self.player.equipped_item in ("throwable", "crowbar"):
@@ -216,8 +199,16 @@ class PlayState(BaseState):
         obstacles = room.get_obstacles()
 
         # Update player
-        self.player.update_movement_from_input(self.pressed_inputs, obstacles, dt)
+        self.player.update_movement(obstacles, dt)
         self.player.update(dt)
+
+        if self.player.interact_requested:
+            self.player.interact_requested = False
+            self._handle_interaction()
+
+        if self.player.throw_requested:
+            self.player.throw_requested = False
+            self._handle_throw()
 
         # Update El Silbón (delegating to FSM state machine with house navigation)
         monster_in_same_room = (self.monster.current_room_name == room.name)

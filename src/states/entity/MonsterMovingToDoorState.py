@@ -1,6 +1,7 @@
 import math
 
 import settings
+from src.commands import CHASE, PATROL
 from src.states.entity.MonsterBaseState import MonsterBaseState
 
 
@@ -23,7 +24,7 @@ class MonsterMovingToDoorState(MonsterBaseState):
 
         if self.monster.current_room_name == player_room_name and not player.is_hidden:
             if self.monster.can_detect_player(player):
-                self.monster.change_state("chase")
+                CHASE(self.monster)
                 return
 
         self.timeout -= dt
@@ -52,6 +53,6 @@ class MonsterMovingToDoorState(MonsterBaseState):
                 self.monster.is_moving = False
 
                 if self.monster.current_room_name == player_room_name and self.monster.can_detect_player(player):
-                    self.monster.change_state("chase")
+                    CHASE(self.monster)
                 else:
-                    self.monster.change_state("patrol")
+                    PATROL(self.monster)

@@ -15,6 +15,7 @@ from gale.animation import Animation
 from gale.state import StateMachine
 
 import settings
+from src.commands import BERSERK
 from src.definitions import entity as entity_defs
 from src.entities.BaseEntity import BaseEntity
 from src.states.entity.MonsterBerserkState import MonsterBerserkState
@@ -83,7 +84,7 @@ class Monster(BaseEntity):
         """Applies 75% Stun / 25% Berserk probability."""
         roll = random.random()
         if roll < settings.THROW_BERSERK_CHANCE:
-            self.change_state("berserk")
+            BERSERK(self)
             return "berserk"
         else:
             duration = random.uniform(3.0, 4.5)

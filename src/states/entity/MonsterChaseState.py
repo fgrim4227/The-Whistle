@@ -1,4 +1,5 @@
 import settings
+from src.commands import PATROL
 from src.states.entity.MonsterBaseState import MonsterBaseState
 
 
@@ -12,11 +13,11 @@ class MonsterChaseState(MonsterBaseState):
         player_room_name = house.current_room.name if house.current_room else "bedroom"
 
         if self.monster.current_room_name != player_room_name:
-            self.monster.change_state("patrol")
+            PATROL(self.monster)
             return
 
         if player.is_hidden:
-            self.monster.change_state("patrol")
+            PATROL(self.monster)
             return
 
         px, py = player.get_center()

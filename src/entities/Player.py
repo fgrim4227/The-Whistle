@@ -7,9 +7,29 @@ flashlight, battery consumption, stealth hiding state, and inner monologues.
 from typing import Optional, List, Dict, Tuple
 import pygame
 from gale.animation import Animation
+from gale.command import CommandBindings
 from gale.state import StateMachine
 
 import settings
+from src.commands import (
+    CYCLE_ITEM,
+    FLASHLIGHT,
+    INTERACT,
+    MOVE_DOWN,
+    MOVE_LEFT,
+    MOVE_RIGHT,
+    MOVE_UP,
+    SELECT_SLOT_1,
+    SELECT_SLOT_2,
+    SELECT_SLOT_3,
+    SELECT_SLOT_4,
+    SELECT_SLOT_5,
+    STOP_MOVE_DOWN,
+    STOP_MOVE_LEFT,
+    STOP_MOVE_RIGHT,
+    STOP_MOVE_UP,
+    THROW,
+)
 from src.definitions import entity as entity_defs
 from src.entities.BaseEntity import BaseEntity
 from src.i18n import t
@@ -26,12 +46,43 @@ class Player(BaseEntity):
         self.battery = 100.0
         self.is_hidden = False
         self.current_hiding_spot = None
-        
+
         # Multi-slot inventory system (stores collected tools & keys)
         self.inventory: List[str] = []
         self.selected_item_index: int = 0
 
         self.panic_meter = 0.0
+
+        # Movement intent, updated by MOVE_*/STOP_MOVE_* commands and
+        # resolved into actual movement by update_movement() every frame.
+        self.held: Dict[str, bool] = {
+            "move_left": False,
+            "move_right": False,
+            "move_up": False,
+            "move_down": False,
+        }
+
+        # Edge-triggered intent: interact/throw are one-shot actions
+        # resolved (and cleared) by PlayState.update(), since they need
+        # access to the current room/house/monster to resolve.
+        self.interact_requested = False
+        self.throw_requested = False
+
+        self.command_bindings = CommandBindings()
+        self.command_bindings.bind("move_left", press=MOVE_LEFT, release=STOP_MOVE_LEFT)
+        self.command_bindings.bind("move_right", press=MOVE_RIGHT, release=STOP_MOVE_RIGHT)
+        self.command_bindings.bind("move_up", press=MOVE_UP, release=STOP_MOVE_UP)
+        self.command_bindings.bind("move_down", press=MOVE_DOWN, release=STOP_MOVE_DOWN)
+        self.command_bindings.bind("interact", press=INTERACT)
+        self.command_bindings.bind("throw", press=THROW)
+        self.command_bindings.bind("action", press=THROW)
+        self.command_bindings.bind("flashlight", press=FLASHLIGHT)
+        self.command_bindings.bind("cycle_item", press=CYCLE_ITEM)
+        self.command_bindings.bind("slot_1", press=SELECT_SLOT_1)
+        self.command_bindings.bind("slot_2", press=SELECT_SLOT_2)
+        self.command_bindings.bind("slot_3", press=SELECT_SLOT_3)
+        self.command_bindings.bind("slot_4", press=SELECT_SLOT_4)
+        self.command_bindings.bind("slot_5", press=SELECT_SLOT_5)
         
         # Directional animations
         self.animations: Dict[str, Animation]
@@ -155,28 +206,34 @@ class Player(BaseEntity):
         self.current_hiding_spot = None
         self.change_state("idle")
 
-    def update_movement_from_input(self, pressed_keys: dict, obstacles: List[pygame.Rect], dt: float) -> None:
+    def clear_held(self) -> None:
+        for key in self.held:
+            self.held[key] = False
+
+    def update_movement(self, obstacles: List[pygame.Rect], dt: float) -> None:
         if self.is_hidden:
             return
 
         dx = 0.0
         dy = 0.0
 
-        if pressed_keys.get("move_left", False):
+        if self.held["move_left"]:
             dx -= 1.0
             self.direction = "left"
-        if pressed_keys.get("move_right", False):
+        if self.held["move_right"]:
             dx += 1.0
             self.direction = "right"
-        if pressed_keys.get("move_up", False):
+        if self.held["move_up"]:
             dy -= 1.0
             self.direction = "up"
-        if pressed_keys.get("move_down", False):
+        if self.held["move_down"]:
             dy += 1.0
             self.direction = "down"
 
         self.is_moving = (dx != 0.0 or dy != 0.0)
         self.change_state("walk" if self.is_moving else "idle")
+        if self.is_moving:
+            self.change_animation(f"walk-{self.direction}")
 
         if dx != 0.0 and dy != 0.0:
             inv = 0.70710678
