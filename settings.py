@@ -6,6 +6,7 @@ Global configurations, constants, input mappings, audio channels, and resource p
 import pathlib
 import pygame
 
+from gale import frames
 from gale import input_handler
 
 # Keyboard action bindings
@@ -199,3 +200,26 @@ TEXTURES["silbon_idle"] = _load_image("characters/monster/silbon_idle.png")
 TEXTURES["silbon_attack"] = _load_image("jumpscare/silbon_attack.png")
 TEXTURES["silbon_sad"] = _load_image("jumpscare/silbon_sad.png")
 TEXTURES["silbon_red"] = _load_image("jumpscare/silbon_red.png")
+
+
+def _generate_frames(texture_id: str, frame_width: int, frame_height: int):
+    image = TEXTURES.get(texture_id)
+    return frames.generate_frames(image, frame_width, frame_height) if image else []
+
+
+# Animation frame rects, sliced once per texture and indexed 1-based by
+# src.definitions.entity's animation specs via frame() below.
+FRAMES = {
+    "player_walk_down": _generate_frames("player_walk_down", 16, 32),
+    "player_walk_up": _generate_frames("player_walk_up", 16, 32),
+    "player_walk_left": _generate_frames("player_walk_left", 16, 32),
+    "player_walk_right": _generate_frames("player_walk_right", 16, 32),
+    "player_idle": _generate_frames("player_idle", 16, 32),
+    "player_dying": _generate_frames("player_dying", 16, 32),
+    "silbon_walk": _generate_frames("silbon_walk", 64, 64),
+    "silbon_idle": _generate_frames("silbon_idle", 64, 64),
+}
+
+
+def frame(texture_id: str, one_based_index: int) -> pygame.Rect:
+    return FRAMES[texture_id][one_based_index - 1]

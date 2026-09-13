@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Tuple
 import pygame
 
 import settings
+from src.definitions.items import ITEM_ARCHETYPES
 from src.world.Room import Room
 from src.world.Door import Door
 from src.world.GameObject import GameObject
@@ -21,7 +22,11 @@ class TilesetManager:
     """Singleton manager for loading, slicing, and caching tileset graphics."""
     _instance: Optional["TilesetManager"] = None
 
-    def __init__(self, spritesheet_path: str = "assets/graphics/environment/spritesheet.png", tile_size: int = 16) -> None:
+    def __init__(self, spritesheet_path: Optional[str] = None, tile_size: int = 16) -> None:
+        if spritesheet_path is None:
+            # Anchored to settings.BASE_DIR, not a bare relative path --
+            # see the same note on TILEMAPS_DIR in src/definitions/rooms.py.
+            spritesheet_path = str(settings.BASE_DIR / "assets" / "graphics" / "environment" / "spritesheet.png")
         self.tile_size = tile_size
         self.spritesheet_path = spritesheet_path
         self.sheet: Optional[pygame.Surface] = None
@@ -163,18 +168,8 @@ class TiledLevelLoader:
                         oy = float(obj.get("y", 0))
                         props = {p.get("name"): p.get("value") for p in obj.get("properties", [])}
                         item_type = props.get("object") or obj.get("type")
-                        if item_type in ("battery", "key", "crowbar", "throwable", "lockpick", "old_key", "safe", "cabinet"):
-                            name_lookup = {
-                                "battery": "Batería",
-                                "key": "Llave del Bosque",
-                                "crowbar": "Palanca",
-                                "throwable": "Objeto Arrojable",
-                                "lockpick": "Ganzúa",
-                                "old_key": "Llave Antigua",
-                                "safe": "Caja Fuerte",
-                                "cabinet": "Vitrina",
-                            }
-                            room.items.append(GameObject(item_type, ox, oy, name_lookup.get(item_type, item_type)))
+                        if item_type in ITEM_ARCHETYPES:
+                            room.items.append(GameObject(item_type, ox, oy))
 
                         # Check if hiding spot object is authored in Tiled
                         spot_type = props.get("spot_type") or (item_type if item_type in ("wardrobe", "table") else None)

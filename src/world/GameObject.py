@@ -4,17 +4,17 @@ GameObject and ThrowableProjectile classes for items, tools, and interactable en
 
 from typing import Optional, Tuple
 import pygame
-import math
+
+from src.definitions.items import ITEM_ARCHETYPES
 
 
 class GameObject:
-    def __init__(self, obj_type: str, x: float, y: float, name: str, is_collectible: bool = True) -> None:
-        self.obj_type = obj_type  # "key", "battery", "crowbar", "throwable"
+    def __init__(self, obj_type: str, x: float, y: float, is_collectible: bool = True) -> None:
+        self.obj_type = obj_type  # "key", "battery", "crowbar", "throwable", "cabinet", "safe", ...
         self.x = float(x)
         self.y = float(y)
         self.width = 16
         self.height = 16
-        self.name = name
         self.is_collectible = is_collectible
         self.is_picked = False
 
@@ -26,22 +26,9 @@ class GameObject:
             return
 
         rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])
-        if self.obj_type == "battery":
-            # Battery icon
-            pygame.draw.rect(surface, (60, 180, 60), rect, border_radius=2)
-            pygame.draw.rect(surface, (220, 220, 220), (rect.left + 4, rect.top - 2, 8, 3))
-        elif self.obj_type == "key":
-            # Golden key icon
-            pygame.draw.circle(surface, (230, 190, 40), (rect.centerx, rect.top + 5), 4)
-            pygame.draw.line(surface, (230, 190, 40), (rect.centerx, rect.top + 5), (rect.centerx, rect.bottom - 2), 2)
-            pygame.draw.line(surface, (230, 190, 40), (rect.centerx, rect.bottom - 4), (rect.right - 2, rect.bottom - 4), 2)
-        elif self.obj_type == "crowbar":
-            # Red iron crowbar
-            pygame.draw.line(surface, (180, 40, 40), (rect.left + 2, rect.bottom - 2), (rect.right - 4, rect.top + 2), 3)
-            pygame.draw.arc(surface, (180, 40, 40), (rect.right - 8, rect.top, 8, 8), 0, math.pi, 2)
-        elif self.obj_type == "throwable":
-            # Stone / Bottle projectile
-            pygame.draw.circle(surface, (160, 150, 140), (rect.centerx, rect.centery), 5)
+        draw = ITEM_ARCHETYPES.get(self.obj_type)
+        if draw:
+            draw(surface, rect)
 
 
 class ThrowableProjectile:

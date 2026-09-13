@@ -1,7 +1,3 @@
-"""
-Main entry point for 'El Silbón: Pesadilla en la Cabaña'.
-"""
-
 import sys
 import os
 

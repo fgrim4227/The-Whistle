@@ -9,3 +9,5 @@ venv_win/
 .idea/
 .DS_Store
 *.tiled-session
+graphify-out/
+.claude/

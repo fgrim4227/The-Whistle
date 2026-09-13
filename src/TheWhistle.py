@@ -8,7 +8,7 @@ from gale.input_handler import InputData
 from gale.state import StateStack
 
 import settings
-from src.states.StartState import StartState
+from src.states.game.StartState import StartState
 
 
 class TheWhistle(Game):

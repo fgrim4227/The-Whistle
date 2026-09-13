@@ -5,6 +5,8 @@ HidingSpot class for wardrobes, lockers, and tables where Andreas can conceal hi
 from typing import Tuple
 import pygame
 
+from src.definitions.items import HIDING_SPOT_ARCHETYPES
+
 
 class HidingSpot:
     def __init__(
@@ -34,16 +36,5 @@ class HidingSpot:
             return
 
         rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])
-        if self.spot_type == "wardrobe":
-            # Dark wood double-door wardrobe
-            pygame.draw.rect(surface, (70, 45, 25), rect, border_radius=2)
-            pygame.draw.rect(surface, (40, 25, 15), rect, width=2, border_radius=2)
-            # Center split line
-            pygame.draw.line(surface, (40, 25, 15), (rect.centerx, rect.top + 2), (rect.centerx, rect.bottom - 2), 2)
-            # Door handles
-            pygame.draw.circle(surface, (200, 180, 70), (rect.centerx - 4, rect.centery), 2)
-            pygame.draw.circle(surface, (200, 180, 70), (rect.centerx + 4, rect.centery), 2)
-        else:
-            # Wooden table
-            pygame.draw.rect(surface, (110, 80, 50), rect, border_radius=3)
-            pygame.draw.rect(surface, (60, 40, 20), rect, width=2, border_radius=3)
+        draw = HIDING_SPOT_ARCHETYPES.get(self.spot_type, HIDING_SPOT_ARCHETYPES["table"])
+        draw(surface, rect)

@@ -7,17 +7,21 @@ flashlight, battery consumption, stealth hiding state, and inner monologues.
 from typing import Optional, List, Dict, Tuple
 import pygame
 from gale.animation import Animation
-from gale import frames
+from gale.state import StateMachine
 
 import settings
+from src.definitions import entity as entity_defs
 from src.entities.BaseEntity import BaseEntity
 from src.i18n import t
+from src.states.entity.PlayerHidingState import PlayerHidingState
+from src.states.entity.PlayerIdleState import PlayerIdleState
+from src.states.entity.PlayerWalkState import PlayerWalkState
 
 
 class Player(BaseEntity):
     def __init__(self, x: float, y: float) -> None:
-        # Andreas sprite dimensions: 16x32 px
-        super().__init__(x, y, width=16, height=32, speed=settings.PLAYER_SPEED)
+        width, height = entity_defs.PLAYER_SIZE
+        super().__init__(x, y, width=width, height=height, speed=settings.PLAYER_SPEED)
         self.flashlight_on = True
         self.battery = 100.0
         self.is_hidden = False
@@ -30,9 +34,20 @@ class Player(BaseEntity):
         self.panic_meter = 0.0
         
         # Directional animations
-        self.animations: Dict[str, Animation] = self._create_animations()
+        self.animations: Dict[str, Animation]
+        self._animation_textures: Dict[str, str]
+        self.animations, self._animation_textures = self._create_animations()
         self.current_animation = self.animations.get("idle-down")
+        self.current_texture = self._animation_textures.get("idle-down")
         self.is_moving = False
+
+        self.state_machine = StateMachine({
+            "idle": lambda sm: PlayerIdleState(self, sm),
+            "walk": lambda sm: PlayerWalkState(self, sm),
+            "hiding": lambda sm: PlayerHidingState(self, sm),
+        })
+        self.state_name = "idle"
+        self.state_machine.change(self.state_name)
 
         # Internal thought / monologue system
         self.current_thought: Optional[str] = "thought_intro"
@@ -94,38 +109,22 @@ class Player(BaseEntity):
         if self.inventory:
             self.selected_item_index = (self.selected_item_index + 1) % len(self.inventory)
 
-    def _create_animations(self) -> Dict[str, Animation]:
-        anims = {}
-        tex = settings.TEXTURES
-
-        def slice_sheet(key: str, fw: int, fh: int) -> List[pygame.Surface]:
-            img = tex.get(key)
-            if img:
-                rects = frames.generate_frames(img, fw, fh)
-                return [img.subsurface(r) for r in rects]
-            # Geometric fallback if texture is unavailable
-            dummy = pygame.Surface((fw, fh), pygame.SRCALPHA)
-            pygame.draw.rect(dummy, (40, 90, 160), (0, 0, fw, fh))
-            return [dummy]
-
-        anims["walk-down"] = Animation(slice_sheet("player_walk_down", 16, 32), 0.12)
-        anims["walk-up"] = Animation(slice_sheet("player_walk_up", 16, 32), 0.12)
-        anims["walk-left"] = Animation(slice_sheet("player_walk_left", 16, 32), 0.12)
-        anims["walk-right"] = Animation(slice_sheet("player_walk_right", 16, 32), 0.12)
-
-        idle_frames = slice_sheet("player_idle", 16, 32)
-        anims["idle-down"] = Animation(idle_frames, 0.25)
-        anims["idle-up"] = Animation(idle_frames, 0.25)
-        anims["idle-left"] = Animation(idle_frames, 0.25)
-        anims["idle-right"] = Animation(idle_frames, 0.25)
-
-        anims["dying"] = Animation(slice_sheet("player_dying", 16, 32), 0.18, loops=1)
-        return anims
+    def _create_animations(self) -> Tuple[Dict[str, Animation], Dict[str, str]]:
+        return entity_defs.build_animations(
+            entity_defs.PLAYER_ANIMATIONS, entity_defs.PLAYER_FALLBACK_COLOR, entity_defs.PLAYER_SIZE
+        )
 
     def change_animation(self, anim_name: str) -> None:
         if anim_name in self.animations and self.current_animation != self.animations[anim_name]:
             self.current_animation = self.animations[anim_name]
             self.current_animation.reset()
+            self.current_texture = self._animation_textures.get(anim_name)
+
+    def change_state(self, state_name: str, *args, **kwargs) -> None:
+        if state_name == self.state_name:
+            return
+        self.state_machine.change(state_name, *args, **kwargs)
+        self.state_name = state_name
 
     def get_collision_rect(self) -> pygame.Rect:
         # Feet collision rect (bottom 16x16 area) for natural top-down perspective
@@ -149,12 +148,12 @@ class Player(BaseEntity):
         self.is_hidden = True
         self.current_hiding_spot = spot
         self.flashlight_on = False
-        self.vx = 0.0
-        self.vy = 0.0
+        self.change_state("hiding")
 
     def exit_hide(self) -> None:
         self.is_hidden = False
         self.current_hiding_spot = None
+        self.change_state("idle")
 
     def update_movement_from_input(self, pressed_keys: dict, obstacles: List[pygame.Rect], dt: float) -> None:
         if self.is_hidden:
@@ -177,17 +176,12 @@ class Player(BaseEntity):
             self.direction = "down"
 
         self.is_moving = (dx != 0.0 or dy != 0.0)
+        self.change_state("walk" if self.is_moving else "idle")
 
-        # Select matching animation
-        if self.is_moving:
-            self.change_animation(f"walk-{self.direction}")
-            # Normalize diagonal movement
-            if dx != 0.0 and dy != 0.0:
-                inv = 0.70710678
-                dx *= inv
-                dy *= inv
-        else:
-            self.change_animation(f"idle-{self.direction}")
+        if dx != 0.0 and dy != 0.0:
+            inv = 0.70710678
+            dx *= inv
+            dy *= inv
 
         # Collision resolution per axis on character feet
         new_x = self.x + dx * self.speed * dt
@@ -228,12 +222,14 @@ class Player(BaseEntity):
         # 1. Draw Andreas current animation frame
         if self.current_animation:
             frame = self.current_animation.get_current_frame()
-            if isinstance(frame, pygame.Surface):
+            if isinstance(frame, pygame.Rect):
+                surface.blit(settings.TEXTURES[self.current_texture], (draw_x, draw_y), frame)
+            elif isinstance(frame, pygame.Surface):
                 surface.blit(frame, (draw_x, draw_y))
             else:
-                pygame.draw.rect(surface, (40, 90, 160), self.get_rect().move(-ox, -oy))
+                pygame.draw.rect(surface, entity_defs.PLAYER_FALLBACK_COLOR, self.get_rect().move(-ox, -oy))
         else:
-            pygame.draw.rect(surface, (40, 90, 160), self.get_rect().move(-ox, -oy))
+            pygame.draw.rect(surface, entity_defs.PLAYER_FALLBACK_COLOR, self.get_rect().move(-ox, -oy))
 
         # 2. Flashlight origin indicator light if active
         if self.flashlight_on and self.battery > 0:

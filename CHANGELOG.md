@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Data-driven definitions package (`src/definitions/`)**:
+  - `entity.py`: `PLAYER_ANIMATIONS`/`MONSTER_ANIMATIONS` specs (per-animation texture + frame indices + interval/loop count) and a shared `build_animations()` loader, replacing the near-identical `_create_animations()` each class hand-rolled.
+  - `items.py`: `ITEM_ARCHETYPES` (`GameObject.obj_type` -> draw function) and `HIDING_SPOT_ARCHETYPES` (`HidingSpot.spot_type` -> draw function), replacing the `if/elif` render chains in `GameObject.render()`/`HidingSpot.render()`.
+  - `rooms.py`: `TILED_ROOMS` and `DEFAULT_CABIN_ROOMS`, the door/hiding-spot/waypoint/item layout data for all 8 cabin rooms plus the procedural fallback house, previously hardcoded inline across ~250 lines of `House.py`.
+- **`settings.FRAMES` + `settings.frame()`**: centralizes animation frame slicing (via `gale.frames.generate_frames`) alongside the existing `TEXTURES` dict. `src/definitions/entity.py`'s animation specs now just list which 1-based frame indices to play (e.g. `{"texture": "silbon_walk", "frames": list(range(1, 11)), "interval": 0.10}`) instead of doing their own pixel-rect math.
+- **`Player`/`Monster` finite state machines**:
+  - `Monster`'s 7 behavior states moved out of `Monster.py` into their own files under `src/states/entity/` (`MonsterBaseState`, `MonsterPatrolState`, `MonsterMovingToDoorState`, `MonsterKnockingState`, `MonsterChaseState`, `MonsterInvestigateState`, `MonsterBerserkState`, `MonsterStunnedState`; renamed from the previous `Silbon*State` names).
+  - `Player` gained a real state machine (`idle`/`walk`/`hiding`, in `src/states/entity/Player*State.py`) instead of calling `change_animation(...)` directly at each call site. `Player.change_state()` guards against re-entering the same state every frame, since movement is polled continuously rather than tile-stepped.
+
+### Changed
+- `House.py` rewritten to be data-driven: `_build_tiled_cabin()`/`_build_default_cabin()` now loop over `src/definitions/rooms.py` instead of repeating a near-identical block of Python per room (422 lines -> ~130 lines). Room name aliases (`"FirstRoom"`/`"first_room"`/`"bedroom"`, etc.) are now declared once per room in that data.
+- `GameObject`: dropped the `name` constructor parameter (confirmed unread anywhere in the codebase; display names come from `i18n`'s `item_<obj_type>` keys instead).
+- `TiledLevelLoader`: the `Interactables` layer now checks `item_type in ITEM_ARCHETYPES` instead of a separate hardcoded tuple + `name_lookup` dict that had to be kept in sync by hand.
+- `build_animations()` now returns `(animations, textures)` instead of just `animations`; `Player`/`Monster` track `self.current_texture` (updated inside `change_animation()`), and their `render()`/`render_sprite()` branch on `isinstance(frame, pygame.Rect)` (blit from `settings.TEXTURES[self.current_texture]`) vs. the pre-existing `pygame.Surface` fallback path used when a texture failed to load.
+- Removed the redundant `src/states/game/BaseState.py`: it was a 1:1 duplicate of `gale.state.BaseState` (same empty `enter`/`exit`/`on_input`/`update`/`render`), differing only in naming its stored reference `self.state_stack` instead of gale's own `self.state_machine`. Every game state now extends `gale.state.BaseState` directly, and every `self.state_stack`/`state_stack` reference in the 6 game states was renamed to `self.state_machine`/`state_machine` to match.
+
+### Fixed
+- **Game silently loading the old pre-Tiled prototype house instead of the real 8-room cabin**: `main.py` never `chdir()`s to the project root, so the bare relative paths in `_build_tiled_cabin()` (`"assets/tilemaps/FirstRoom.json"`, etc.) and `TilesetManager`'s default `spritesheet_path` only resolved correctly when the game happened to be launched with the working directory already set to `The-Whistle/`. Launched from anywhere else, `House` silently fell back to `_build_default_cabin()`, the old 4-room procedural prototype. Both paths are now anchored to `settings.BASE_DIR` (`src/definitions/rooms.py`'s new `TILEMAPS_DIR`, and `TilesetManager.__init__`'s default).
+- **Broken imports after the `src/states/*.py` -> `src/states/game/*.py` move**: `from src.states.BaseState import ...`-style imports across `GameOverState`/`ObjectiveState`/`PauseState`/`PlayState`/`StartState`/`VictoryState`/`TheWhistle.py` still pointed at the old path, so the game failed to import at all. All updated to `src.states.game.*`.
+- **`Monster.ai_state` never actually reflected the current state**: it compared `self.state_machine.current` against the *lambda factories* in `state_machine.states` (never real classes), which always fell through to `SilbonBaseState` and always returned the first key in the dict. `LightingSystem`'s berserk eye-glow color, driven by this property, never fired correctly. Replaced with a plain attribute (`self.ai_state`) set directly by `change_state()`.
+- **Missing `cabinet`/`safe` sprite and label**: these two item types (added in 0.3.0 for the Dining Room cabinet and Master Bedroom safe) had no entry in `GameObject.render()`'s draw chain and no `item_cabinet`/`item_safe` key in `i18n.py`, so they rendered as nothing. Both are now in `ITEM_ARCHETYPES` and `i18n.py` (es/en).
+
 ## [0.3.0] - 2026-09-12
 
 ### Added

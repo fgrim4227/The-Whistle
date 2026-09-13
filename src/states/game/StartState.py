@@ -8,12 +8,12 @@ from gale.input_handler import InputData
 
 import settings
 from src.i18n import t, toggle_language, get_language
-from src.states.BaseState import BaseState
+from gale.state import BaseState
 
 
 class StartState(BaseState):
-    def __init__(self, state_stack) -> None:
-        super().__init__(state_stack)
+    def __init__(self, state_machine) -> None:
+        super().__init__(state_machine)
         self.selected_index = 0
         self.show_instructions = False
         self.fog_timer = 0.0
@@ -47,8 +47,8 @@ class StartState(BaseState):
     def _select_option(self) -> None:
         if self.selected_index == 0:
             # Launch game: push PlayState
-            from src.states.PlayState import PlayState
-            self.state_stack.push(PlayState(self.state_stack))
+            from src.states.game.PlayState import PlayState
+            self.state_machine.push(PlayState(self.state_machine))
         elif self.selected_index == 1:
             toggle_language()
         elif self.selected_index == 2:

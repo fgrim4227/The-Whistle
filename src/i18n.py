@@ -36,6 +36,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "item_throwable": "Objeto Arrojable",
         "item_lockpick": "Ganzúa",
         "item_old_key": "Llave Antigua",
+        "item_cabinet": "Vitrina",
+        "item_safe": "Caja Fuerte",
 
         # Interactions & Prompts
         "prompt_interact": "Presiona E para interactuar",
@@ -144,6 +146,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "item_throwable": "Throwable Object",
         "item_lockpick": "Lockpick",
         "item_old_key": "Old Key",
+        "item_cabinet": "Cabinet",
+        "item_safe": "Safe",
 
         # Interactions & Prompts
         "prompt_interact": "Press E to interact",

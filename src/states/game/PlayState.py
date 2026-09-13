@@ -11,14 +11,14 @@ from gale.input_handler import InputData
 
 import settings
 from src.i18n import t
-from src.states.BaseState import BaseState
-from src.states.PauseState import PauseState
-from src.states.ObjectiveState import ObjectiveState
-from src.states.GameOverState import GameOverState
-from src.states.VictoryState import VictoryState
+from gale.state import BaseState
+from src.states.game.PauseState import PauseState
+from src.states.game.ObjectiveState import ObjectiveState
+from src.states.game.GameOverState import GameOverState
+from src.states.game.VictoryState import VictoryState
 from src.world.House import House
 from src.entities.Player import Player
-from src.entities.Monster import Monster, SilbonStunnedState, SilbonKnockingState
+from src.entities.Monster import Monster
 from src.world.GameObject import ThrowableProjectile
 from src.systems.LightingSystem import LightingSystem
 from src.systems.AudioManager import AudioManager
@@ -26,8 +26,8 @@ from src.ui.HUD import HUD
 
 
 class PlayState(BaseState):
-    def __init__(self, state_stack) -> None:
-        super().__init__(state_stack)
+    def __init__(self, state_machine) -> None:
+        super().__init__(state_machine)
         self.house = House()
 
         # Andreas spawns at the authored player_spawn in FirstRoom (defaulting to 94, 129)
@@ -73,9 +73,9 @@ class PlayState(BaseState):
             return
 
         if input_id == "pause":
-            self.state_stack.push(PauseState(self.state_stack))
+            self.state_machine.push(PauseState(self.state_machine))
         elif input_id == "objectives":
-            self.state_stack.push(ObjectiveState(self.state_stack, self.objectives_progress))
+            self.state_machine.push(ObjectiveState(self.state_machine, self.objectives_progress))
         elif input_id == "flashlight":
             self.player.toggle_flashlight()
         elif input_id in ("throw", "action"):
@@ -193,14 +193,14 @@ class PlayState(BaseState):
                         door.unlock()
                         if door.is_exit_door:
                             self.objectives_progress["escape"] = True
-                            self.state_stack.push(VictoryState(self.state_stack))
+                            self.state_machine.push(VictoryState(self.state_machine))
                             return
                     else:
                         self.player.set_thought("prompt_door_locked", 3.0)
                     return
 
                 if door.is_exit_door:
-                    self.state_stack.push(VictoryState(self.state_stack))
+                    self.state_machine.push(VictoryState(self.state_machine))
                     return
 
                 # Walk through door into target room
@@ -269,10 +269,10 @@ class PlayState(BaseState):
         self.hud.update(dt)
 
         # Game Over Condition: caught by El Silbón in the same room while unhidden
-        is_safe_state = isinstance(self.monster.state_machine.current, SilbonStunnedState)
+        is_safe_state = self.monster.ai_state == "stunned"
         if monster_in_same_room and not self.player.is_hidden and not is_safe_state:
             if self.player.get_rect().colliderect(self.monster.get_rect()):
-                self.state_stack.push(GameOverState(self.state_stack))
+                self.state_machine.push(GameOverState(self.state_machine))
 
     def _update_contextual_prompt(self) -> None:
         room = self.house.current_room
@@ -282,7 +282,7 @@ class PlayState(BaseState):
 
         # Special door banging warning when El Silbón is knocking on the room's door
         current_state = self.monster.state_machine.current
-        if isinstance(current_state, SilbonKnockingState):
+        if self.monster.ai_state == "knocking":
             target_room = getattr(current_state, "target_room", "")
             if target_room == room.name:
                 self.prompt_text = t("prompt_door_banging")

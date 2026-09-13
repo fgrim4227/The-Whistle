@@ -7,12 +7,12 @@ from gale.input_handler import InputData
 
 import settings
 from src.i18n import t
-from src.states.BaseState import BaseState
+from gale.state import BaseState
 
 
 class VictoryState(BaseState):
-    def __init__(self, state_stack) -> None:
-        super().__init__(state_stack)
+    def __init__(self, state_machine) -> None:
+        super().__init__(state_machine)
         self.timer = 0.0
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
@@ -20,8 +20,8 @@ class VictoryState(BaseState):
             return
 
         if input_id in ("enter", "action", "interact", "quit"):
-            while len(self.state_stack.states) > 1:
-                self.state_stack.pop()
+            while len(self.state_machine.states) > 1:
+                self.state_machine.pop()
 
     def update(self, dt: float) -> None:
         self.timer += dt

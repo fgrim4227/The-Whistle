@@ -7,12 +7,12 @@ from gale.input_handler import InputData
 
 import settings
 from src.i18n import t
-from src.states.BaseState import BaseState
+from gale.state import BaseState
 
 
 class PauseState(BaseState):
-    def __init__(self, state_stack) -> None:
-        super().__init__(state_stack)
+    def __init__(self, state_machine) -> None:
+        super().__init__(state_machine)
         self.selected_index = 0
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
@@ -20,18 +20,18 @@ class PauseState(BaseState):
             return
 
         if input_id in ("pause", "quit"):
-            self.state_stack.pop()
+            self.state_machine.pop()
         elif input_id == "move_up":
             self.selected_index = (self.selected_index - 1) % 2
         elif input_id == "move_down":
             self.selected_index = (self.selected_index + 1) % 2
         elif input_id == "enter":
             if self.selected_index == 0:
-                self.state_stack.pop()
+                self.state_machine.pop()
             elif self.selected_index == 1:
                 # Return to Main Menu: pop stack down to StartState
-                while len(self.state_stack.states) > 1:
-                    self.state_stack.pop()
+                while len(self.state_machine.states) > 1:
+                    self.state_machine.pop()
 
     def render(self, surface: pygame.Surface) -> None:
         # Translucent overlay over the paused game world

@@ -7,12 +7,12 @@ from gale.input_handler import InputData
 
 import settings
 from src.i18n import t
-from src.states.BaseState import BaseState
+from gale.state import BaseState
 
 
 class ObjectiveState(BaseState):
-    def __init__(self, state_stack, objectives_progress: dict = None) -> None:
-        super().__init__(state_stack)
+    def __init__(self, state_machine, objectives_progress: dict = None) -> None:
+        super().__init__(state_machine)
         self.objectives_progress = objectives_progress or {}
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
@@ -20,7 +20,7 @@ class ObjectiveState(BaseState):
             return
 
         if input_id in ("objectives", "quit", "pause", "enter", "interact"):
-            self.state_stack.pop()
+            self.state_machine.pop()
 
     def render(self, surface: pygame.Surface) -> None:
         # Semi-transparent dark background overlay

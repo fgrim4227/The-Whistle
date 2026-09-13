@@ -10,12 +10,12 @@ from gale.input_handler import InputData
 
 import settings
 from src.i18n import t
-from src.states.BaseState import BaseState
+from gale.state import BaseState
 
 
 class GameOverState(BaseState):
-    def __init__(self, state_stack) -> None:
-        super().__init__(state_stack)
+    def __init__(self, state_machine) -> None:
+        super().__init__(state_machine)
         self.timer = 0.0
         self.jumpscare_duration = 2.4
         self.margin = 24
@@ -70,8 +70,8 @@ class GameOverState(BaseState):
                 # Silence jumpscare and return to main menu
                 settings.stop_channel("jumpscare1")
                 settings.stop_channel("jumpscare2")
-                while len(self.state_stack.states) > 1:
-                    self.state_stack.pop()
+                while len(self.state_machine.states) > 1:
+                    self.state_machine.pop()
 
     def update(self, dt: float) -> None:
         self.timer += dt
