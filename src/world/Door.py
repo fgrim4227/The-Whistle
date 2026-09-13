@@ -18,6 +18,7 @@ class Door:
         height: int = 32,
         is_locked: bool = False,
         is_barred: bool = False,
+        is_bolted: bool = False,
         required_key: Optional[str] = None,
         is_exit_door: bool = False,
         render_graphic: bool = True,
@@ -32,6 +33,7 @@ class Door:
         self.target_spawn_y = target_spawn_y
         self.is_locked = is_locked
         self.is_barred = is_barred
+        self.is_bolted = is_bolted
         self.required_key = required_key
         self.is_exit_door = is_exit_door
         self.render_graphic = render_graphic
@@ -41,12 +43,12 @@ class Door:
         return pygame.Rect(int(self.x), int(self.y), self.width, self.height)
 
     def can_open(self, player) -> bool:
-        if self.is_barred:
+        if self.is_barred or self.is_bolted:
             return False
         if self.is_locked:
-            if player.equipped_item == self.required_key:
-                return True
-            return False
+            if hasattr(player, "has_item"):
+                return player.has_item(self.required_key)
+            return player.equipped_item == self.required_key
         return True
 
     def unlock(self) -> None:
@@ -54,6 +56,9 @@ class Door:
 
     def unbar(self) -> None:
         self.is_barred = False
+
+    def unbolt(self) -> None:
+        self.is_bolted = False
 
     def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
         rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])

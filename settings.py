@@ -29,6 +29,14 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_q, "throw")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_SPACE, "action")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_TAB, "objectives")
 
+# Inventory management
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_c, "cycle_item")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_1, "slot_1")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_2, "slot_2")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_3, "slot_3")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_4, "slot_4")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_5, "slot_5")
+
 # Menu navigation
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RETURN, "enter")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_KP_ENTER, "enter")

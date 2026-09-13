@@ -163,12 +163,16 @@ class TiledLevelLoader:
                         oy = float(obj.get("y", 0))
                         props = {p.get("name"): p.get("value") for p in obj.get("properties", [])}
                         item_type = props.get("object") or obj.get("type")
-                        if item_type in ("battery", "key", "crowbar", "throwable"):
+                        if item_type in ("battery", "key", "crowbar", "throwable", "lockpick", "old_key", "safe", "cabinet"):
                             name_lookup = {
                                 "battery": "Batería",
-                                "key": "Llave",
+                                "key": "Llave del Bosque",
                                 "crowbar": "Palanca",
                                 "throwable": "Objeto Arrojable",
+                                "lockpick": "Ganzúa",
+                                "old_key": "Llave Antigua",
+                                "safe": "Caja Fuerte",
+                                "cabinet": "Vitrina",
                             }
                             room.items.append(GameObject(item_type, ox, oy, name_lookup.get(item_type, item_type)))
 
@@ -190,6 +194,7 @@ class TiledLevelLoader:
                             dh = int(obj.get("height", 32))
                             is_locked = bool(props.get("is_locked", False))
                             is_barred = bool(props.get("is_barred", False))
+                            is_bolted = bool(props.get("is_bolted", False))
                             is_stairs = bool(props.get("is_stairs", False)) or (props.get("id") == "stairs") or (obj.get("type") == "stairs")
                             is_exit = (props.get("is_exit_door") in ("Yes", "yes", True)) or bool(props.get("is_exit", False))
                             req_key = props.get("required_key", "key")
@@ -204,6 +209,7 @@ class TiledLevelLoader:
                                     height=dh,
                                     is_locked=is_locked,
                                     is_barred=is_barred,
+                                    is_bolted=is_bolted,
                                     required_key=req_key,
                                     is_exit_door=is_exit,
                                     is_stairs=is_stairs,

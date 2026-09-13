@@ -6,10 +6,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Changed
--**Folklore logic with whistle volume**
+
+## [0.3.0] - 2026-09-12
+
 ### Added
--**Added provisional assets for steps and running**
+- **8-Room House Expansion & Continuous 360° Loop Layout**:
+  - Added `DiningRoom.json` ($512 \times 288$ px) featuring a central dining table hiding spot, locked vintage china cabinet, and doorways connecting Kitchen and Living Room.
+  - Added `MasterBedroom.json` ($512 \times 288$ px) on the upper floor with a master bed, double wardrobe hiding spot, desk, and the Master Safe.
+  - Added unboltable door mechanic (`Door.is_bolted`, `Door.unbolt()`). The shortcut door between `DiningRoom` and `LivingRoom` starts bolted from the living room side; once reached and unbolted, it completes a continuous ground floor loop (`LowerHallway` <-> `Kitchen` <-> `DiningRoom` <-> `LivingRoom` <-> `LowerHallway`) so the player is never trapped in dead ends by El Silbón.
+  - Integrated and registered all 8 cabin rooms in `House.py` with bidirectional door transitions.
+
+- **Player Multi-Slot Inventory System & HUD Hotbar**:
+  - Implemented multi-slot inventory (`player.inventory: List[str]`, capacity up to 5 items) in `Player.py` preventing acquired tools and keys from being discarded or overwritten on pickup.
+  - Added hotkeys `1` to `5` for direct inventory slot selection and `C` to cycle active items sequentially in `settings.py`.
+  - Upgraded HUD in `HUD.py` with top-right inventory badges displaying slot numbers and item names (`[1: Palanca] > 2: Ganzúa < [3: Llave Antigua]`), highlighting the active equipped item in bright gold.
+  - Battery items recharge flashlight immediately upon pickup without occupying inventory space.
+
+- **Interactive Story NPC Progression & Puzzle Dependency Flow**:
+  - Enhanced `NPC.py` with story-driven item giving and dynamic contextual dialogues (`interact_with_player()`).
+  - Elena delivers the Lockpick (`lockpick`) on first interaction, and provides narrative hints guiding the player through the house based on their current inventory.
+  - Established complete non-linear puzzle chain:
+    - Elena delivers Lockpick in Kitchen/Upper Hallway.
+    - Lockpick unlocks vintage cabinet in Dining Room -> Yields Old Key.
+    - Old Key unlocks Master Bedroom door upstairs.
+    - Master Safe yields Forest Exit Key.
+    - Crowbar in Storage Room unbars Living Room entrance.
+    - Unbolting Living Room door opens shortcut to Dining Room.
+    - Forest Exit Key unlocks final exit into the woods.
+  - Decoupled NPC instantiation in `House.py` so the Tiled JSON `Npcs` layer serves as the single source of truth for survivor placement.
+
+- **Audio Revision & Sound Assets**:
+  - Added provisional assets for walking, running, heavy breathing, and jump scares (`breathing.wav`, `run_sound.mp3`, `walk_sound.mp3`, `sfx/screams.wav`).
+  - Implemented folklore-accurate inverse volume modulation for El Silbón's whistling in `AudioManager.py` (distant sound = extremely near; clear loud sound = far away).
+  - Adjusted whistle cooldown timer range to `(4.0, 15.0)` seconds for atmospheric pacing.
+
+### Changed
+- **Door Traversal AI for El Silbón**:
+  - Updated valid door filtering in `Monster.py` so El Silbón respects bolted doors (`is_bolted`) until they are unlocked by Andreas.
+- **Relocated Tools & Key Placement**:
+  - Moved the crowbar to `StorageRoom.json` tool shelf.
+  - Removed loose key from `LivingRoom.json` floor, relocating it inside the `MasterBedroom.json` safe.
+
+### Fixed
+- **Duplicate NPC Initialization**:
+  - Removed hardcoded fallback for `kitchen.npc` in `House.py`, allowing level designers full control of NPC placement directly through Tiled JSON object layers without code duplication.
+
 ## [0.2.0] - 2026-09-12
 
 ### Added

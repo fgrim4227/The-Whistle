@@ -113,7 +113,7 @@ class SilbonPatrolState(SilbonBaseState):
         # Ensure chosen doors lead only to rooms that actually exist in house.rooms
         valid_doors = [
             d for d in current_room.doors
-            if not d.is_exit_door and not d.is_barred and not d.is_locked
+            if not d.is_exit_door and not d.is_barred and not d.is_locked and not getattr(d, "is_bolted", False)
             and d.target_room_name in house.rooms
         ]
         if not valid_doors:

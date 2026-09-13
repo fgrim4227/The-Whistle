@@ -82,12 +82,21 @@ class PlayState(BaseState):
             self._handle_throw()
         elif input_id == "interact":
             self._handle_interaction()
+        elif input_id == "cycle_item":
+            self.player.cycle_item()
+        elif input_id.startswith("slot_"):
+            try:
+                slot_idx = int(input_id.split("_")[1]) - 1
+                self.player.select_slot(slot_idx)
+            except Exception:
+                pass
 
     def _handle_throw(self) -> None:
         if self.player.equipped_item in ("throwable", "crowbar"):
+            item_thrown = self.player.equipped_item
             px, py = self.player.get_center()
             self.projectiles.append(ThrowableProjectile(px, py, self.player.direction))
-            self.player.equipped_item = None
+            self.player.remove_item(item_thrown)
             # Loud crash alerts El Silbón if in the same room
             if self.monster.current_room_name == self.house.current_room.name:
                 self.monster.hear_noise(px, py, radius=320.0)
@@ -111,30 +120,72 @@ class PlayState(BaseState):
                 self.player.hide(spot)
                 return
 
-        # 3. Check nearby floor items
+        # 3. Check nearby NPC (Elena)
+        if room.npc and interact_zone.colliderect(room.npc.get_rect()):
+            dialogue_key, given_item = room.npc.interact_with_player(self.player)
+            if given_item:
+                self.player.set_thought("thought_got_lockpick", 4.5)
+            elif dialogue_key:
+                self.player.set_thought(dialogue_key, 4.5)
+            return
+
+        # 4. Check nearby floor items & interactables (cabinets, safes, keys, tools)
         for item in room.items:
             if not item.is_picked and interact_zone.colliderect(item.get_rect()):
-                item.is_picked = True
                 if item.obj_type == "battery":
+                    item.is_picked = True
                     self.player.recharge_battery()
                     self.player.set_thought("thought_dark", 3.0)
+                    return
+                elif item.obj_type == "cabinet":
+                    # Vintage cabinet in DiningRoom requiring lockpick
+                    if self.player.has_item("lockpick"):
+                        item.is_picked = True
+                        self.player.add_item("old_key")
+                        self.player.set_thought("thought_got_old_key", 4.5)
+                    else:
+                        self.player.set_thought("prompt_cabinet_locked", 3.5)
+                    return
+                elif item.obj_type == "safe":
+                    # Master Bedroom safe containing exit key
+                    item.is_picked = True
+                    self.player.add_item("key")
+                    self.objectives_progress["key"] = True
+                    self.player.set_thought("thought_got_exit_key", 4.5)
+                    return
                 else:
-                    self.player.equipped_item = item.obj_type
+                    item.is_picked = True
+                    self.player.add_item(item.obj_type)
                     if item.obj_type == "crowbar":
                         self.objectives_progress["crowbar"] = True
                     elif item.obj_type == "key":
                         self.objectives_progress["key"] = True
-                return
+                    return
 
-        # 4. Check nearby doors
+        # 5. Check nearby doors
         for door in room.doors:
             if interact_zone.colliderect(door.get_rect()):
-                if door.is_barred:
-                    if self.player.equipped_item == "crowbar":
-                        door.unbar()
-                        self.player.set_thought("thought_door_locked", 3.0)
+                # Unboltable passage between LivingRoom and DiningRoom
+                if door.is_bolted:
+                    if room.name in ("living_room", "LivingRoom"):
+                        door.unbolt()
+                        # Also unbolt reverse door in dining_room to complete the loop
+                        dining_room = self.house.rooms.get("dining_room")
+                        if dining_room:
+                            for d in dining_room.doors:
+                                if d.target_room_name in ("living_room", "LivingRoom"):
+                                    d.unbolt()
+                        self.player.set_thought("thought_unbolted", 4.0)
                     else:
-                        self.player.set_thought("prompt_door_barred", 3.0)
+                        self.player.set_thought("prompt_door_bolted", 3.5)
+                    return
+
+                if door.is_barred:
+                    if self.player.has_item("crowbar"):
+                        door.unbar()
+                        self.player.set_thought("thought_door_unbarred", 3.5)
+                    else:
+                        self.player.set_thought("prompt_door_barred", 3.5)
                     return
 
                 if door.is_locked:
@@ -156,11 +207,6 @@ class PlayState(BaseState):
                 self.house.change_room(door.target_room_name, door.target_spawn_x, door.target_spawn_y, self.player)
                 self.objectives_progress["explore"] = True
                 return
-
-        # 5. Check nearby NPC
-        if room.npc and interact_zone.colliderect(room.npc.get_rect()):
-            dialogue_key = room.npc.get_next_dialogue()
-            self.player.set_thought(dialogue_key, 4.5)
 
     def update(self, dt: float) -> None:
         room = self.house.current_room
@@ -253,10 +299,22 @@ class PlayState(BaseState):
                 self.prompt_text = t("prompt_hide")
                 return
 
+        if room.npc and zone.colliderect(room.npc.get_rect()):
+            self.prompt_text = t("prompt_talk_npc", name=room.npc.name)
+            return
+
         for item in room.items:
             if not item.is_picked and zone.colliderect(item.get_rect()):
-                item_label = t(f"item_{item.obj_type}")
-                self.prompt_text = f"{t('prompt_pickup')} ({item_label})"
+                if item.obj_type == "cabinet":
+                    if self.player.has_item("lockpick"):
+                        self.prompt_text = t("prompt_pick_cabinet")
+                    else:
+                        self.prompt_text = t("prompt_cabinet_locked")
+                elif item.obj_type == "safe":
+                    self.prompt_text = t("prompt_open_safe")
+                else:
+                    item_label = t(f"item_{item.obj_type}")
+                    self.prompt_text = f"{t('prompt_pickup')} ({item_label})"
                 return
 
         for door in room.doors:
@@ -269,7 +327,12 @@ class PlayState(BaseState):
                     if m_dist < 180.0:
                         is_danger = True
 
-                if door.is_barred:
+                if door.is_bolted:
+                    if room.name in ("living_room", "LivingRoom"):
+                        self.prompt_text = t("prompt_unbolt_door")
+                    else:
+                        self.prompt_text = t("prompt_door_bolted")
+                elif door.is_barred:
                     self.prompt_text = t("prompt_door_barred")
                 elif door.is_locked:
                     self.prompt_text = t("prompt_door_locked")
@@ -280,10 +343,6 @@ class PlayState(BaseState):
                 else:
                     self.prompt_text = t("prompt_open_door")
                 return
-
-        if room.npc and zone.colliderect(room.npc.get_rect()):
-            self.prompt_text = t("prompt_talk_npc", name=room.npc.name)
-            return
 
         self.prompt_text = ""
 

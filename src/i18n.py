@@ -31,9 +31,11 @@ STRINGS: Dict[str, Dict[str, str]] = {
         
         # Items
         "item_battery": "Batería",
-        "item_key": "Llave",
+        "item_key": "Llave del Bosque",
         "item_crowbar": "Palanca",
         "item_throwable": "Objeto Arrojable",
+        "item_lockpick": "Ganzúa",
+        "item_old_key": "Llave Antigua",
 
         # Interactions & Prompts
         "prompt_interact": "Presiona E para interactuar",
@@ -44,16 +46,36 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_use_stairs": "Presiona E para usar las escaleras",
         "prompt_door_locked": "La puerta está cerrada con llave.",
         "prompt_door_barred": "La puerta está bloqueada con tablones clavados.",
+        "prompt_door_bolted": "La puerta está trabada con un cerrojo desde el otro lado.",
+        "prompt_unbolt_door": "Presiona E para descorrer el cerrojo",
+        "prompt_pick_cabinet": "Presiona E para forzar la vitrina con la ganzúa",
+        "prompt_cabinet_locked": "La vitrina tiene una cerradura fina. Necesitas una ganzúa.",
+        "prompt_open_safe": "Presiona E para abrir la caja fuerte",
         "prompt_door_banging": "¡ALGO ESTÁ GOLPEANDO LA PUERTA VIOLENTAMENTE! ¡ESCÓNDETE!",
         "prompt_talk_npc": "Presiona E para hablar con {name}",
         "prompt_pickup": "Presiona E para recoger",
         "prompt_search": "Presiona E para revisar",
+
+        # NPC Elena Story Dialogues
+        "elena_dialogue_intro": "¡Andreas! Menos mal... El Silbón trancó la salida con tablones. Toma esta ganzúa, la escondí en mi delantal... busca en el comedor contiguo.",
+        "elena_dialogue_dining": "Revisa la vitrina del comedor con la ganzúa. Allí guardaban las llaves viejas de la cabaña.",
+        "elena_dialogue_bedroom": "Esa llave antigua abre el cuarto principal de arriba... cuidado, El Silbón merodea por las escaleras.",
+        "elena_dialogue_crowbar": "Busca la palanca en el almacén para quitar los tablones de la sala.",
+        "elena_dialogue_escape": "¡La salida está libre! ¡Abre la puerta del bosque y salgamos de aquí!",
+
+        # Monologues / Thoughts
+        "thought_got_lockpick": "Elena me entregó una Ganzúa.",
+        "thought_got_old_key": "Conseguí una Llave Antigua de la vitrina.",
+        "thought_got_exit_key": "¡La caja fuerte contenía la Llave de Salida del Bosque!",
+        "thought_unbolted": "He descorrido el cerrojo. ¡El pasaje hacia el comedor está abierto!",
+        "thought_door_unbarred": "He retirado los tablones con la palanca.",
         
         # Instructions Modal
         "inst_move": "WASD / Flechas : Moverse",
         "inst_flashlight": "F : Encender / Apagar Linterna",
         "inst_interact": "E : Interactuar / Esconderse / Abrir",
         "inst_throw": "Q / Espacio : Lanzar objeto en mano (75% Stun, 25% Furia)",
+        "inst_inventory": "1-5 / C : Seleccionar / Ciclar objeto en inventario",
         "inst_objectives": "TAB : Libreta de Objetivos",
         "inst_pause": "P / ESC : Pausa",
         "inst_warning": "Atención: Cuando escuches el silbido lejano, ¡está muy cerca!",
@@ -117,9 +139,11 @@ STRINGS: Dict[str, Dict[str, str]] = {
         
         # Items
         "item_battery": "Battery",
-        "item_key": "Key",
+        "item_key": "Forest Exit Key",
         "item_crowbar": "Crowbar",
         "item_throwable": "Throwable Object",
+        "item_lockpick": "Lockpick",
+        "item_old_key": "Old Key",
 
         # Interactions & Prompts
         "prompt_interact": "Press E to interact",
@@ -130,16 +154,36 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_use_stairs": "Press E to use the stairs",
         "prompt_door_locked": "The door is locked tight.",
         "prompt_door_barred": "The door is blocked with nailed planks.",
+        "prompt_door_bolted": "The door is bolted from the other side.",
+        "prompt_unbolt_door": "Press E to unbolt the door",
+        "prompt_pick_cabinet": "Press E to pick the display case lock",
+        "prompt_cabinet_locked": "The display case has a delicate lock. You need a lockpick.",
+        "prompt_open_safe": "Press E to open the safe",
         "prompt_door_banging": "SOMETHING IS VIOLENTLY BANGING ON THE DOOR! HIDE!",
         "prompt_talk_npc": "Press E to talk to {name}",
         "prompt_pickup": "Press E to pick up",
         "prompt_search": "Press E to search",
-        
+
+        # NPC Elena Story Dialogues
+        "elena_dialogue_intro": "Andreas! Thank goodness... The Whistler barred the exit. Take this lockpick from my apron... search the dining room next door.",
+        "elena_dialogue_dining": "Check the dining room cabinet with the lockpick. They kept old cabin keys in there.",
+        "elena_dialogue_bedroom": "That old key opens the master bedroom upstairs... be careful, The Whistler is lurking around the stairs.",
+        "elena_dialogue_crowbar": "Find the crowbar in the storage room to pry the planks off the living room door.",
+        "elena_dialogue_escape": "The exit is clear! Unlock the forest door and let's get out of here!",
+
+        # Monologues / Thoughts
+        "thought_got_lockpick": "Elena gave me a Lockpick.",
+        "thought_got_old_key": "Obtained an Old Key from the display case.",
+        "thought_got_exit_key": "The safe contained the Forest Exit Key!",
+        "thought_unbolted": "I've unbolted the door. The passage to the dining room is now open!",
+        "thought_door_unbarred": "Pried off the wooden planks with the crowbar.",
+
         # Instructions Modal
         "inst_move": "WASD / Arrow Keys : Move Andreas",
         "inst_flashlight": "F : Toggle Flashlight",
         "inst_interact": "E : Interact / Hide / Open Door",
         "inst_throw": "Q / Space : Throw equipped item (75% Stun, 25% Enrage)",
+        "inst_inventory": "1-5 / C : Select / Cycle inventory item",
         "inst_objectives": "TAB : Objectives Log",
         "inst_pause": "P / ESC : Pause",
         "inst_warning": "Warning: When the whistle sounds far away, HE IS NEAR!",

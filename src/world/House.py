@@ -273,31 +273,56 @@ class House:
             if not lower_hallway.patrol_waypoints:
                 lower_hallway.patrol_waypoints = [(80, 112), (190, 80), (330, 112), (480, 140), (620, 112), (780, 80), (940, 112)]
 
-            # 4. Load Kitchen (Contains crowbar tool and Elena NPC)
+            # 4. Load Kitchen (Contains Elena survivor NPC and door to DiningRoom)
             kitchen = TiledLevelLoader.load_room(
                 json_path="assets/tilemaps/Kitchen.json",
                 room_name="kitchen",
                 display_name="Cocina Abandonada",
             )
-            if not kitchen.npc:
-                kitchen.npc = NPC(64, 80, name="Elena", dialogue_keys=["thought_silbon_whistle", "thought_door_locked"])
             if not kitchen.hiding_spots:
                 kitchen.hiding_spots.append(
                     HidingSpot("table", 224, 112, width=64, height=32, render_graphic=False, is_solid=False)
                 )
-            if not any(it.obj_type == "crowbar" for it in kitchen.items):
-                kitchen.items.append(GameObject("crowbar", 380, 80, "Palanca"))
+            if not any(d.target_room_name in ("dining_room", "DiningRoom") for d in kitchen.doors):
+                kitchen.doors.append(
+                    Door(x=488, y=96, target_room_name="dining_room", target_spawn_x=48, target_spawn_y=116, width=24, height=48, render_graphic=False)
+                )
             if not kitchen.patrol_waypoints:
                 kitchen.patrol_waypoints = [(100, 120), (380, 140)]
 
-            # 5. Load Living Room (Exit room with master key and locked forest exit door)
+            # 5. Load Dining Room (NEW - Center ground floor connector forming circular loop)
+            dining_room = TiledLevelLoader.load_room(
+                json_path="assets/tilemaps/DiningRoom.json",
+                room_name="dining_room",
+                display_name="Comedor Principal",
+            )
+            if not dining_room.hiding_spots:
+                dining_room.hiding_spots.append(
+                    HidingSpot("table", 12 * 16, 7 * 16, width=8 * 16, height=2 * 16, render_graphic=False, is_solid=False)
+                )
+            if not any(it.obj_type == "cabinet" for it in dining_room.items):
+                dining_room.items.append(GameObject("cabinet", 22 * 16, 2 * 16, "Vitrina"))
+            if not any(d.target_room_name in ("kitchen", "Kitchen") for d in dining_room.doors):
+                dining_room.doors.append(
+                    Door(x=0, y=96, target_room_name="kitchen", target_spawn_x=440, target_spawn_y=116, width=24, height=48, render_graphic=False)
+                )
+            if not any(d.target_room_name in ("living_room", "LivingRoom") for d in dining_room.doors):
+                dining_room.doors.append(
+                    Door(x=488, y=96, target_room_name="living_room", target_spawn_x=48, target_spawn_y=192, width=24, height=48, is_bolted=True, render_graphic=False)
+                )
+            if not dining_room.patrol_waypoints:
+                dining_room.patrol_waypoints = [(100, 120), (256, 160), (420, 120)]
+
+            # 6. Load Living Room (Exit room with locked forest exit door and unboltable passage to DiningRoom)
             living_room = TiledLevelLoader.load_room(
                 json_path="assets/tilemaps/LivingRoom.json",
                 room_name="living_room",
                 display_name="Sala Principal",
             )
-            if not any(it.obj_type == "key" for it in living_room.items):
-                living_room.items.append(GameObject("key", 200, 110, "Llave de Salida"))
+            if not any(d.target_room_name in ("dining_room", "DiningRoom") for d in living_room.doors):
+                living_room.doors.append(
+                    Door(x=0, y=180, target_room_name="dining_room", target_spawn_x=450, target_spawn_y=116, width=24, height=48, is_bolted=True, render_graphic=False)
+                )
             if not living_room.hiding_spots:
                 living_room.hiding_spots.append(
                     HidingSpot("wardrobe", 432, 48, width=48, height=48, render_graphic=False, is_solid=False)
@@ -305,12 +330,14 @@ class House:
             if not living_room.patrol_waypoints:
                 living_room.patrol_waypoints = [(120, 120), (360, 120)]
 
-            # 6. Load Storage Room (Side room with battery and throwable brick)
+            # 7. Load Storage Room (Contains crowbar tool, battery, and electrical breaker)
             storage_room = TiledLevelLoader.load_room(
                 json_path="assets/tilemaps/StorageRoom.json",
                 room_name="storage_room",
                 display_name="Almacén Oscuro",
             )
+            if not any(it.obj_type == "crowbar" for it in storage_room.items):
+                storage_room.items.append(GameObject("crowbar", 380, 80, "Palanca"))
             if not any(it.obj_type == "battery" for it in storage_room.items):
                 storage_room.items.append(GameObject("battery", 180, 90, "Batería"))
             if not storage_room.hiding_spots:
@@ -320,7 +347,32 @@ class House:
             if not storage_room.patrol_waypoints:
                 storage_room.patrol_waypoints = [(120, 130), (360, 130)]
 
-            # Register all rooms and aliases for case-insensitivity and backward compatibility
+            # 8. Load Master Bedroom (NEW - Upper floor room with Safe containing Forest Exit Key)
+            master_bedroom = TiledLevelLoader.load_room(
+                json_path="assets/tilemaps/MasterBedroom.json",
+                room_name="master_bedroom",
+                display_name="Dormitorio Principal",
+            )
+            if not master_bedroom.hiding_spots:
+                master_bedroom.hiding_spots.append(
+                    HidingSpot("wardrobe", 26 * 16, 2 * 16, width=32, height=48, render_graphic=False, is_solid=False)
+                )
+            if not any(it.obj_type == "safe" for it in master_bedroom.items):
+                master_bedroom.items.append(GameObject("safe", 9 * 16, 3 * 16, "Caja Fuerte"))
+            if not any(d.target_room_name in ("UpperHallway", "upper_hallway") for d in master_bedroom.doors):
+                master_bedroom.doors.append(
+                    Door(x=0, y=96, target_room_name="UpperHallway", target_spawn_x=440, target_spawn_y=116, width=24, height=48, render_graphic=False)
+                )
+            if not master_bedroom.patrol_waypoints:
+                master_bedroom.patrol_waypoints = [(120, 130), (256, 140), (380, 130)]
+
+            # Ensure UpperHallway has locked door to master_bedroom
+            if not any(d.target_room_name in ("master_bedroom", "MasterBedroom") for d in upper_hallway.doors):
+                upper_hallway.doors.append(
+                    Door(x=488, y=96, target_room_name="master_bedroom", target_spawn_x=48, target_spawn_y=116, width=24, height=48, is_locked=True, required_key="old_key", render_graphic=False)
+                )
+
+            # Register all 8 rooms and aliases for case-insensitivity and backward compatibility
             self.rooms["FirstRoom"] = first_room
             self.rooms["first_room"] = first_room
             self.rooms["bedroom"] = first_room
@@ -329,11 +381,17 @@ class House:
             self.rooms["upper_hallway"] = upper_hallway
             self.rooms["hallway"] = upper_hallway
 
+            self.rooms["MasterBedroom"] = master_bedroom
+            self.rooms["master_bedroom"] = master_bedroom
+
             self.rooms["LowerHallway"] = lower_hallway
             self.rooms["lower_hallway"] = lower_hallway
 
             self.rooms["Kitchen"] = kitchen
             self.rooms["kitchen"] = kitchen
+
+            self.rooms["DiningRoom"] = dining_room
+            self.rooms["dining_room"] = dining_room
 
             self.rooms["LivingRoom"] = living_room
             self.rooms["living_room"] = living_room

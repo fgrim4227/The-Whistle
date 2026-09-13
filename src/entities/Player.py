@@ -22,7 +22,11 @@ class Player(BaseEntity):
         self.battery = 100.0
         self.is_hidden = False
         self.current_hiding_spot = None
-        self.equipped_item: Optional[str] = None
+        
+        # Multi-slot inventory system (stores collected tools & keys)
+        self.inventory: List[str] = []
+        self.selected_item_index: int = 0
+
         self.panic_meter = 0.0
         
         # Directional animations
@@ -33,6 +37,62 @@ class Player(BaseEntity):
         # Internal thought / monologue system
         self.current_thought: Optional[str] = "thought_intro"
         self.thought_timer = 5.0
+
+    @property
+    def equipped_item(self) -> Optional[str]:
+        """Returns the currently selected item in the inventory, if any."""
+        if 0 <= self.selected_item_index < len(self.inventory):
+            return self.inventory[self.selected_item_index]
+        return None
+
+    @equipped_item.setter
+    def equipped_item(self, item: Optional[str]) -> None:
+        if item is None:
+            return
+        if item not in self.inventory:
+            if len(self.inventory) < 5:
+                self.inventory.append(item)
+                self.selected_item_index = len(self.inventory) - 1
+            else:
+                self.inventory[self.selected_item_index] = item
+        else:
+            self.selected_item_index = self.inventory.index(item)
+
+    def add_item(self, item: str) -> bool:
+        """Adds an item to inventory without overwriting existing items."""
+        if item not in self.inventory:
+            if len(self.inventory) < 5:
+                self.inventory.append(item)
+                self.selected_item_index = len(self.inventory) - 1
+                return True
+            return False
+        self.selected_item_index = self.inventory.index(item)
+        return True
+
+    def remove_item(self, item: str) -> bool:
+        """Removes an item from inventory (e.g. consumed keys)."""
+        if item in self.inventory:
+            self.inventory.remove(item)
+            if self.selected_item_index >= len(self.inventory):
+                self.selected_item_index = max(0, len(self.inventory) - 1)
+            return True
+        return False
+
+    def has_item(self, item: Optional[str]) -> bool:
+        """Checks if player possesses the given item in any inventory slot."""
+        if not item:
+            return False
+        return item in self.inventory
+
+    def select_slot(self, index: int) -> None:
+        """Selects an active inventory slot by index (0-4)."""
+        if 0 <= index < len(self.inventory):
+            self.selected_item_index = index
+
+    def cycle_item(self) -> None:
+        """Cycles to the next item in inventory."""
+        if self.inventory:
+            self.selected_item_index = (self.selected_item_index + 1) % len(self.inventory)
 
     def _create_animations(self) -> Dict[str, Animation]:
         anims = {}

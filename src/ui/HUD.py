@@ -46,11 +46,26 @@ class HUD:
         bat_label = settings.FONTS["small"].render(f"{t('hud_battery')}: {int(player.battery)}%", True, settings.COLOR_WHITE)
         surface.blit(bat_label, (bat_x + bat_w + 8, bat_y - 1))
 
-        # 2. Equipped item indicator (Top-Right)
-        item_name = t(f"item_{player.equipped_item}") if player.equipped_item else t("hud_none")
-        item_text = f"{t('hud_equipped')}: {item_name}"
-        item_surf = settings.FONTS["small"].render(item_text, True, settings.COLOR_GOLD)
-        surface.blit(item_surf, (settings.VIRTUAL_WIDTH - item_surf.get_width() - 12, 12))
+        # 2. Multi-slot inventory indicator (Top-Right)
+        if hasattr(player, "inventory") and player.inventory:
+            inv_surfs = []
+            for idx, it in enumerate(player.inventory):
+                is_selected = (idx == player.selected_item_index)
+                name = t(f"item_{it}")
+                label = f"[{idx + 1}:{name}]" if not is_selected else f"> {idx + 1}:{name} <"
+                color = settings.COLOR_GOLD if is_selected else (170, 165, 150)
+                inv_surfs.append(settings.FONTS["small"].render(label, True, color))
+
+            cur_x = settings.VIRTUAL_WIDTH - 12
+            for s in reversed(inv_surfs):
+                cur_x -= s.get_width()
+                surface.blit(s, (cur_x, 12))
+                cur_x -= 8
+        else:
+            item_name = t(f"item_{player.equipped_item}") if player.equipped_item else t("hud_none")
+            item_text = f"{t('hud_equipped')}: {item_name}"
+            item_surf = settings.FONTS["small"].render(item_text, True, settings.COLOR_GOLD)
+            surface.blit(item_surf, (settings.VIRTUAL_WIDTH - item_surf.get_width() - 12, 12))
 
         # 3. Concealment status indicator (Wardrobe / Table)
         if player.is_hidden:
