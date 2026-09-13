@@ -17,6 +17,7 @@ class AudioManager:
         self.ambient_tracks = ["ambience1", "ambience2", "ambience3"]
         self.current_ambient_idx = 0
         self.is_near_alert = False
+        self.current_footstep_sound: Optional[str] = None
         
         # Cooldown timer for periodic whistling bursts (not continuous loops)
         self.whistle_cooldown = random.uniform(4.0, 15.0)
@@ -48,6 +49,8 @@ class AudioManager:
         settings.stop_channel("ambience")
         settings.stop_channel("silbon_whistle")
         settings.stop_channel("silbon_breath")
+        settings.stop_channel("silbon_footsteps")
+        self.current_footstep_sound = None
         
         settings.play_sound("jumpscare1", loops=0, volume=1.0, channel_name="jumpscare1")
         settings.play_sound("jumpscare2", loops=0, volume=1.0, channel_name="jumpscare2")
@@ -60,15 +63,18 @@ class AudioManager:
         monster_in_same_room: bool = True,
         door_listening_proximity: float = 0.0,
         dt: float = 0.016,
+        monster_is_moving: bool = False,
+        monster_ai_state: str = "patrol",
     ) -> None:
         """
-        Modulates whistling volume and breathing in real-time:
+        Modulates whistling volume, breathing, and footsteps in real-time:
         - Periodic Whistling: Plays periodically (every 14-24s) instead of an endless loop.
         - Folklore Paradox:
             * Farther real distance -> Louder perceived whistle (up to 0.85).
             * Closer real distance (< 80px) -> Faint whisper volume (down to 0.08).
         - Breathing: Audible when monster is close (< 150px), player is hidden, or player listens at a door.
         - Ambient Ducking: Lowers background ambience when listening closely to heavy breathing at a door.
+        - Footsteps: Dynamic walk/run sounds when El Silbón stalks or chases the player.
         """
         dist = math.hypot(
             player_center[0] - monster_center[0],
@@ -125,3 +131,26 @@ class AudioManager:
             else:
                 if ch_breath.get_busy():
                     settings.stop_channel("silbon_breath")
+
+        # Footstep & running sounds for El Silbón
+        ch_steps = settings.AUDIO_CHANNELS.get("silbon_footsteps")
+        if ch_steps:
+            should_play_steps = (
+                monster_in_same_room
+                and monster_is_moving
+                and monster_ai_state not in ("stunned", "knocking")
+                and dist < 260.0
+            )
+            if should_play_steps:
+                target_sound = "run_sound" if monster_ai_state in ("chase", "berserk") else "walk_sound"
+                step_vol = max(0.12, (1.0 - min(1.0, dist / 260.0)) * 0.85)
+
+                if self.current_footstep_sound != target_sound or not ch_steps.get_busy():
+                    settings.play_sound(target_sound, loops=-1, volume=step_vol, channel_name="silbon_footsteps")
+                    self.current_footstep_sound = target_sound
+                else:
+                    ch_steps.set_volume(step_vol)
+            else:
+                if ch_steps.get_busy():
+                    settings.stop_channel("silbon_footsteps")
+                self.current_footstep_sound = None

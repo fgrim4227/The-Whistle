@@ -15,7 +15,6 @@ from src.world.Room import Room
 from src.world.Door import Door
 from src.world.GameObject import GameObject
 from src.world.HidingSpot import HidingSpot
-from src.entities.NPC import NPC
 
 
 class TilesetManager:
@@ -171,9 +170,20 @@ class TiledLevelLoader:
                         ow = int(float(obj.get("width", 16))) or 16
                         oh = int(float(obj.get("height", 16))) or 16
                         render_graphic = props.get("render_graphic", True)
+                        note_id = props.get("note_id")
+                        yields = props.get("yields")
                         if item_type in ITEM_ARCHETYPES:
                             room.items.append(
-                                GameObject(item_type, ox, oy, width=ow, height=oh, render_graphic=render_graphic)
+                                GameObject(
+                                    item_type,
+                                    ox,
+                                    oy,
+                                    width=ow,
+                                    height=oh,
+                                    render_graphic=render_graphic,
+                                    note_id=note_id,
+                                    yields=yields,
+                                )
                             )
 
                         # Check if hiding spot object is authored in Tiled
@@ -221,8 +231,31 @@ class TiledLevelLoader:
                     for obj in objects:
                         ox = float(obj.get("x", 0))
                         oy = float(obj.get("y", 0))
-                        name = obj.get("name") or "Elena"
-                        room.npc = NPC(ox, oy, name=name)
+                        # Replace survivor NPC with an environmental parchment note on the floor (Slender-style)
+                        if "kitchen" in room_name.lower():
+                            room.items.append(
+                                GameObject(
+                                    "note",
+                                    ox,
+                                    oy,
+                                    width=16,
+                                    height=16,
+                                    note_id="note_kitchen",
+                                    yields="lockpick",
+                                )
+                            )
+                        else:
+                            room.items.append(
+                                GameObject(
+                                    "note",
+                                    ox,
+                                    oy,
+                                    width=16,
+                                    height=16,
+                                    note_id="note_hallway",
+                                    yields=None,
+                                )
+                            )
 
         # Seamlessly extend bottom wall rows if map height is less than target canvas height (e.g. 16 vs 18 rows)
         map_pixel_h = map_h * tile_size

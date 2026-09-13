@@ -8,7 +8,6 @@ import settings
 from src.world.Door import Door
 from src.world.GameObject import GameObject
 from src.world.HidingSpot import HidingSpot
-from src.entities.NPC import NPC
 
 
 class Room:
@@ -33,7 +32,6 @@ class Room:
         self.doors: List[Door] = []
         self.items: List[GameObject] = []
         self.hiding_spots: List[HidingSpot] = []
-        self.npc: Optional[NPC] = None
         self.patrol_waypoints: List[Tuple[float, float]] = []
         self.player_spawn: Optional[Tuple[float, float]] = None
         self.background_surface: Optional[pygame.Surface] = None
@@ -99,7 +97,3 @@ class Room:
         # Draw floor items
         for item in self.items:
             item.render(surface, camera_offset)
-
-        # Draw NPC if present
-        if self.npc:
-            self.npc.render(surface, camera_offset)

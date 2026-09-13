@@ -11,7 +11,6 @@ from src.world.Room import Room
 from src.world.Door import Door
 from src.world.GameObject import GameObject
 from src.world.HidingSpot import HidingSpot
-from src.entities.NPC import NPC
 from src.world.TiledLevelLoader import TiledLevelLoader
 
 
@@ -105,13 +104,6 @@ class House:
             for d in spec.get("doors", []):
                 room.doors.append(Door(**d))
             room.patrol_waypoints = list(spec.get("patrol_waypoints", []))
-
-            npc_spec = spec.get("npc")
-            if npc_spec:
-                room.npc = NPC(
-                    npc_spec["x"], npc_spec["y"],
-                    name=npc_spec["name"], dialogue_keys=npc_spec.get("dialogue_keys"),
-                )
 
             built[room_key] = room
             self.rooms[room_key] = room

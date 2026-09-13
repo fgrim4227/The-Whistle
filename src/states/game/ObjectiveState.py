@@ -7,13 +7,21 @@ from gale.input_handler import InputData
 
 import settings
 from src.i18n import t
+from typing import Callable, Optional
 from gale.state import BaseState
 
 
 class ObjectiveState(BaseState):
-    def __init__(self, state_machine, objectives_progress: dict = None) -> None:
+    def __init__(self, state_machine, objectives_progress: dict = None, on_close: Optional[Callable[[], None]] = None) -> None:
         super().__init__(state_machine)
         self.objectives_progress = objectives_progress or {}
+        self.on_close = on_close
+
+    def exit(self) -> None:
+        if self.on_close:
+            callback = self.on_close
+            self.on_close = None
+            callback()
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if not input_data.pressed:

@@ -56,6 +56,16 @@ class StopMoveDownCommand(Command):
         receiver.held["move_down"] = False
 
 
+class RunCommand(Command):
+    def execute(self, receiver, dt: float = 0.0) -> None:
+        receiver.is_running = True
+
+
+class StopRunCommand(Command):
+    def execute(self, receiver, dt: float = 0.0) -> None:
+        receiver.is_running = False
+
+
 class InteractCommand(Command):
     def execute(self, receiver, dt: float = 0.0) -> None:
         receiver.interact_requested = True
@@ -109,6 +119,8 @@ STOP_MOVE_LEFT = StopMoveLeftCommand()
 STOP_MOVE_RIGHT = StopMoveRightCommand()
 STOP_MOVE_UP = StopMoveUpCommand()
 STOP_MOVE_DOWN = StopMoveDownCommand()
+RUN = RunCommand()
+STOP_RUN = StopRunCommand()
 INTERACT = InteractCommand()
 THROW = ThrowCommand()
 FLASHLIGHT = FlashlightCommand()

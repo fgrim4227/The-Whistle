@@ -195,7 +195,6 @@ DEFAULT_CABIN_ROOMS: Dict[str, Dict[str, Any]] = {
              "target_room_name": "hallway", "target_spawn_x": settings.VIRTUAL_WIDTH // 2 - 10, "target_spawn_y": 48},
         ],
         "patrol_waypoints": [(150, 100), (320, 160)],
-        "npc": {"x": 64, "y": 64, "name": "Elena", "dialogue_keys": ["thought_silbon_whistle", "thought_door_locked"]},
     },
     "living_room": {
         "display_name": "Sala Principal",

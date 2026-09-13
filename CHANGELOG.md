@@ -19,7 +19,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Command pattern for Andreas and El Silbón** (`src/commands.py`, mirroring `06-princess`'s `gale.command` usage):
   - Player commands (`MOVE_LEFT/RIGHT/UP/DOWN`, `STOP_MOVE_*`, `INTERACT`, `THROW`, `FLASHLIGHT`, `CYCLE_ITEM`, `SELECT_SLOT_1..5`) are bound to `InputHandler` action ids through a `CommandBindings` instance owned by `Player`.
   - El Silbón's three parameter-free transitions (`CHASE`, `PATROL`, `BERSERK`) are now called directly by his own states' `process_ai()`, the same way an AI-controlled entity fires the shared movement commands in princess's `EntityWalkState`. `moving_to_door`/`knocking`/`investigate`/`stunned` were deliberately left as direct `change_state(...)` calls: they need extra per-call data (`door`, `target_room`, `target_x/y`, `duration`) that `Command.execute(receiver, dt)`'s fixed signature has no room for.
-  - Monster's *movement* deliberately was **not** folded into a `held`-flag model like Player's: princess's held-flag resolution is strictly 4-directional (tile-locked), while Monster's chase/investigate/patrol already move at any continuous angle toward an arbitrary point via `move_towards()` -- also exactly the primitive a future A* pathfinder would want to hand waypoints to. Snapping Monster's movement to held-flags would have made chases feel robotic for no pathfinding benefit.
+- **Survivor Parchment Notes & `NoteState` modal (Slender-style environmental storytelling)**:
+  - Replaced human NPC Elena with collectible survivor notes left on the floor (`note_kitchen`, `note_hallway`).
+  - Added `src/states/game/NoteState.py`: pauses the scene and renders an aged parchment sheet with word-wrapped narrative, attached item indicators, and close controls (`E`, `SPACE`, `ESC`).
+  - Reading Elena's note in the kitchen yields the Lockpick (`lockpick`) required for the dining room cabinet.
+  - Added `_draw_note` rendering archetype in `ITEM_ARCHETYPES`.
+- **Tactical Throwable Obstacle Collisions & Noise Distraction**:
+  - `ThrowableProjectile` now checks collision against solid room obstacles (`room.get_obstacles()`) instead of flying through walls.
+  - Upon impacting a wall, furniture, or landing, the projectile triggers impact audio and calls `monster.hear_noise(p.x, p.y, radius=320.0)`, luring El Silbón to investigate the sound location.
+- **El Silbón Stalking & Running Footstep Audio**:
+  - Registered dedicated channel `silbon_footsteps` in `settings.AUDIO_CHANNELS`.
+  - Dynamically loops `walk_sound.mp3` when El Silbón patrols/investigates and `run_sound.mp3` during chases/berserk, with proximity volume attenuation.
+- **Compact HUD Multi-Slot Inventory (Option B)**:
+  - Redesigned the inventory indicator into a clean, compact top-right badge (`[Slot/Total] > Item <`), preventing text overlap with `[ESCONDIDO]` and `[EL SILBÓN ESTÁ CERCA]`.
+- **Enhanced Typography & Dialogue / Prompt Readability**:
+  - Upgraded fonts (`dialogue`, `note_title`, `note_body`, `hud`) and added padded semi-transparent dark borders for prompts and internal thought banners.
+- **Player Sprint & Footstep Cadence (`Shift`)**:
+  - Bound `KEY_LSHIFT` and `KEY_RSHIFT` to `"run"` in `InputHandler` and registered `RUN` and `STOP_RUN` commands in `src/commands.py`.
+  - Player moves at `PLAYER_RUN_SPEED` (135 px/s) while holding Shift, and normal `PLAYER_SPEED` (80 px/s) otherwise.
+  - Implemented step cadence tracking in `Player.py` (`step_interval` of 0.25s during sprint vs 0.44s during walking), firing `footstep_taken = True` per physical footstep.
+- **Dynamic Acoustic Hearing for El Silbón**:
+  - `PlayState.py` evaluates footstep noise at step cadence intervals instead of per-frame random rolls.
+  - Sprinting footsteps generate noise with a 75% probability across a 320 px radius, attracting El Silbón to investigate Andreas's position.
+  - Walking footsteps generate subtle noise with a 20% probability within a tight 140 px radius.
+
+### Removed
+- **Legacy NPC Code & Cleanup**:
+  - Completely deleted `src/entities/NPC.py` and purged all obsolete references and imports across `src/world/Room.py`, `src/world/House.py`, `src/world/TiledLevelLoader.py`, `src/definitions/rooms.py`, and `src/states/game/PlayState.py`.
+  - Level layouts now rely exclusively on environmental parchment notes (`note_kitchen`, `note_hallway`) and Tiled object layers for storytelling and item yields.
 
 ### Changed
 - `House.py` rewritten to be data-driven: `_build_tiled_cabin()`/`_build_default_cabin()` now loop over `src/definitions/rooms.py` instead of repeating a near-identical block of Python per room (422 lines -> ~130 lines). Room name aliases (`"FirstRoom"`/`"first_room"`/`"bedroom"`, etc.) are now declared once per room in that data.
@@ -32,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PlayState.on_input` no longer hand-rolls a `pressed_inputs` dict or an `elif` chain per action id; it now only handles state-stack navigation (`pause`/`objectives`) itself and forwards everything else to `self.player.command_bindings.dispatch(...)`.
 
 ### Fixed
+- **Player stuck moving or sprinting after closing modal states (`NoteState`, `PauseState`, `ObjectiveState`)**:
+  - Because `gale.state.StateStack` routes `on_input()` exclusively to the top state on the stack, key releases performed while reading notes or pausing were swallowed by the modal and never delivered to `PlayState`. This left `Player.held` directional keys and `Player.is_running` permanently true upon resuming.
+  - Added `Player.clear_movement()` to halt velocities and clear all movement intents immediately when any modal state is pushed.
+  - Implemented `Player.sync_movement_keys()` querying physical keyboard states via `pygame.key.get_pressed()`, wired through an `exit()` lifecycle hook on all modal states (`NoteState`, `PauseState`, `ObjectiveState`) upon closing to guarantee clean resumption.
 - **Game silently loading the old pre-Tiled prototype house instead of the real 8-room cabin**: `main.py` never `chdir()`s to the project root, so the bare relative paths in `_build_tiled_cabin()` (`"assets/tilemaps/FirstRoom.json"`, etc.) and `TilesetManager`'s default `spritesheet_path` only resolved correctly when the game happened to be launched with the working directory already set to `The-Whistle/`. Launched from anywhere else, `House` silently fell back to `_build_default_cabin()`, the old 4-room procedural prototype. Both paths are now anchored to `settings.BASE_DIR` (`src/definitions/rooms.py`'s new `TILEMAPS_DIR`, and `TilesetManager.__init__`'s default).
 - **Broken imports after the `src/states/*.py` -> `src/states/game/*.py` move**: `from src.states.BaseState import ...`-style imports across `GameOverState`/`ObjectiveState`/`PauseState`/`PlayState`/`StartState`/`VictoryState`/`TheWhistle.py` still pointed at the old path, so the game failed to import at all. All updated to `src.states.game.*`.
 - **`Monster.ai_state` never actually reflected the current state**: it compared `self.state_machine.current` against the *lambda factories* in `state_machine.states` (never real classes), which always fell through to `SilbonBaseState` and always returned the first key in the dict. `LightingSystem`'s berserk eye-glow color, driven by this property, never fired correctly. Replaced with a plain attribute (`self.ai_state`) set directly by `change_state()`.

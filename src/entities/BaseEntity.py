@@ -1,5 +1,5 @@
 """
-BaseEntity class for all movable entities (Player, Monster, NPC).
+BaseEntity class for all movable entities (Player, Monster).
 """
 
 from typing import Optional, Tuple

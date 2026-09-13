@@ -46,21 +46,29 @@ class HUD:
         bat_label = settings.FONTS["small"].render(f"{t('hud_battery')}: {int(player.battery)}%", True, settings.COLOR_WHITE)
         surface.blit(bat_label, (bat_x + bat_w + 8, bat_y - 1))
 
-        # 2. Multi-slot inventory indicator (Top-Right)
+        # 2. Compact Multi-slot inventory badge (Top-Right) [Option B]
         if hasattr(player, "inventory") and player.inventory:
-            inv_surfs = []
-            for idx, it in enumerate(player.inventory):
-                is_selected = (idx == player.selected_item_index)
-                name = t(f"item_{it}")
-                label = f"[{idx + 1}:{name}]" if not is_selected else f"> {idx + 1}:{name} <"
-                color = settings.COLOR_GOLD if is_selected else (170, 165, 150)
-                inv_surfs.append(settings.FONTS["small"].render(label, True, color))
+            total_items = len(player.inventory)
+            cur_slot = player.selected_item_index + 1
+            equipped = player.equipped_item
+            name = t(f"item_{equipped}") if equipped else t("hud_none")
 
-            cur_x = settings.VIRTUAL_WIDTH - 12
-            for s in reversed(inv_surfs):
-                cur_x -= s.get_width()
-                surface.blit(s, (cur_x, 12))
-                cur_x -= 8
+            badge_text = f"[{cur_slot}/{total_items}] > {name} <"
+            badge_surf = settings.FONTS["small"].render(badge_text, True, settings.COLOR_GOLD)
+            sub_text = "(C: Cambiar | 1-5)" if not settings.IS_ENGLISH else "(C: Cycle | 1-5)"
+            sub_surf = settings.FONTS.get("hud", settings.FONTS["small"]).render(sub_text, True, (160, 155, 140))
+
+            w = max(badge_surf.get_width(), sub_surf.get_width()) + 14
+            h = badge_surf.get_height() + sub_surf.get_height() + 6
+            box_x = settings.VIRTUAL_WIDTH - w - 10
+            box_y = 8
+
+            bg_box = pygame.Rect(box_x, box_y, w, h)
+            pygame.draw.rect(surface, (15, 15, 22, 210), bg_box, border_radius=4)
+            pygame.draw.rect(surface, (90, 80, 60), bg_box, width=1, border_radius=4)
+
+            surface.blit(badge_surf, (bg_box.centerx - badge_surf.get_width() // 2, box_y + 3))
+            surface.blit(sub_surf, (bg_box.centerx - sub_surf.get_width() // 2, box_y + badge_surf.get_height() + 3))
         else:
             item_name = t(f"item_{player.equipped_item}") if player.equipped_item else t("hud_none")
             item_text = f"{t('hud_equipped')}: {item_name}"
@@ -81,8 +89,10 @@ class HUD:
         # 5. Contextual interaction prompt at bottom center
         if prompt_text:
             p_surf = settings.FONTS["small"].render(prompt_text, True, settings.COLOR_WHITE)
-            bg_rect = p_surf.get_rect(center=(settings.VIRTUAL_WIDTH // 2, settings.VIRTUAL_HEIGHT - 16))
-            pygame.draw.rect(surface, (0, 0, 0, 180), bg_rect.inflate(10, 4), border_radius=3)
+            bg_rect = p_surf.get_rect(center=(settings.VIRTUAL_WIDTH // 2, settings.VIRTUAL_HEIGHT - 18))
+            padded_rect = bg_rect.inflate(18, 8)
+            pygame.draw.rect(surface, (10, 10, 16, 225), padded_rect, border_radius=4)
+            pygame.draw.rect(surface, (150, 130, 75), padded_rect, width=1, border_radius=4)
             surface.blit(p_surf, bg_rect)
 
         # 6. Character thoughts & NPC dialogue banner (rendered on top of lighting)

@@ -5,6 +5,7 @@ dynamic lighting system, HUD, and game over / victory conditions.
 """
 
 import math
+import random
 from typing import List, Optional, Tuple
 import pygame
 from gale.input_handler import InputData
@@ -16,6 +17,7 @@ from src.states.game.PauseState import PauseState
 from src.states.game.ObjectiveState import ObjectiveState
 from src.states.game.GameOverState import GameOverState
 from src.states.game.VictoryState import VictoryState
+from src.states.game.NoteState import NoteState
 from src.world.House import House
 from src.entities.Player import Player
 from src.entities.Monster import Monster
@@ -66,10 +68,12 @@ class PlayState(BaseState):
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if input_data.pressed:
             if input_id == "pause":
-                self.state_machine.push(PauseState(self.state_machine))
+                self.player.clear_movement()
+                self.state_machine.push(PauseState(self.state_machine, on_close=self.player.sync_movement_keys))
                 return
             elif input_id == "objectives":
-                self.state_machine.push(ObjectiveState(self.state_machine, self.objectives_progress))
+                self.player.clear_movement()
+                self.state_machine.push(ObjectiveState(self.state_machine, self.objectives_progress, on_close=self.player.sync_movement_keys))
                 return
 
         self.player.command_bindings.dispatch(self.player, input_id, input_data)
@@ -103,16 +107,7 @@ class PlayState(BaseState):
                 self.player.hide(spot)
                 return
 
-        # 3. Check nearby NPC (Elena)
-        if room.npc and interact_zone.colliderect(room.npc.get_rect()):
-            dialogue_key, given_item = room.npc.interact_with_player(self.player)
-            if given_item:
-                self.player.set_thought("thought_got_lockpick", 4.5)
-            elif dialogue_key:
-                self.player.set_thought(dialogue_key, 4.5)
-            return
-
-        # 4. Check nearby floor items & interactables (cabinets, safes, keys, tools)
+        # 3. Check nearby floor items & interactables (cabinets, safes, keys, tools, notes)
         for item in room.items:
             if not item.is_picked and interact_zone.colliderect(item.get_rect()):
                 if item.obj_type == "battery":
@@ -135,6 +130,32 @@ class PlayState(BaseState):
                     self.player.add_item("key")
                     self.objectives_progress["key"] = True
                     self.player.set_thought("thought_got_exit_key", 4.5)
+                    return
+                elif item.obj_type == "note":
+                    note_id = getattr(item, "note_id", "note_kitchen")
+                    title_key = f"{note_id}_title"
+                    body_key = f"{note_id}_body"
+                    attached_item = getattr(item, "yields", None)
+
+                    self.player.clear_movement()
+
+                    def on_note_closed():
+                        if attached_item and not item.is_picked:
+                            item.is_picked = True
+                            self.player.add_item(attached_item)
+                            if attached_item == "lockpick":
+                                self.player.set_thought("thought_note_got_lockpick", 4.5)
+                        self.player.sync_movement_keys()
+
+                    self.state_machine.push(
+                        NoteState(
+                            self.state_machine,
+                            title_key,
+                            body_key,
+                            attached_item=attached_item if not item.is_picked else None,
+                            on_close=on_note_closed,
+                        )
+                    )
                     return
                 else:
                     item.is_picked = True
@@ -202,6 +223,22 @@ class PlayState(BaseState):
         self.player.update_movement(obstacles, dt)
         self.player.update(dt)
 
+        monster_in_same_room = (self.monster.current_room_name == room.name)
+
+        # Footstep acoustics: footsteps can alert El Silbón to investigate
+        if self.player.footstep_taken:
+            self.player.footstep_taken = False
+            if monster_in_same_room:
+                px, py = self.player.get_center()
+                if self.player.is_running:
+                    # Running footsteps: 75% chance within 320 px
+                    if random.random() < 0.75:
+                        self.monster.hear_noise(px, py, radius=320.0)
+                else:
+                    # Walking footsteps: 20% chance within 140 px
+                    if random.random() < 0.20:
+                        self.monster.hear_noise(px, py, radius=140.0)
+
         if self.player.interact_requested:
             self.player.interact_requested = False
             self._handle_interaction()
@@ -211,23 +248,23 @@ class PlayState(BaseState):
             self._handle_throw()
 
         # Update El Silbón (delegating to FSM state machine with house navigation)
-        monster_in_same_room = (self.monster.current_room_name == room.name)
         self.monster.update_ai(self.player, self.house, dt)
 
-        # Update thrown projectiles and hit collisions
-        if monster_in_same_room:
-            for p in self.projectiles:
-                p.update(dt)
-                if p.active and p.get_rect().colliderect(self.monster.get_rect()):
-                    p.active = False
-                    result = self.monster.receive_throw_hit()
-                    if result == "stunned":
-                        self.player.set_thought("thought_monster_stunned", 3.0)
-                    else:
-                        self.player.set_thought("thought_monster_enraged", 3.0)
-        else:
-            for p in self.projectiles:
-                p.update(dt)
+        # Update thrown projectiles, obstacle collisions, and monster hit collisions
+        for p in self.projectiles:
+            impacted = p.update(dt, obstacles)
+            if monster_in_same_room and p.active and p.get_rect().colliderect(self.monster.get_rect()):
+                p.active = False
+                result = self.monster.receive_throw_hit()
+                if result == "stunned":
+                    self.player.set_thought("thought_monster_stunned", 3.0)
+                else:
+                    self.player.set_thought("thought_monster_enraged", 3.0)
+            elif impacted:
+                # Projectile crashed against a wall/obstacle or reached ground, generating noise distraction
+                settings.play_sound("knock_door", volume=0.55, channel_name="sfx")
+                self.monster.hear_noise(p.x, p.y, radius=320.0)
+                self.player.set_thought("thought_projectile_crash", 2.5)
 
         self.projectiles = [p for p in self.projectiles if p.active]
 
@@ -253,6 +290,8 @@ class PlayState(BaseState):
             monster_in_same_room=monster_in_same_room,
             door_listening_proximity=door_listening_proximity,
             dt=dt,
+            monster_is_moving=self.monster.is_moving,
+            monster_ai_state=self.monster.ai_state,
         )
 
         # Update HUD and contextual action prompts
@@ -290,10 +329,6 @@ class PlayState(BaseState):
                 self.prompt_text = t("prompt_hide")
                 return
 
-        if room.npc and zone.colliderect(room.npc.get_rect()):
-            self.prompt_text = t("prompt_talk_npc", name=room.npc.name)
-            return
-
         for item in room.items:
             if not item.is_picked and zone.colliderect(item.get_rect()):
                 if item.obj_type == "cabinet":
@@ -303,6 +338,8 @@ class PlayState(BaseState):
                         self.prompt_text = t("prompt_cabinet_locked")
                 elif item.obj_type == "safe":
                     self.prompt_text = t("prompt_open_safe")
+                elif item.obj_type == "note":
+                    self.prompt_text = t("prompt_read_note")
                 else:
                     item_label = t(f"item_{item.obj_type}")
                     self.prompt_text = f"{t('prompt_pickup')} ({item_label})"

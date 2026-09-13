@@ -38,6 +38,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "item_old_key": "Llave Antigua",
         "item_cabinet": "Vitrina",
         "item_safe": "Caja Fuerte",
+        "item_note": "Nota",
 
         # Interactions & Prompts
         "prompt_interact": "Presiona E para interactuar",
@@ -53,10 +54,18 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_pick_cabinet": "Presiona E para forzar la vitrina con la ganzúa",
         "prompt_cabinet_locked": "La vitrina tiene una cerradura fina. Necesitas una ganzúa.",
         "prompt_open_safe": "Presiona E para abrir la caja fuerte",
+        "prompt_read_note": "Presiona E para leer la nota",
+        "note_close_hint": "[ E / ESPACIO ] Doblar y guardar nota",
         "prompt_door_banging": "¡ALGO ESTÁ GOLPEANDO LA PUERTA VIOLENTAMENTE! ¡ESCÓNDETE!",
         "prompt_talk_npc": "Presiona E para hablar con {name}",
         "prompt_pickup": "Presiona E para recoger",
         "prompt_search": "Presiona E para revisar",
+
+        # Survivor Notes
+        "note_kitchen_title": "Nota apresurada de Elena",
+        "note_kitchen_body": "Si encuentras esto, logré huir hacia el piso superior. Dejé la ganzúa pegada aquí para ti. Úsala en la vitrina del comedor contiguo: allí guardaban llaves viejas de la cabaña. ¡No hagas ruido, esa criatura escucha todo!",
+        "note_hallway_title": "Página de diario arrancada",
+        "note_hallway_body": "Los silbidos son una trampa mortal. Si se oyen cerca, está lejos... pero si los escuchas como un susurro en tu nuca, escóndete de inmediato. La caja fuerte del dormitorio principal tiene la llave de salida, pero necesitas la llave antigua.",
 
         # NPC Elena Story Dialogues
         "elena_dialogue_intro": "¡Andreas! Menos mal... El Silbón trancó la salida con tablones. Toma esta ganzúa, la escondí en mi delantal... busca en el comedor contiguo.",
@@ -67,6 +76,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
 
         # Monologues / Thoughts
         "thought_got_lockpick": "Elena me entregó una Ganzúa.",
+        "thought_note_got_lockpick": "Encontré una Ganzúa doblada dentro de la nota de Elena.",
+        "thought_projectile_crash": "¡El objeto hizo un estruendo al estrellarse!",
         "thought_got_old_key": "Conseguí una Llave Antigua de la vitrina.",
         "thought_got_exit_key": "¡La caja fuerte contenía la Llave de Salida del Bosque!",
         "thought_unbolted": "He descorrido el cerrojo. ¡El pasaje hacia el comedor está abierto!",
@@ -148,6 +159,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "item_old_key": "Old Key",
         "item_cabinet": "Cabinet",
         "item_safe": "Safe",
+        "item_note": "Note",
 
         # Interactions & Prompts
         "prompt_interact": "Press E to interact",
@@ -163,10 +175,18 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_pick_cabinet": "Press E to pick the display case lock",
         "prompt_cabinet_locked": "The display case has a delicate lock. You need a lockpick.",
         "prompt_open_safe": "Press E to open the safe",
+        "prompt_read_note": "Press E to read the note",
+        "note_close_hint": "[ E / SPACE ] Fold and stash note",
         "prompt_door_banging": "SOMETHING IS VIOLENTLY BANGING ON THE DOOR! HIDE!",
         "prompt_talk_npc": "Press E to talk to {name}",
         "prompt_pickup": "Press E to pick up",
         "prompt_search": "Press E to search",
+
+        # Survivor Notes
+        "note_kitchen_title": "Elena's Hurried Note",
+        "note_kitchen_body": "If you find this, I managed to flee upstairs. I left the lockpick taped here for you. Use it on the dining room cabinet next door: they kept old cabin keys in there. Keep quiet, that creature hears everything!",
+        "note_hallway_title": "Torn Journal Page",
+        "note_hallway_body": "The whistles are a deadly trap. If they sound close, he is far... but if you hear them like a whisper on your neck, hide immediately. The master bedroom safe has the exit key, but you need the old key.",
 
         # NPC Elena Story Dialogues
         "elena_dialogue_intro": "Andreas! Thank goodness... The Whistler barred the exit. Take this lockpick from my apron... search the dining room next door.",
@@ -177,6 +197,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
 
         # Monologues / Thoughts
         "thought_got_lockpick": "Elena gave me a Lockpick.",
+        "thought_note_got_lockpick": "Found a Lockpick folded inside Elena's note.",
+        "thought_projectile_crash": "The object crashed with a loud noise!",
         "thought_got_old_key": "Obtained an Old Key from the display case.",
         "thought_got_exit_key": "The safe contained the Forest Exit Key!",
         "thought_unbolted": "I've unbolted the door. The passage to the dining room is now open!",

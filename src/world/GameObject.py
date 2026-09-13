@@ -2,7 +2,7 @@
 GameObject and ThrowableProjectile classes for items, tools, and interactable environmental objects.
 """
 
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 import pygame
 
 from src.definitions.items import ITEM_ARCHETYPES
@@ -18,14 +18,18 @@ class GameObject:
         height: int = 16,
         is_collectible: bool = True,
         render_graphic: bool = True,
+        note_id: Optional[str] = None,
+        yields: Optional[str] = None,
     ) -> None:
-        self.obj_type = obj_type  # "key", "battery", "crowbar", "throwable", "cabinet", "safe", ...
+        self.obj_type = obj_type  # "key", "battery", "crowbar", "throwable", "cabinet", "safe", "note", ...
         self.x = float(x)
         self.y = float(y)
         self.width = int(width)
         self.height = int(height)
         self.is_collectible = is_collectible
         self.render_graphic = render_graphic
+        self.note_id = note_id
+        self.yields = yields
         self.is_picked = False
 
     def get_rect(self) -> pygame.Rect:
@@ -42,7 +46,7 @@ class GameObject:
 
 
 class ThrowableProjectile:
-    """Projectile thrown by the player to stun or enrage El Silbón."""
+    """Projectile thrown by the player to stun or enrage El Silbón, or distract him via sound impact."""
     def __init__(self, x: float, y: float, direction: str, speed: float = 240.0) -> None:
         self.x = float(x)
         self.y = float(y)
@@ -61,14 +65,29 @@ class ThrowableProjectile:
         }
         self.dx, self.dy = dir_vectors.get(direction, (0.0, 1.0))
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float, obstacles: Optional[List[pygame.Rect]] = None) -> bool:
+        """
+        Updates projectile position. Returns True if projectile impacted
+        an obstacle or reached max distance on this frame (generating noise).
+        """
+        if not self.active:
+            return False
+
         step = self.speed * dt
         self.x += self.dx * step
         self.y += self.dy * step
         self.distance_traveled += step
 
+        # Check collision with solid room obstacles
+        if obstacles and self.get_rect().collidelist(obstacles) != -1:
+            self.active = False
+            return True
+
         if self.distance_traveled >= self.max_distance:
             self.active = False
+            return True
+
+        return False
 
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(int(self.x - self.radius), int(self.y - self.radius), self.radius * 2, self.radius * 2)

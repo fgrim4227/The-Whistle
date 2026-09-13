@@ -56,6 +56,14 @@ def _draw_safe(surface: pygame.Surface, rect: pygame.Rect) -> None:
     pass
 
 
+def _draw_note(surface: pygame.Surface, rect: pygame.Rect) -> None:
+    paper_rect = pygame.Rect(rect.left + 2, rect.top + 1, max(12, rect.width - 4), max(14, rect.height - 2))
+    pygame.draw.rect(surface, (235, 225, 200), paper_rect, border_radius=1)
+    pygame.draw.rect(surface, (150, 130, 95), paper_rect, width=1, border_radius=1)
+    for ly in range(paper_rect.top + 3, paper_rect.bottom - 2, 3):
+        pygame.draw.line(surface, (100, 85, 65), (paper_rect.left + 2, ly), (paper_rect.right - 3, ly), 1)
+
+
 ITEM_ARCHETYPES: Dict[str, Callable[[pygame.Surface, pygame.Rect], None]] = {
     "battery": _draw_battery,
     "key": _draw_key,
@@ -65,6 +73,7 @@ ITEM_ARCHETYPES: Dict[str, Callable[[pygame.Surface, pygame.Rect], None]] = {
     "old_key": _draw_old_key,
     "cabinet": _draw_cabinet,
     "safe": _draw_safe,
+    "note": _draw_note,
 }
 
 

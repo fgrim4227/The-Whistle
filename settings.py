@@ -22,6 +22,8 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_UP, "move_up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "move_up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_DOWN, "move_down")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "move_down")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LSHIFT, "run")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RSHIFT, "run")
 
 # Survival actions
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_e, "interact")
@@ -90,10 +92,14 @@ COLOR_FLASHLIGHT = (255, 250, 220)
 # Default fonts using SysFont fallback
 pygame.font.init()
 FONTS = {
-    "small": pygame.font.SysFont("arial", 12),
+    "small": pygame.font.SysFont("arial", 13, bold=True),
+    "hud": pygame.font.SysFont("arial", 12, bold=True),
     "medium": pygame.font.SysFont("arial", 16, bold=True),
     "large": pygame.font.SysFont("arial", 24, bold=True),
     "title": pygame.font.SysFont("georgia", 36, bold=True),
+    "note_title": pygame.font.SysFont("georgia", 15, bold=True),
+    "note_body": pygame.font.SysFont("georgia", 12),
+    "dialogue": pygame.font.SysFont("arial", 13, bold=True),
 }
 
 # Initialize audio system with 16 dedicated mixer channels
@@ -119,6 +125,8 @@ def _load_sound(rel_path: str):
 
 SOUNDS["whistle"] = _load_sound("whistle.mp3")
 SOUNDS["breathing"] = _load_sound("breathing.wav")
+SOUNDS["walk_sound"] = _load_sound("walk_sound.mp3")
+SOUNDS["run_sound"] = _load_sound("run_sound.mp3")
 SOUNDS["ambience1"] = _load_sound("ambient/ambience1.mp3")
 SOUNDS["ambience2"] = _load_sound("ambient/ambience2.mp3")
 SOUNDS["ambience3"] = _load_sound("ambient/ambience3.mp3")
@@ -135,6 +143,7 @@ AUDIO_CHANNELS = {
     "jumpscare1": pygame.mixer.Channel(4) if pygame.mixer.get_init() else None,
     "jumpscare2": pygame.mixer.Channel(5) if pygame.mixer.get_init() else None,
     "sfx": pygame.mixer.Channel(6) if pygame.mixer.get_init() else None,
+    "silbon_footsteps": pygame.mixer.Channel(7) if pygame.mixer.get_init() else None,
 }
 
 def play_sound(name: str, loops: int = 0, volume: float = 1.0, channel_name: str = None):

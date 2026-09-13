@@ -19,6 +19,7 @@ from src.commands import (
     MOVE_LEFT,
     MOVE_RIGHT,
     MOVE_UP,
+    RUN,
     SELECT_SLOT_1,
     SELECT_SLOT_2,
     SELECT_SLOT_3,
@@ -28,6 +29,7 @@ from src.commands import (
     STOP_MOVE_LEFT,
     STOP_MOVE_RIGHT,
     STOP_MOVE_UP,
+    STOP_RUN,
     THROW,
 )
 from src.definitions import entity as entity_defs
@@ -52,6 +54,9 @@ class Player(BaseEntity):
         self.selected_item_index: int = 0
 
         self.panic_meter = 0.0
+        self.is_running = False
+        self.step_timer = 0.0
+        self.footstep_taken = False
 
         # Movement intent, updated by MOVE_*/STOP_MOVE_* commands and
         # resolved into actual movement by update_movement() every frame.
@@ -73,6 +78,7 @@ class Player(BaseEntity):
         self.command_bindings.bind("move_right", press=MOVE_RIGHT, release=STOP_MOVE_RIGHT)
         self.command_bindings.bind("move_up", press=MOVE_UP, release=STOP_MOVE_UP)
         self.command_bindings.bind("move_down", press=MOVE_DOWN, release=STOP_MOVE_DOWN)
+        self.command_bindings.bind("run", press=RUN, release=STOP_RUN)
         self.command_bindings.bind("interact", press=INTERACT)
         self.command_bindings.bind("throw", press=THROW)
         self.command_bindings.bind("action", press=THROW)
@@ -206,9 +212,44 @@ class Player(BaseEntity):
         self.current_hiding_spot = None
         self.change_state("idle")
 
-    def clear_held(self) -> None:
+    def clear_movement(self) -> None:
+        """Completely halts movement and clears all held directional inputs, running status, and velocity."""
         for key in self.held:
             self.held[key] = False
+        self.is_running = False
+        self.is_moving = False
+        self.vx = 0.0
+        self.vy = 0.0
+        self.step_timer = 0.0
+        self.footstep_taken = False
+        self.interact_requested = False
+        self.throw_requested = False
+        if not self.is_hidden:
+            self.change_state("idle")
+            if self.direction:
+                self.change_animation(f"idle-{self.direction}")
+
+    def clear_held(self) -> None:
+        self.clear_movement()
+
+    def sync_movement_keys(self) -> None:
+        """Synchronizes movement and run states with actual physical keyboard state."""
+        keys = pygame.key.get_pressed()
+        self.held["move_left"] = bool(keys[pygame.K_LEFT] or keys[pygame.K_a])
+        self.held["move_right"] = bool(keys[pygame.K_RIGHT] or keys[pygame.K_d])
+        self.held["move_up"] = bool(keys[pygame.K_UP] or keys[pygame.K_w])
+        self.held["move_down"] = bool(keys[pygame.K_DOWN] or keys[pygame.K_s])
+        self.is_running = bool(keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT])
+        self.is_moving = any(self.held.values())
+        if not self.is_moving:
+            self.vx = 0.0
+            self.vy = 0.0
+            self.step_timer = 0.0
+            self.footstep_taken = False
+            if not self.is_hidden:
+                self.change_state("idle")
+                if self.direction:
+                    self.change_animation(f"idle-{self.direction}")
 
     def update_movement(self, obstacles: List[pygame.Rect], dt: float) -> None:
         if self.is_hidden:
@@ -235,18 +276,30 @@ class Player(BaseEntity):
         if self.is_moving:
             self.change_animation(f"walk-{self.direction}")
 
+        current_speed = settings.PLAYER_RUN_SPEED if self.is_running else self.speed
+
+        if self.is_moving:
+            step_interval = 0.25 if self.is_running else 0.44
+            self.step_timer += dt
+            if self.step_timer >= step_interval:
+                self.step_timer = 0.0
+                self.footstep_taken = True
+        else:
+            self.step_timer = 0.0
+            self.footstep_taken = False
+
         if dx != 0.0 and dy != 0.0:
             inv = 0.70710678
             dx *= inv
             dy *= inv
 
         # Collision resolution per axis on character feet
-        new_x = self.x + dx * self.speed * dt
+        new_x = self.x + dx * current_speed * dt
         feet_rect_x = pygame.Rect(int(new_x), int(self.y + 16), 16, 16)
         if not any(feet_rect_x.colliderect(obs) for obs in obstacles):
             self.x = new_x
 
-        new_y = self.y + dy * self.speed * dt
+        new_y = self.y + dy * current_speed * dt
         feet_rect_y = pygame.Rect(int(self.x), int(new_y + 16), 16, 16)
         if not any(feet_rect_y.colliderect(obs) for obs in obstacles):
             self.y = new_y
@@ -305,7 +358,7 @@ class Player(BaseEntity):
             return
 
         thought_text = t(self.current_thought)
-        font = settings.FONTS["small"]
+        font = settings.FONTS.get("dialogue", settings.FONTS["small"])
         max_w = settings.VIRTUAL_WIDTH - 48
 
         # Word wrap into lines if text exceeds canvas width
@@ -330,14 +383,14 @@ class Player(BaseEntity):
         total_h = sum(r.get_height() for r in rendered_lines) + (len(rendered_lines) - 1) * 3
         max_line_w = max(r.get_width() for r in rendered_lines)
 
-        base_y = settings.VIRTUAL_HEIGHT - 38 if prompt_active else settings.VIRTUAL_HEIGHT - 22
-        bg_rect = pygame.Rect(0, 0, max_line_w + 16, total_h + 8)
+        base_y = settings.VIRTUAL_HEIGHT - 44 if prompt_active else settings.VIRTUAL_HEIGHT - 24
+        bg_rect = pygame.Rect(0, 0, max_line_w + 20, total_h + 10)
         bg_rect.center = (settings.VIRTUAL_WIDTH // 2, base_y - (total_h - rendered_lines[0].get_height()) // 2)
 
-        pygame.draw.rect(surface, (0, 0, 0, 210), bg_rect, border_radius=4)
-        pygame.draw.rect(surface, (90, 85, 75), bg_rect, width=1, border_radius=4)
+        pygame.draw.rect(surface, (12, 12, 18, 225), bg_rect, border_radius=5)
+        pygame.draw.rect(surface, (120, 110, 85), bg_rect, width=1, border_radius=5)
 
-        cur_y = bg_rect.top + 4
+        cur_y = bg_rect.top + 5
         for r in rendered_lines:
             r_rect = r.get_rect(centerx=bg_rect.centerx, top=cur_y)
             surface.blit(r, r_rect)
