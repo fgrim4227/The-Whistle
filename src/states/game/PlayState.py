@@ -231,13 +231,13 @@ class PlayState(BaseState):
             if monster_in_same_room:
                 px, py = self.player.get_center()
                 if self.player.is_running:
-                    # Running footsteps: 75% chance within 320 px
-                    if random.random() < 0.75:
-                        self.monster.hear_noise(px, py, radius=320.0)
+                    # Running footsteps: 75% chance within 600 px
+                    if random.random() < 0.9:
+                        self.monster.hear_noise(px, py, radius=600.0)
                 else:
-                    # Walking footsteps: 20% chance within 140 px
-                    if random.random() < 0.20:
-                        self.monster.hear_noise(px, py, radius=140.0)
+                    # Walking footsteps: 20% chance within 200 px
+                    if random.random() < 0.35:
+                        self.monster.hear_noise(px, py, radius=200.0)
 
         if self.player.interact_requested:
             self.player.interact_requested = False

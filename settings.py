@@ -65,18 +65,18 @@ GRID_COLS = VIRTUAL_WIDTH // TILE_SIZE  # 16
 GRID_ROWS = VIRTUAL_HEIGHT // TILE_SIZE  # 9
 
 # Gameplay and survival parameters
-PLAYER_SPEED = 90.0  # px/s
-PLAYER_RUN_SPEED = 135.0  # px/s
+PLAYER_SPEED = 69  # px/s
+PLAYER_RUN_SPEED = 75  # px/s
 MONSTER_PATROL_SPEED = 70.0  # px/s
 MONSTER_CHASE_SPEED = 105.0  # px/s
-MONSTER_BERSERK_SPEED = 160.0  # px/s (+80% speed when enraged)
+MONSTER_BERSERK_SPEED = 300  # px/s (+80% speed when enraged)
 
-BATTERY_DRAIN_RATE = 0.3  # Percentage per second while flashlight is ON
+BATTERY_DRAIN_RATE = 0.9  # Percentage per second while flashlight is ON
 BATTERY_RECHARGE_AMOUNT = 35.0  # Battery refill per picked-up battery item
 
 # Throw probabilities
-THROW_STUN_CHANCE = 0.75  # 75% chance to stun the monster
-THROW_BERSERK_CHANCE = 0.25  # 25% chance to enrage the monster
+THROW_STUN_CHANCE = 0.8  # 75% chance to stun the monster
+THROW_BERSERK_CHANCE = 0.2  # 25% chance to enrage the monster
 
 # Global color definitions (RGB)
 COLOR_BLACK = (0, 0, 0)
