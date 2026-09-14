@@ -105,6 +105,7 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
         "patrol_waypoints": [(100, 120), (256, 160), (420, 120)],
         "items": [
             {"obj_type": "cabinet", "x": 22 * 16, "y": 2 * 16},
+            {"obj_type": "fuse_key", "x": 120, "y": 180},
         ],
     },
     "living_room": {

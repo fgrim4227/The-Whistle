@@ -40,6 +40,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "item_safe": "Caja Fuerte",
         "item_note": "Nota",
         "item_fuse_box": "Caja de fusibles",
+        "item_fuse_key": "Llave de la Caja de Fusibles",
 
         # Interactions & Prompts
         "prompt_interact": "Presiona E para interactuar",
@@ -58,6 +59,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_read_note": "Presiona E para leer la nota",
         "note_close_hint": "[ E / ESPACIO ] Doblar y guardar nota",
         "prompt_fuse_box": "Presiona E para inspeccionar la caja de fusibles",
+        "prompt_fuse_box_locked": "La caja de fusibles está cerrada con llave.",
+        "prompt_open_fuse_box": "Presiona E para abrir con la llave de fusibles",
         "prompt_door_banging": "¡ALGO ESTÁ GOLPEANDO LA PUERTA VIOLENTAMENTE! ¡ESCÓNDETE!",
         "prompt_talk_npc": "Presiona E para hablar con {name}",
         "prompt_pickup": "Presiona E para recoger",
@@ -85,6 +88,9 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_unbolted": "He descorrido el cerrojo. ¡El pasaje hacia el comedor está abierto!",
         "thought_door_unbarred": "He retirado los tablones con la palanca.",
         "thought_fuse_box": "La caja de fusibles principal. Parece que los cables están desconectados... tal vez pueda restaurar la energía más tarde.",
+        "thought_fuse_box_locked": "La caja de fusibles está cerrada con llave. Debe haber una llave en algún lugar abajo...",
+        "thought_got_fuse_key": "¡Encontré la llave de la caja de fusibles! Tendré que volver al cuarto de arriba con cuidado...",
+        "thought_exit_no_power": "La puerta de salida tiene un sensor de seguridad activo. Debo reactivar la energía en la caja de fusibles arriba.",
         
         # Instructions Modal
         "inst_move": "WASD / Flechas : Moverse",
@@ -164,6 +170,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "item_safe": "Safe",
         "item_note": "Note",
         "item_fuse_box": "Fuse Box",
+        "item_fuse_key": "Fuse Box Key",
 
         # Interactions & Prompts
         "prompt_interact": "Press E to interact",
@@ -182,6 +189,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_read_note": "Press E to read the note",
         "note_close_hint": "[ E / SPACE ] Fold and stash note",
         "prompt_fuse_box": "Press E to inspect fuse box",
+        "prompt_fuse_box_locked": "The fuse box is locked tight.",
+        "prompt_open_fuse_box": "Press E to unlock fuse box with key",
         "prompt_door_banging": "SOMETHING IS VIOLENTLY BANGING ON THE DOOR! HIDE!",
         "prompt_talk_npc": "Press E to talk to {name}",
         "prompt_pickup": "Press E to pick up",
@@ -209,6 +218,9 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_unbolted": "I've unbolted the door. The passage to the dining room is now open!",
         "thought_door_unbarred": "Pried off the wooden planks with the crowbar.",
         "thought_fuse_box": "The main fuse box. The wiring seems disconnected... maybe I can restore power later.",
+        "thought_fuse_box_locked": "The fuse box is locked. There must be a key somewhere downstairs...",
+        "thought_got_fuse_key": "Found the fuse box key! I'll have to head back to the upstairs room carefully...",
+        "thought_exit_no_power": "The exit door has an active security sensor. I must restore power at the fuse box upstairs.",
 
         # Instructions Modal
         "inst_move": "WASD / Arrow Keys : Move Andreas",

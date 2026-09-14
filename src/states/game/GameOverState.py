@@ -56,6 +56,8 @@ class GameOverState(BaseState):
         settings.stop_channel("ambience")
         settings.stop_channel("silbon_whistle")
         settings.stop_channel("silbon_breath")
+        settings.stop_channel("silbon_footsteps")
+        settings.stop_channel("minigame")
 
         # Trigger both jumpscare sounds concurrently at maximum volume
         settings.play_sound("jumpscare1", loops=0, volume=1.0, channel_name="jumpscare1")

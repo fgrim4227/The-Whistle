@@ -466,6 +466,24 @@
                  "width":16,
                  "x":80,
                  "y":180
+                }, 
+                {
+                 "height":16,
+                 "id":25,
+                 "name":"",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"object",
+                         "type":"string",
+                         "value":"fuse_key"
+                        }],
+                 "rotation":0,
+                 "type":"fuse_key",
+                 "visible":true,
+                 "width":16,
+                 "x":120,
+                 "y":180
                 }],
          "opacity":1,
          "type":"objectgroup",

@@ -69,6 +69,14 @@ def _draw_fuse_box(surface: pygame.Surface, rect: pygame.Rect) -> None:
     pass
 
 
+def _draw_fuse_key(surface: pygame.Surface, rect: pygame.Rect) -> None:
+    # Small metallic panel key with an electric blue bow
+    pygame.draw.circle(surface, (140, 190, 220), (rect.centerx, rect.top + 5), 4)
+    pygame.draw.circle(surface, (40, 80, 120), (rect.centerx, rect.top + 5), 2)
+    pygame.draw.line(surface, (200, 210, 220), (rect.centerx, rect.top + 5), (rect.centerx, rect.bottom - 2), 2)
+    pygame.draw.line(surface, (200, 210, 220), (rect.centerx, rect.bottom - 4), (rect.right - 2, rect.bottom - 4), 2)
+
+
 ITEM_ARCHETYPES: Dict[str, Callable[[pygame.Surface, pygame.Rect], None]] = {
     "battery": _draw_battery,
     "key": _draw_key,
@@ -80,6 +88,7 @@ ITEM_ARCHETYPES: Dict[str, Callable[[pygame.Surface, pygame.Rect], None]] = {
     "safe": _draw_safe,
     "note": _draw_note,
     "fuse_box": _draw_fuse_box,
+    "fuse_key": _draw_fuse_key,
 }
 
 

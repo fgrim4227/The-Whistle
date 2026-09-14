@@ -23,6 +23,7 @@ class Door:
         is_exit_door: bool = False,
         render_graphic: bool = True,
         is_stairs: bool = False,
+        planks_remaining: int = 3,
     ) -> None:
         self.x = float(x)
         self.y = float(y)
@@ -38,6 +39,7 @@ class Door:
         self.is_exit_door = is_exit_door
         self.render_graphic = render_graphic
         self.is_stairs = is_stairs
+        self.planks_remaining = planks_remaining if is_barred else 0
 
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(int(self.x), int(self.y), self.width, self.height)
@@ -55,6 +57,7 @@ class Door:
         self.is_locked = False
 
     def unbar(self) -> None:
+        self.planks_remaining = 0
         self.is_barred = False
 
     def unbolt(self) -> None:

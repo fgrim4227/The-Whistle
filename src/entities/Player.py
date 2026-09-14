@@ -122,7 +122,7 @@ class Player(BaseEntity):
         if item is None:
             return
         if item not in self.inventory:
-            if len(self.inventory) < 5:
+            if len(self.inventory) < 6:
                 self.inventory.append(item)
                 self.selected_item_index = len(self.inventory) - 1
             else:
@@ -133,7 +133,7 @@ class Player(BaseEntity):
     def add_item(self, item: str) -> bool:
         """Adds an item to inventory without overwriting existing items."""
         if item not in self.inventory:
-            if len(self.inventory) < 5:
+            if len(self.inventory) < 6:
                 self.inventory.append(item)
                 self.selected_item_index = len(self.inventory) - 1
                 return True
@@ -235,11 +235,12 @@ class Player(BaseEntity):
     def sync_movement_keys(self) -> None:
         """Synchronizes movement and run states with actual physical keyboard state."""
         keys = pygame.key.get_pressed()
-        self.held["move_left"] = bool(keys[pygame.K_LEFT] or keys[pygame.K_a])
-        self.held["move_right"] = bool(keys[pygame.K_RIGHT] or keys[pygame.K_d])
-        self.held["move_up"] = bool(keys[pygame.K_UP] or keys[pygame.K_w])
-        self.held["move_down"] = bool(keys[pygame.K_DOWN] or keys[pygame.K_s])
-        self.is_running = bool(keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT])
+        get_k = (lambda k: keys.get(k, False)) if isinstance(keys, dict) else (lambda k: keys[k])
+        self.held["move_left"] = bool(get_k(pygame.K_LEFT) or get_k(pygame.K_a))
+        self.held["move_right"] = bool(get_k(pygame.K_RIGHT) or get_k(pygame.K_d))
+        self.held["move_up"] = bool(get_k(pygame.K_UP) or get_k(pygame.K_w))
+        self.held["move_down"] = bool(get_k(pygame.K_DOWN) or get_k(pygame.K_s))
+        self.is_running = bool(get_k(pygame.K_LSHIFT) or get_k(pygame.K_RSHIFT))
         self.is_moving = any(self.held.values())
         if not self.is_moving:
             self.vx = 0.0

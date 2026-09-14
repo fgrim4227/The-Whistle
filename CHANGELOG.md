@@ -8,10 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Real-Time Active Overlay Minigames System (`src/minigames/`)**:
+  - `BaseMinigame`: Abstract lifecycle base class for active overlays running directly over `PlayState`. Crucially preserves real-time world simulation (El Silbón continues stalking, moving, and generating footstep audio; darkness and lighting remain active; player can press `ESC` to cancel and flee anytime).
+  - `SafeMinigame`: Rotary acoustic combination safe dial in `master_bedroom`. Features rotational audio cues (`normal_click.wav`), target discovery clicks (`unlock_click.mp3`), and metallic jam penalty (`lock_forced.mp3`) alerting El Silbón upon failure. Yields the Forest Exit Key (`key`).
+  - `LockpickMinigame`: Tension and sweet-spot angle lockpicking for the dining room vintage cabinet. Simulates lock cylinder rotation, pick strain vibration, and metallic forced sound (`lock_forced.mp3`) that alerts El Silbón when overstressed. Yields the Old Key (`old_key`).
+  - `CrowbarMinigame`: Button-mashing tug-of-war against resistance to pry wooden planks off barred doors. Each plank removal snaps with an authentic wood cracking sound (`wood_break.mp3`), decrements `planks_remaining`, and alerts El Silbón with heavy noise (`monster.hear_noise`).
+  - `FuseBoxMinigame`: Electrical wire patching in `FirstRoom`. Connects 4 colored terminals across shuffled endpoints. Incorrect connections trigger an electrical short-circuit and alert the monster; completing the circuit restores cabin electricity (`house.power_restored = True`), unlocking the final exit door's electronic security sensor.
+  - Dedicated `"minigame"` audio channel (Channel 8) in `settings.AUDIO_CHANNELS` with loaded sound effects.
 - **Authored Tiled Doors & Transitions (`FirstRoom` <-> `UpperHallway`)**:
   - Authored standard interactable `door` object in `assets/tilemaps/FirstRoom.json` (`type="door"`, target `UpperHallway` with spawn `(48, 116)`).
   - Authored corresponding interactable `door` object in `assets/tilemaps/UpperHallway.json` (`type="door"`, target `FirstRoom` with spawn `(440, 120)`) and `stairs` object targeting `lower_hallway` with spawn `(190, 60)`).
   - Replaces hardcoded fallback room dicts with first-class authored Tiled objects across both maps, enabling seamless bidirectional room navigation.
+- **Fuse Box Key (`fuse_key`) & Locked Electrical Cabinet**:
+  - Authored `fuse_key` item in `assets/tilemaps/DiningRoom.json` and `src/definitions/rooms.py` (`x=120, y=180` in `dining_room`).
+  - Added `_draw_fuse_key` archetype in `src/definitions/items.py` (`ITEM_ARCHETYPES`).
+  - Added bilingual translations in `src/i18n.py` for item label, locked prompt, unlock prompt, and internal thoughts.
+  - The upstairs fuse box (`FirstRoom`) is now locked tight by default, preventing premature access to the wiring minigame and requiring the player to explore downstairs to `dining_room` to retrieve the key.
 - **Fuse Box (`fuse_box`) Interactable Object**:
   - Placed authored `fuse_box` interactable in `assets/tilemaps/FirstRoom.json` (`is_collectible=False`, `render_graphic=False`).
   - Added `_draw_fuse_box` archetype in `src/definitions/items.py` (`ITEM_ARCHETYPES`).
@@ -88,6 +100,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `UpperHallway.json`: corrected tile ID assignment on the upper hallway floor boundary.
 
 ### Fixed
+- **Minigame Completion `AttributeError` in `PlayState.update()`**:
+  - When completing or exiting a minigame (such as `LockpickMinigame`), `BaseMinigame.close()` set `play_state.active_minigame = None`. Line 279 then attempted `not self.active_minigame.is_active`, raising `AttributeError: 'NoneType' object has no attribute 'is_active'`.
+  - Cached the active minigame in a local variable `current_minigame` during `update(dt)` to safely evaluate completion and execute cleanup without exceptions.
+- **`Player.sync_movement_keys()` Robust Key Retrieval**:
+  - Added a defensive key lookup helper `get_k` in `sync_movement_keys()` to support both standard Pygame `ScancodeWrapper` sequences and dictionary objects without triggering `KeyError`.
+- **El Silbón Footstep Audio Persisting on Game Over**:
+  - When Andreas was caught and killed by El Silbón, transitioning to `GameOverState` left the looping footstep audio (`silbon_footsteps`) and any active minigame sounds playing endlessly on the Game Over screen.
+  - Added immediate channel silencing (`pygame.mixer.Channel(AUDIO_CHANNELS["silbon_footsteps"]).stop()` and `AUDIO_CHANNELS["minigame"]`) in `GameOverState.enter()` and `PlayState.update()`, ensuring complete audio cleanup upon death.
 - **Player stuck moving or sprinting after closing modal states (`NoteState`, `PauseState`, `ObjectiveState`)**:
   - Because `gale.state.StateStack` routes `on_input()` exclusively to the top state on the stack, key releases performed while reading notes or pausing were swallowed by the modal and never delivered to `PlayState`. This left `Player.held` directional keys and `Player.is_running` permanently true upon resuming.
   - Added `Player.clear_movement()` to halt velocities and clear all movement intents immediately when any modal state is pushed.

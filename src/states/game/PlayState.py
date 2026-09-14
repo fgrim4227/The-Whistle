@@ -25,12 +25,18 @@ from src.world.GameObject import ThrowableProjectile
 from src.systems.LightingSystem import Light, LightingSystem
 from src.systems.AudioManager import AudioManager
 from src.ui.HUD import HUD
+from src.minigames.BaseMinigame import BaseMinigame
+from src.minigames.SafeMinigame import SafeMinigame
+from src.minigames.LockpickMinigame import LockpickMinigame
+from src.minigames.CrowbarMinigame import CrowbarMinigame
+from src.minigames.FuseBoxMinigame import FuseBoxMinigame
 
 
 class PlayState(BaseState):
     def __init__(self, state_machine) -> None:
         super().__init__(state_machine)
         self.house = House()
+        self.active_minigame: Optional[BaseMinigame] = None
 
         # Andreas spawns at the authored player_spawn in FirstRoom (defaulting to 94, 129)
         spawn_pos = (94.0, 129.0)
@@ -66,6 +72,11 @@ class PlayState(BaseState):
         settings.stop_channel("silbon_breath")
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
+        if self.active_minigame and self.active_minigame.is_active:
+            if self.active_minigame.handle_action(input_id, input_data):
+                return
+            return
+
         if input_data.pressed:
             if input_id == "pause":
                 self.player.clear_movement()
@@ -118,18 +129,32 @@ class PlayState(BaseState):
                 elif item.obj_type == "cabinet":
                     # Vintage cabinet in DiningRoom requiring lockpick
                     if self.player.has_item("lockpick"):
-                        item.is_picked = True
-                        self.player.add_item("old_key")
-                        self.player.set_thought("thought_got_old_key", 4.5)
+                        def on_cabinet_unlocked():
+                            item.is_picked = True
+                            self.player.add_item("old_key")
+                            self.player.set_thought("thought_got_old_key", 4.5)
+
+                        self.active_minigame = LockpickMinigame(
+                            self,
+                            target_object=item,
+                            on_success=on_cabinet_unlocked,
+                        )
                     else:
                         self.player.set_thought("prompt_cabinet_locked", 3.5)
                     return
                 elif item.obj_type == "safe":
                     # Master Bedroom safe containing exit key
-                    item.is_picked = True
-                    self.player.add_item("key")
-                    self.objectives_progress["key"] = True
-                    self.player.set_thought("thought_got_exit_key", 4.5)
+                    def on_safe_unlocked():
+                        item.is_picked = True
+                        self.player.add_item("key")
+                        self.objectives_progress["key"] = True
+                        self.player.set_thought("thought_got_exit_key", 4.5)
+
+                    self.active_minigame = SafeMinigame(
+                        self,
+                        target_object=item,
+                        on_success=on_safe_unlocked,
+                    )
                     return
                 elif item.obj_type == "note":
                     note_id = getattr(item, "note_id", "note_kitchen")
@@ -158,7 +183,27 @@ class PlayState(BaseState):
                     )
                     return
                 elif item.obj_type == "fuse_box":
-                    self.player.set_thought("thought_fuse_box", 4.5)
+                    if getattr(self.house, "power_restored", False):
+                        self.player.set_thought("thought_fuse_box", 3.5)
+                        return
+
+                    if not self.player.has_item("fuse_key"):
+                        self.player.set_thought("thought_fuse_box_locked", 4.0)
+                        return
+
+                    def on_fuse_box_powered():
+                        setattr(self.house, "power_restored", True)
+
+                    self.active_minigame = FuseBoxMinigame(
+                        self,
+                        target_object=item,
+                        on_success=on_fuse_box_powered,
+                    )
+                    return
+                elif item.obj_type == "fuse_key":
+                    item.is_picked = True
+                    self.player.add_item("fuse_key")
+                    self.player.set_thought("thought_got_fuse_key", 4.5)
                     return
                 else:
                     item.is_picked = True
@@ -189,14 +234,25 @@ class PlayState(BaseState):
 
                 if door.is_barred:
                     if self.player.has_item("crowbar"):
-                        door.unbar()
-                        self.player.set_thought("thought_door_unbarred", 3.5)
+                        def on_plank_pried():
+                            if not door.is_barred:
+                                self.objectives_progress["crowbar"] = True
+                                self.player.set_thought("thought_door_unbarred", 3.5)
+
+                        self.active_minigame = CrowbarMinigame(
+                            self,
+                            target_door=door,
+                            on_success=on_plank_pried,
+                        )
                     else:
                         self.player.set_thought("prompt_door_barred", 3.5)
                     return
 
                 if door.is_locked:
                     if door.can_open(self.player):
+                        if door.is_exit_door and not getattr(self.house, "power_restored", False):
+                            self.player.set_thought("thought_exit_no_power", 4.0)
+                            return
                         door.unlock()
                         if door.is_exit_door:
                             self.objectives_progress["escape"] = True
@@ -207,6 +263,9 @@ class PlayState(BaseState):
                     return
 
                 if door.is_exit_door:
+                    if not getattr(self.house, "power_restored", False):
+                        self.player.set_thought("thought_exit_no_power", 4.0)
+                        return
                     self.state_machine.push(VictoryState(self.state_machine))
                     return
 
@@ -223,7 +282,17 @@ class PlayState(BaseState):
         obstacles = room.get_obstacles()
 
         # Update player
-        self.player.update_movement(obstacles, dt)
+        if self.active_minigame and self.active_minigame.is_active:
+            self.player.clear_movement()
+            current_minigame = self.active_minigame
+            current_minigame.update(dt)
+            if not current_minigame.is_active:
+                if self.active_minigame is current_minigame:
+                    self.active_minigame = None
+                self.player.sync_movement_keys()
+        else:
+            self.player.update_movement(obstacles, dt)
+
         self.player.update(dt)
 
         monster_in_same_room = (self.monster.current_room_name == room.name)
@@ -305,9 +374,18 @@ class PlayState(BaseState):
         is_safe_state = self.monster.ai_state == "stunned"
         if monster_in_same_room and not self.player.is_hidden and not is_safe_state:
             if self.player.get_rect().colliderect(self.monster.get_rect()):
+                if self.active_minigame:
+                    self.active_minigame.close()
+                settings.stop_channel("silbon_footsteps")
+                settings.stop_channel("minigame")
+                self.audio.current_footstep_sound = None
                 self.state_machine.push(GameOverState(self.state_machine))
 
     def _update_contextual_prompt(self) -> None:
+        if self.active_minigame and self.active_minigame.is_active:
+            self.prompt_text = ""
+            return
+
         room = self.house.current_room
         if not room:
             self.prompt_text = ""
@@ -344,7 +422,12 @@ class PlayState(BaseState):
                 elif item.obj_type == "note":
                     self.prompt_text = t("prompt_read_note")
                 elif item.obj_type == "fuse_box":
-                    self.prompt_text = t("prompt_fuse_box")
+                    if getattr(self.house, "power_restored", False):
+                        self.prompt_text = t("prompt_fuse_box")
+                    elif not self.player.has_item("fuse_key"):
+                        self.prompt_text = t("prompt_fuse_box_locked")
+                    else:
+                        self.prompt_text = t("prompt_open_fuse_box")
                 else:
                     item_label = t(f"item_{item.obj_type}")
                     self.prompt_text = f"{t('prompt_pickup')} ({item_label})"
@@ -446,3 +529,7 @@ class PlayState(BaseState):
 
         # 5. Draw top HUD and prompts
         self.hud.render(surface, self.player, self.audio, self.prompt_text)
+
+        # 6. Render active minigame overlay if open
+        if self.active_minigame and self.active_minigame.is_active:
+            self.active_minigame.render(surface)

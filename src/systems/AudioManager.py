@@ -80,7 +80,7 @@ class AudioManager:
             player_center[0] - monster_center[0],
             player_center[1] - monster_center[1]
         )
-        max_range = 700
+        max_range = 2000
         normalized = min(1.0, max(0.0, dist / max_range))
 
         # Modulate whistle volume inversely proportional to distance

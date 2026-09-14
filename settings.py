@@ -129,6 +129,10 @@ SOUNDS = {
     "jumpscare1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "jumpscare1.mp3"),
     "jumpscare2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "jumpscare2.mp3"),
     "jumpscare3": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "screams.wav"),
+    "minigame_lock_forced": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "minigames" / "lock_forced.mp3"),
+    "minigame_normal_click": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "minigames" / "normal_click.wav"),
+    "minigame_unlock_click": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "minigames" / "unlock_click.mp3"),
+    "minigame_wood_break": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "minigames" / "wood_break.mp3"),
 }
 # Dedicated Audio Channels (Ultimate Fantasy architecture pattern)
 AUDIO_CHANNELS = {
@@ -140,6 +144,7 @@ AUDIO_CHANNELS = {
     "jumpscare2": pygame.mixer.Channel(5) if pygame.mixer.get_init() else None,
     "sfx": pygame.mixer.Channel(6) if pygame.mixer.get_init() else None,
     "silbon_footsteps": pygame.mixer.Channel(7) if pygame.mixer.get_init() else None,
+    "minigame": pygame.mixer.Channel(8) if pygame.mixer.get_init() else None,
 }
 
 def play_sound(name: str, loops: int = 0, volume: float = 1.0, channel_name: str = None):
