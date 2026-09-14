@@ -166,10 +166,21 @@ class TiledLevelLoader:
                         ox = float(obj.get("x", 0))
                         oy = float(obj.get("y", 0))
                         props = {p.get("name"): p.get("value") for p in obj.get("properties", [])}
-                        item_type = props.get("object") or obj.get("type")
+                        item_type = props.get("object") or props.get("id") or obj.get("type")
                         ow = int(float(obj.get("width", 16))) or 16
                         oh = int(float(obj.get("height", 16))) or 16
-                        render_graphic = props.get("render_graphic", True)
+
+                        is_collectible = props.get("is_collectible")
+                        if is_collectible is None:
+                            is_collectible = item_type not in ("cabinet", "safe", "fuse_box")
+                        else:
+                            is_collectible = bool(is_collectible)
+
+                        if item_type in ("safe", "fuse_box") and "render_graphic" not in props:
+                            render_graphic = False
+                        else:
+                            render_graphic = bool(props.get("render_graphic", True))
+
                         note_id = props.get("note_id")
                         yields = props.get("yields")
                         if item_type in ITEM_ARCHETYPES:
@@ -180,6 +191,7 @@ class TiledLevelLoader:
                                     oy,
                                     width=ow,
                                     height=oh,
+                                    is_collectible=is_collectible,
                                     render_graphic=render_graphic,
                                     note_id=note_id,
                                     yields=yields,

@@ -157,6 +157,9 @@ class PlayState(BaseState):
                         )
                     )
                     return
+                elif item.obj_type == "fuse_box":
+                    self.player.set_thought("thought_fuse_box", 4.5)
+                    return
                 else:
                     item.is_picked = True
                     self.player.add_item(item.obj_type)
@@ -340,6 +343,8 @@ class PlayState(BaseState):
                     self.prompt_text = t("prompt_open_safe")
                 elif item.obj_type == "note":
                     self.prompt_text = t("prompt_read_note")
+                elif item.obj_type == "fuse_box":
+                    self.prompt_text = t("prompt_fuse_box")
                 else:
                     item_label = t(f"item_{item.obj_type}")
                     self.prompt_text = f"{t('prompt_pickup')} ({item_label})"

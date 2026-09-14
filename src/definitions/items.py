@@ -64,6 +64,11 @@ def _draw_note(surface: pygame.Surface, rect: pygame.Rect) -> None:
         pygame.draw.line(surface, (100, 85, 65), (paper_rect.left + 2, ly), (paper_rect.right - 3, ly), 1)
 
 
+def _draw_fuse_box(surface: pygame.Surface, rect: pygame.Rect) -> None:
+    # Graphical tile is already drawn on tilemap layer
+    pass
+
+
 ITEM_ARCHETYPES: Dict[str, Callable[[pygame.Surface, pygame.Rect], None]] = {
     "battery": _draw_battery,
     "key": _draw_key,
@@ -74,6 +79,7 @@ ITEM_ARCHETYPES: Dict[str, Callable[[pygame.Surface, pygame.Rect], None]] = {
     "cabinet": _draw_cabinet,
     "safe": _draw_safe,
     "note": _draw_note,
+    "fuse_box": _draw_fuse_box,
 }
 
 

@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Authored Tiled Doors & Transitions (`FirstRoom` <-> `UpperHallway`)**:
+  - Authored standard interactable `door` object in `assets/tilemaps/FirstRoom.json` (`type="door"`, target `UpperHallway` with spawn `(48, 116)`).
+  - Authored corresponding interactable `door` object in `assets/tilemaps/UpperHallway.json` (`type="door"`, target `FirstRoom` with spawn `(440, 120)`) and `stairs` object targeting `lower_hallway` with spawn `(190, 60)`).
+  - Replaces hardcoded fallback room dicts with first-class authored Tiled objects across both maps, enabling seamless bidirectional room navigation.
+- **Fuse Box (`fuse_box`) Interactable Object**:
+  - Placed authored `fuse_box` interactable in `assets/tilemaps/FirstRoom.json` (`is_collectible=False`, `render_graphic=False`).
+  - Added `_draw_fuse_box` archetype in `src/definitions/items.py` (`ITEM_ARCHETYPES`).
+  - Extended `TiledLevelLoader.py` to support `props.get("id")`, honor custom `is_collectible` and `render_graphic` properties, and properly configure non-collectible stationary objects.
+  - Added Spanish and English localization in `src/i18n.py` for item label, interaction prompt, and Andreas's inspection thought.
+  - Handled contextual prompt and interaction in `src/states/game/PlayState.py`, leaving the fuse box interactive for the upcoming wiring minigame.
 - **Data-driven definitions package (`src/definitions/`)**:
   - `entity.py`: `PLAYER_ANIMATIONS`/`MONSTER_ANIMATIONS` specs (per-animation texture + frame indices + interval/loop count) and a shared `build_animations()` loader, replacing the near-identical `_create_animations()` each class hand-rolled.
   - `items.py`: `ITEM_ARCHETYPES` (`GameObject.obj_type` -> draw function) and `HIDING_SPOT_ARCHETYPES` (`HidingSpot.spot_type` -> draw function), replacing the `if/elif` render chains in `GameObject.render()`/`HidingSpot.render()`.

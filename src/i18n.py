@@ -39,6 +39,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "item_cabinet": "Vitrina",
         "item_safe": "Caja Fuerte",
         "item_note": "Nota",
+        "item_fuse_box": "Caja de fusibles",
 
         # Interactions & Prompts
         "prompt_interact": "Presiona E para interactuar",
@@ -56,6 +57,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_open_safe": "Presiona E para abrir la caja fuerte",
         "prompt_read_note": "Presiona E para leer la nota",
         "note_close_hint": "[ E / ESPACIO ] Doblar y guardar nota",
+        "prompt_fuse_box": "Presiona E para inspeccionar la caja de fusibles",
         "prompt_door_banging": "¡ALGO ESTÁ GOLPEANDO LA PUERTA VIOLENTAMENTE! ¡ESCÓNDETE!",
         "prompt_talk_npc": "Presiona E para hablar con {name}",
         "prompt_pickup": "Presiona E para recoger",
@@ -82,6 +84,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_got_exit_key": "¡La caja fuerte contenía la Llave de Salida del Bosque!",
         "thought_unbolted": "He descorrido el cerrojo. ¡El pasaje hacia el comedor está abierto!",
         "thought_door_unbarred": "He retirado los tablones con la palanca.",
+        "thought_fuse_box": "La caja de fusibles principal. Parece que los cables están desconectados... tal vez pueda restaurar la energía más tarde.",
         
         # Instructions Modal
         "inst_move": "WASD / Flechas : Moverse",
@@ -160,6 +163,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "item_cabinet": "Cabinet",
         "item_safe": "Safe",
         "item_note": "Note",
+        "item_fuse_box": "Fuse Box",
 
         # Interactions & Prompts
         "prompt_interact": "Press E to interact",
@@ -177,6 +181,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_open_safe": "Press E to open the safe",
         "prompt_read_note": "Press E to read the note",
         "note_close_hint": "[ E / SPACE ] Fold and stash note",
+        "prompt_fuse_box": "Press E to inspect fuse box",
         "prompt_door_banging": "SOMETHING IS VIOLENTLY BANGING ON THE DOOR! HIDE!",
         "prompt_talk_npc": "Press E to talk to {name}",
         "prompt_pickup": "Press E to pick up",
@@ -203,6 +208,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_got_exit_key": "The safe contained the Forest Exit Key!",
         "thought_unbolted": "I've unbolted the door. The passage to the dining room is now open!",
         "thought_door_unbarred": "Pried off the wooden planks with the crowbar.",
+        "thought_fuse_box": "The main fuse box. The wiring seems disconnected... maybe I can restore power later.",
 
         # Instructions Modal
         "inst_move": "WASD / Arrow Keys : Move Andreas",
