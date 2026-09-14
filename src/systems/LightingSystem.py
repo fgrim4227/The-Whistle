@@ -1,101 +1,131 @@
 """
-2D Lighting and Darkness System (LightingSystem).
-Generates atmospheric darkness and dynamic flashlight cones using an independent light mask
-combined with pygame.BLEND_RGBA_SUB for crisp subtraction and smooth visibility.
+Generic light-source darkness system, built on gale.stencil.
+
+LightingSystem itself knows nothing about flashlights or monster eyes --
+it just takes a list of Light (world position, radius, color, intensity)
+every frame and carves each one, as a hard-edged circle of full
+visibility, out of a solid darkness overlay; a light with intensity > 0
+also casts its own color over that same circle. Whoever calls render()
+(PlayState today) decides what counts as a light and builds that list --
+the player's flashlight (colorless, intensity 0) and El Silbón's red
+eyes are just two entries in it, and any future emitter (a thrown lit
+lantern, say) is a third with no change needed here.
 """
 
-import math
-from typing import Tuple, Optional
+from dataclasses import dataclass
+from typing import Dict, List, Tuple
+
 import pygame
+from gale.stencil import Stencil
 
 import settings
 
 
+@dataclass
+class Light:
+    x: float
+    y: float
+    radius: float
+    color: Tuple[int, int, int]
+    intensity: float = 0.4  # 0..1, max fraction of `color` added at the light's own center
+    reveal: float = 1.0  # 0..1, how much of the ambient darkness this light removes -- 1 = fully lit like a real flashlight, lower = still dim inside its own circle. Flat, not a gradient.
+
+
 class LightingSystem:
     def __init__(self) -> None:
-        self.darkness_surface = pygame.Surface(
-            (settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT),
-            flags=pygame.SRCALPHA
-        )
-        self.light_mask = pygame.Surface(
-            (settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT),
-            flags=pygame.SRCALPHA
-        )
-        # Balanced darkness opacity
-        self.ambient_darkness = (10, 10, 16, 255)
-        self.cone_length = 145.0
-        self.cone_angle_deg = 50.0
+        size = (settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        self.darkness_surface = pygame.Surface(size, pygame.SRCALPHA)
+        self.glow_surface = pygame.Surface(size, pygame.SRCALPHA)
+        self.stencil = Stencil(size)
 
-    def render(self, target_surface: pygame.Surface, player, monster, camera_offset: Tuple[int, int] = (0, 0)) -> None:
-        """Renders the darkness layer and flashlight cutouts over target_surface."""
-        # 1. Reset darkness layer and light subtraction mask
-        self.darkness_surface.fill(self.ambient_darkness)
-        self.light_mask.fill((0, 0, 0, 0))
+        # Dark enough that nothing outside a light is readable, but not a
+        # flat black block -- a faint silhouette of nearby geometry still
+        # shows through.
+        self.ambient_darkness = (8, 8, 14, 250)
 
+        self._reveal_cache: Dict[Tuple[int, float], pygame.Surface] = {}
+        self._tint_cache: Dict[Tuple[int, Tuple[int, int, int], float], pygame.Surface] = {}
+
+    def _reveal_circle(self, radius: int, reveal: float) -> pygame.Surface:
+        """
+        A cached white circle, one flat level of see-through-ness all
+        the way across (no soft edge): clears the darkness inside its
+        radius down to `1 - reveal` of its normal strength, and leaves
+        everything outside untouched. A softer, fading edge was tried
+        first, but the library we cut this shape out of the darkness
+        with treats any pixel that was drawn at all -- even a barely
+        visible one at the edge -- as fully drawn, so the edge came out
+        as a ring darker than the darkness around it instead of fading
+        smoothly. A flat, hard-edged circle sidesteps that.
+        """
+        key = (radius, round(reveal, 3))
+        cached = self._reveal_cache.get(key)
+        if cached is not None:
+            return cached
+
+        diameter = radius * 2
+        surface = pygame.Surface((diameter, diameter), pygame.SRCALPHA)
+        alpha = max(0, min(255, int(255 * reveal)))
+        pygame.draw.circle(surface, (255, 255, 255, alpha), (radius, radius), radius)
+        self._reveal_cache[key] = surface
+        return surface
+
+    def _tint_circle(self, radius: int, color: Tuple[int, int, int], strength: float) -> pygame.Surface:
+        """
+        A cached, flat colored circle, the same hard-edged shape as
+        _reveal_circle: `color` dimmed by `strength` applies evenly
+        across the whole circle, not just at its center. We dim the
+        color itself instead of making it see-through, because this
+        glow gets laid on top of the scene by brightening it directly --
+        it adds the color's full brightness wherever it's drawn, no
+        matter how transparent that pixel looks. A faint, see-through
+        edge would still show up at full strength, so we dim the color
+        instead of the transparency.
+        """
+        key = (radius, color, round(strength, 3))
+        cached = self._tint_cache.get(key)
+        if cached is not None:
+            return cached
+
+        diameter = radius * 2
+        surface = pygame.Surface((diameter, diameter), pygame.SRCALPHA)
+        r0, g0, b0 = color
+        col = (int(r0 * strength), int(g0 * strength), int(b0 * strength), 255)
+        pygame.draw.circle(surface, col, (radius, radius), radius)
+        self._tint_cache[key] = surface
+        return surface
+
+    def render(
+        self,
+        target_surface: pygame.Surface,
+        lights: List[Light],
+        camera_offset: Tuple[int, int] = (0, 0),
+    ) -> None:
+        """Renders the darkness layer with every light in `lights` carved out of it."""
         ox, oy = camera_offset
-        px, py = player.get_center()
-        spx = px - ox
-        spy = py - oy
 
-        # 2. Build the light mask (light subtracts opacity from darkness)
-        # When player is hidden inside wardrobe/table, NO halo or light is rendered
-        if not player.is_hidden:
-            if player.flashlight_on and player.battery > 0:
-                self._carve_flashlight_cone(spx, spy, player.direction)
-                # Ambient radius around player when holding flashlight
-                pygame.draw.circle(self.light_mask, (0, 0, 0, 200), (int(spx), int(spy)), 30)
-                pygame.draw.circle(self.light_mask, (0, 0, 0, 240), (int(spx), int(spy)), 18)
-            else:
-                # Faint residual visibility when flashlight is turned off (only when NOT hidden)
-                pygame.draw.circle(self.light_mask, (0, 0, 0, 130), (int(spx), int(spy)), 22)
+        self.darkness_surface.fill(self.ambient_darkness)
+        self.glow_surface.fill((0, 0, 0, 0))
+        self.stencil.clear()
 
-        # 3. Apply light cutout onto the darkness surface
-        self.darkness_surface.blit(self.light_mask, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
+        for light in lights:
+            radius = int(light.radius)
+            if radius <= 0:
+                continue
 
-        # 4. Blit darkness layer onto game surface
+            pos = (int(light.x - ox - radius), int(light.y - oy - radius))
+
+            # Reveal: add this light's circle onto the shared cutout
+            # shape, so overlapping lights combine into a wider revealed area.
+            reveal = self._reveal_circle(radius, light.reveal)
+            self.stencil.draw(lambda mask, g=reveal, p=pos: mask.blit(g, p, special_flags=pygame.BLEND_RGBA_ADD))
+
+            # Tint: a much gentler color cast on its own layer, so the
+            # room still reads normally inside the light instead of
+            # being painted over solid.
+            tint = self._tint_circle(radius, light.color, light.intensity)
+            self.glow_surface.blit(tint, pos, special_flags=pygame.BLEND_RGBA_ADD)
+
+        self.stencil.apply(self.darkness_surface, invert=True)
         target_surface.blit(self.darkness_surface, (0, 0))
-
-        # 5. El Silbón glowing eyes piercing through darkness if lurking nearby
-        if monster and not monster.is_dead:
-            mx, my = monster.get_center()
-            dist = math.hypot(mx - px, my - py)
-            if dist < 240.0:
-                smx = mx - ox
-                smy = my - oy
-                eye_color = (255, 30, 30) if monster.ai_state == "berserk" else (255, 215, 80)
-                pygame.draw.circle(target_surface, eye_color, (int(smx - 4), int(smy - 14)), 2)
-                pygame.draw.circle(target_surface, eye_color, (int(smx + 4), int(smy - 14)), 2)
-
-    def _carve_flashlight_cone(self, px: float, py: float, direction: str) -> None:
-        """Draws the flashlight beam onto the light mask."""
-        dir_angles = {
-            "right": 0.0,
-            "down": 90.0,
-            "left": 180.0,
-            "up": 270.0,
-        }
-        base_angle = math.radians(dir_angles.get(direction, 90.0))
-        half_spread = math.radians(self.cone_angle_deg / 2.0)
-
-        p1 = (px, py)
-        p2 = (
-            px + self.cone_length * math.cos(base_angle - half_spread),
-            py + self.cone_length * math.sin(base_angle - half_spread),
-        )
-        p3 = (
-            px + self.cone_length * math.cos(base_angle + half_spread),
-            py + self.cone_length * math.sin(base_angle + half_spread),
-        )
-
-        # Outer soft beam
-        pygame.draw.polygon(self.light_mask, (0, 0, 0, 185), [p1, p2, p3])
-        
-        # Inner brighter beam
-        p_mid = (
-            px + (self.cone_length * 0.85) * math.cos(base_angle),
-            py + (self.cone_length * 0.85) * math.sin(base_angle),
-        )
-        p2_mid = (px + (p2[0] - px) * 0.7, py + (p2[1] - py) * 0.7)
-        p3_mid = (px + (p3[0] - px) * 0.7, py + (p3[1] - py) * 0.7)
-        pygame.draw.polygon(self.light_mask, (0, 0, 0, 235), [p1, p2_mid, p_mid])
-        pygame.draw.polygon(self.light_mask, (0, 0, 0, 235), [p1, p_mid, p3_mid])
+        target_surface.blit(self.glow_surface, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)

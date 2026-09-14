@@ -29,23 +29,26 @@ PLAYER_ANIMATIONS: Dict[str, Dict[str, Any]] = {
 }
 
 MONSTER_SIZE = (24, 44)
-MONSTER_SPRITE_SIZE = (64, 64)
+MONSTER_SPRITE_SIZE = (92, 92)
 MONSTER_FALLBACK_COLOR = (160, 40, 40)
-# render_sprite's own offset from the entity's x/y to the sprite's top-left.
-MONSTER_SPRITE_OFFSET = (-20, -12)
+# render_sprite anchors the sprite's bottom this many px below the
+# collision box's bottom edge (feet/shadow margin) and centers it
+# horizontally -- computed from each frame's own size, so idle's smaller
+# 64x64 sheet and walk/running's 92x92 sheets don't visually jump
+# position when the animation changes.
+MONSTER_SPRITE_BOTTOM_MARGIN = 8
 
-# silbon_walk is one 10-col x 4-row sheet (up/left/right/down per row);
-# silbon_idle is one 7-col x 4-row sheet (down/up/left/right per row).
-# Frame indices below are 1-based, row-major across the whole sheet.
+# monster_walk/monster_running are each one 8-col x 4-row sheet, rows in
+# down/left/up/right order (verified by rendering each row -- this differs
+# from a naive top/left/right/bottom guess). monster_idle is a single
+# 4-frame row with no per-direction variants. Frame indices below are
+# 1-based, row-major across the whole sheet.
 MONSTER_ANIMATIONS: Dict[str, Dict[str, Any]] = {
-    "walk-up": {"texture": "silbon_walk", "frames": list(range(1, 11)), "interval": 0.10},
-    "walk-left": {"texture": "silbon_walk", "frames": list(range(11, 21)), "interval": 0.10},
-    "walk-right": {"texture": "silbon_walk", "frames": list(range(21, 31)), "interval": 0.10},
-    "walk-down": {"texture": "silbon_walk", "frames": list(range(31, 41)), "interval": 0.10},
-    "idle-down": {"texture": "silbon_idle", "frames": list(range(1, 8)), "interval": 0.16},
-    "idle-up": {"texture": "silbon_idle", "frames": list(range(8, 15)), "interval": 0.16},
-    "idle-left": {"texture": "silbon_idle", "frames": list(range(15, 22)), "interval": 0.16},
-    "idle-right": {"texture": "silbon_idle", "frames": list(range(22, 29)), "interval": 0.16},
+    "walk-down": {"texture": "monster_walk", "frames": list(range(1, 9)), "interval": 0.10},
+    "walk-left": {"texture": "monster_walk", "frames": list(range(9, 17)), "interval": 0.10},
+    "walk-up": {"texture": "monster_walk", "frames": list(range(17, 25)), "interval": 0.10},
+    "walk-right": {"texture": "monster_walk", "frames": list(range(25, 33)), "interval": 0.10},
+    "idle": {"texture": "monster_idle", "frames": list(range(1, 5)), "interval": 0.20},
 }
 
 

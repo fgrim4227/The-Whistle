@@ -18,7 +18,7 @@ class MonsterKnockingState(MonsterBaseState):
         self.monster.vx = 0.0
         self.monster.vy = 0.0
         self.monster.is_moving = False
-        self.monster.change_animation(f"idle-{self.monster.direction}")
+        self.monster.change_animation("idle")
         settings.play_sound("knock_door", loops=0, volume=1.0, channel_name="knock")
 
     def process_ai(self, house, player, dt: float) -> None:

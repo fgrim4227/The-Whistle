@@ -41,8 +41,9 @@ class Monster(BaseEntity):
         self.animations: Dict[str, Animation]
         self._animation_textures: Dict[str, str]
         self.animations, self._animation_textures = self._create_animations()
-        self.current_animation = self.animations.get("idle-down")
-        self.current_texture = self._animation_textures.get("idle-down")
+        self.current_animation_name = "idle"
+        self.current_animation = self.animations.get("idle")
+        self.current_texture = self._animation_textures.get("idle")
 
         self.state_machine = StateMachine({
             "patrol": lambda sm: MonsterPatrolState(self, sm),
@@ -70,6 +71,7 @@ class Monster(BaseEntity):
             self.current_animation = self.animations[anim_name]
             self.current_animation.reset()
             self.current_texture = self._animation_textures.get(anim_name)
+            self.current_animation_name = anim_name
 
     def hear_noise(self, noise_x: float, noise_y: float, radius: float = 280.0) -> None:
         """Alerts the monster of a sound if within audio radius."""
@@ -112,7 +114,7 @@ class Monster(BaseEntity):
             self.vx = 0.0
             self.vy = 0.0
             self.is_moving = False
-            self.change_animation(f"idle-{self.direction}")
+            self.change_animation("idle")
             return
 
         self.is_moving = True
@@ -143,26 +145,34 @@ class Monster(BaseEntity):
             self.current_animation.update(dt)
 
     def render_sprite(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
-        """Renders the 64x64 frame centered over the entity's position."""
+        """
+        Renders the current animation frame horizontally centered over the
+        collision box, bottom-anchored a fixed margin below it. Computed
+        from the frame's own size (rather than a fixed offset) so idle's
+        smaller 64x64 sheet and walk/running's 92x92 sheets don't visually
+        jump position when the animation changes.
+        """
         ox, oy = camera_offset
-        offset_x, offset_y = entity_defs.MONSTER_SPRITE_OFFSET
-        sprite_x = int(self.x + offset_x - ox)
-        sprite_y = int(self.y + offset_y - oy)
 
-        if self.current_animation:
-            frame = self.current_animation.get_current_frame()
-            if isinstance(frame, pygame.Rect):
-                surface.blit(settings.TEXTURES[self.current_texture], (sprite_x, sprite_y), frame)
-            elif isinstance(frame, pygame.Surface):
-                surface.blit(frame, (sprite_x, sprite_y))
-            else:
-                pygame.draw.rect(surface, entity_defs.MONSTER_FALLBACK_COLOR, self.get_rect().move(-ox, -oy))
-        else:
+        frame = self.current_animation.get_current_frame() if self.current_animation else None
+        frame_size = None
+        if isinstance(frame, pygame.Rect):
+            frame_size = (frame.width, frame.height)
+        elif isinstance(frame, pygame.Surface):
+            frame_size = frame.get_size()
+
+        if frame_size is None:
             pygame.draw.rect(surface, entity_defs.MONSTER_FALLBACK_COLOR, self.get_rect().move(-ox, -oy))
+            return
 
-        if self.ai_state == "berserk":
-            pygame.draw.circle(surface, (255, 0, 0), (int(self.x + 8 - ox), int(self.y - 2 - oy)), 3)
-            pygame.draw.circle(surface, (255, 0, 0), (int(self.x + 16 - ox), int(self.y - 2 - oy)), 3)
+        fw, fh = frame_size
+        sprite_x = int(self.x - ox + (self.width - fw) / 2)
+        sprite_y = int(self.y - oy + self.height - fh + entity_defs.MONSTER_SPRITE_BOTTOM_MARGIN)
+
+        if isinstance(frame, pygame.Rect):
+            surface.blit(settings.TEXTURES[self.current_texture], (sprite_x, sprite_y), frame)
+        else:
+            surface.blit(frame, (sprite_x, sprite_y))
 
     def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
         self.state_machine.current.render(surface, camera_offset)

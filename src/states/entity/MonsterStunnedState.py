@@ -10,7 +10,7 @@ class MonsterStunnedState(MonsterBaseState):
         self.monster.vx = 0.0
         self.monster.vy = 0.0
         self.monster.is_moving = False
-        self.monster.change_animation(f"idle-{self.monster.direction}")
+        self.monster.change_animation("idle")
 
     def process_ai(self, house, player, dt: float) -> None:
         self.timer -= dt

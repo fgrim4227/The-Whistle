@@ -88,6 +88,12 @@ COLOR_GOLD = (230, 190, 40)
 COLOR_GRAY = (120, 120, 130)
 COLOR_DARK_BLUE = (12, 12, 22)
 COLOR_FLASHLIGHT = (255, 250, 220)
+COLOR_MONSTER_EYES = (255, 25, 20)
+
+# Light radii (world px), tunable here for quick testing without touching
+# LightingSystem itself.
+FLASHLIGHT_LIGHT_RADIUS = 92.0
+MONSTER_EYE_LIGHT_RADIUS = 64.0
 
 # Default fonts using SysFont fallback
 pygame.font.init()
@@ -111,29 +117,19 @@ except Exception as e:
     print(f"Warning: could not initialize pygame.mixer ({e})")
 
 # Sound dictionary
-SOUNDS = {}
-sounds_dir = BASE_DIR / "assets" / "sounds"
-
-def _load_sound(rel_path: str):
-    p = sounds_dir / rel_path
-    if p.exists():
-        try:
-            return pygame.mixer.Sound(p)
-        except Exception as e:
-            print(f"Error loading sound {rel_path}: {e}")
-    return None
-
-SOUNDS["whistle"] = _load_sound("whistle.mp3")
-SOUNDS["breathing"] = _load_sound("breathing.wav")
-SOUNDS["walk_sound"] = _load_sound("walk_sound.mp3")
-SOUNDS["run_sound"] = _load_sound("run_sound.mp3")
-SOUNDS["ambience1"] = _load_sound("ambient/ambience1.mp3")
-SOUNDS["ambience2"] = _load_sound("ambient/ambience2.mp3")
-SOUNDS["ambience3"] = _load_sound("ambient/ambience3.mp3")
-SOUNDS["knock_door"] = _load_sound("sfx/knock_door.mp3")
-SOUNDS["jumpscare1"] = _load_sound("sfx/jumpscare1.mp3")
-SOUNDS["jumpscare2"] = _load_sound("sfx/jumpscare2.mp3")
-SOUNDS["jumpscare3"] = _load_sound("sfx/screams.wav")
+SOUNDS = {
+    "whistle": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "whistle.mp3"),
+    "breathing": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "breathing.wav"),
+    "walk_sound": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "walk_sound.mp3"),
+    "run_sound": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "run_sound.mp3"),
+    "ambience1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ambient" / "ambience1.mp3"),
+    "ambience2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ambient" / "ambience2.mp3"),
+    "ambience3": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ambient" / "ambience3.mp3"),
+    "knock_door": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "knock_door.mp3"),
+    "jumpscare1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "jumpscare1.mp3"),
+    "jumpscare2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "jumpscare2.mp3"),
+    "jumpscare3": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "screams.wav"),
+}
 # Dedicated Audio Channels (Ultimate Fantasy architecture pattern)
 AUDIO_CHANNELS = {
     "ambience": pygame.mixer.Channel(0) if pygame.mixer.get_init() else None,
@@ -181,52 +177,50 @@ def stop_all_audio():
             channel.stop()
 
 # Texture dictionary
-TEXTURES = {}
-graphics_dir = BASE_DIR / "assets" / "graphics"
+TEXTURES = {
+    # Player sprites (Andreas)
+    "player_walk_down": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "andreas walk down.png"
+    ),
+    "player_walk_up": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "Andreas walk back.png"
+    ),
+    "player_walk_left": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "andreas left walk.png"
+    ),
+    "player_walk_right": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "andreas right side walk.png"
+    ),
+    "player_idle": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "andreas idle animation.png"
+    ),
+    "player_dying": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "Andreas dying.png"
+    ),
 
-def _load_image(rel_path: str):
-    p = graphics_dir / rel_path
-    if p.exists():
-        try:
-            return pygame.image.load(p)
-        except Exception as e:
-            print(f"Error loading image {rel_path}: {e}")
-    return None
+    # Monster sprites (El Silbón)
+    "monster_idle": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_idle.png"),
+    "monster_walk": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_walk.png"),
+    "monster_running": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_running.png"),
 
-# Player sprites (Andreas)
-TEXTURES["player_walk_down"] = _load_image("characters/player/Andreas/andreas walk down.png")
-TEXTURES["player_walk_up"] = _load_image("characters/player/Andreas/Andreas walk back.png")
-TEXTURES["player_walk_left"] = _load_image("characters/player/Andreas/andreas left walk.png")
-TEXTURES["player_walk_right"] = _load_image("characters/player/Andreas/andreas right side walk.png")
-TEXTURES["player_idle"] = _load_image("characters/player/Andreas/andreas idle animation.png")
-TEXTURES["player_dying"] = _load_image("characters/player/Andreas/Andreas dying.png")
-
-# Monster sprites (El Silbón)
-TEXTURES["silbon_walk"] = _load_image("characters/monster/silbon_walk.png")
-TEXTURES["silbon_idle"] = _load_image("characters/monster/silbon_idle.png")
-
-# Jumpscare textures
-TEXTURES["silbon_attack"] = _load_image("jumpscare/silbon_attack.png")
-TEXTURES["silbon_sad"] = _load_image("jumpscare/silbon_sad.png")
-TEXTURES["silbon_red"] = _load_image("jumpscare/silbon_red.png")
-
-
-def _generate_frames(texture_id: str, frame_width: int, frame_height: int):
-    image = TEXTURES.get(texture_id)
-    return frames.generate_frames(image, frame_width, frame_height) if image else []
-
+    # Jumpscare textures
+    "silbon_attack": pygame.image.load(BASE_DIR / "assets" / "graphics" / "jumpscare" / "silbon_attack.png"),
+    "silbon_sad": pygame.image.load(BASE_DIR / "assets" / "graphics" / "jumpscare" / "silbon_sad.png"),
+    "silbon_red": pygame.image.load(BASE_DIR / "assets" / "graphics" / "jumpscare" / "silbon_red.png"),
+}
 
 # Animation frame rects, sliced once per texture and indexed 1-based by
 # src.definitions.entity's animation specs via frame() below.
 FRAMES = {
-    "player_walk_down": _generate_frames("player_walk_down", 16, 32),
-    "player_walk_up": _generate_frames("player_walk_up", 16, 32),
-    "player_walk_left": _generate_frames("player_walk_left", 16, 32),
-    "player_walk_right": _generate_frames("player_walk_right", 16, 32),
-    "player_idle": _generate_frames("player_idle", 16, 32),
-    "player_dying": _generate_frames("player_dying", 16, 32),
-    "silbon_walk": _generate_frames("silbon_walk", 64, 64),
-    "silbon_idle": _generate_frames("silbon_idle", 64, 64),
+    "player_walk_down": frames.generate_frames(TEXTURES["player_walk_down"], 16, 32),
+    "player_walk_up": frames.generate_frames(TEXTURES["player_walk_up"], 16, 32),
+    "player_walk_left": frames.generate_frames(TEXTURES["player_walk_left"], 16, 32),
+    "player_walk_right": frames.generate_frames(TEXTURES["player_walk_right"], 16, 32),
+    "player_idle": frames.generate_frames(TEXTURES["player_idle"], 16, 32),
+    "player_dying": frames.generate_frames(TEXTURES["player_dying"], 16, 32),
+    "monster_idle": frames.generate_frames(TEXTURES["monster_idle"], 64, 64),
+    "monster_walk": frames.generate_frames(TEXTURES["monster_walk"], 92, 92),
+    "monster_running":frames.generate_frames(TEXTURES["monster_running"], 92, 92),
 }
 
 

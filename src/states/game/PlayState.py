@@ -22,7 +22,7 @@ from src.world.House import House
 from src.entities.Player import Player
 from src.entities.Monster import Monster
 from src.world.GameObject import ThrowableProjectile
-from src.systems.LightingSystem import LightingSystem
+from src.systems.LightingSystem import Light, LightingSystem
 from src.systems.AudioManager import AudioManager
 from src.ui.HUD import HUD
 
@@ -387,6 +387,37 @@ class PlayState(BaseState):
         cam_y = max(0, min(cam_y, max_cam_y))
         return (cam_x, cam_y)
 
+    def _collect_lights(self, active_monster) -> List[Light]:
+        """
+        Builds this frame's list of active lights -- the player's
+        flashlight (or a dim residual glow while it's off) and El
+        Silbón's always-on red eyes today. A future light source (a
+        thrown lit lantern, say) is just another entry appended here;
+        LightingSystem itself doesn't need to know it exists.
+        """
+        lights: List[Light] = []
+
+        if not self.player.is_hidden:
+            px, py = self.player.get_center()
+            if self.player.flashlight_on and self.player.battery > 0:
+                # Colorless: a real flashlight just reveals, it doesn't tint the room.
+                lights.append(
+                    Light(px, py, settings.FLASHLIGHT_LIGHT_RADIUS, settings.COLOR_FLASHLIGHT, intensity=0.0, reveal=0.6)
+                )
+            else:
+                lights.append(Light(px, py, 26.0, settings.COLOR_GRAY, intensity=0.0, reveal=0.3))
+
+        if active_monster:
+            mx, my = active_monster.get_center()
+            lights.append(
+                Light(
+                    mx, my - 32, settings.MONSTER_EYE_LIGHT_RADIUS, settings.COLOR_MONSTER_EYES,
+                    intensity=0.1, reveal=0.1,
+                )
+            )
+
+        return lights
+
     def render(self, surface: pygame.Surface) -> None:
         camera_offset = self.get_camera_offset()
 
@@ -404,9 +435,9 @@ class PlayState(BaseState):
         for p in self.projectiles:
             p.render(surface, camera_offset)
 
-        # 4. Draw darkness and dynamic flashlight beam
+        # 4. Draw darkness with every active light carved out of it
         active_monster = self.monster if (self.monster.current_room_name == self.house.current_room.name) else None
-        self.lighting.render(surface, self.player, active_monster, camera_offset)
+        self.lighting.render(surface, self._collect_lights(active_monster), camera_offset)
 
         # 5. Draw top HUD and prompts
         self.hud.render(surface, self.player, self.audio, self.prompt_text)
