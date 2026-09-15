@@ -66,7 +66,7 @@ GRID_ROWS = VIRTUAL_HEIGHT // TILE_SIZE  # 9
 
 # Gameplay and survival parameters
 PLAYER_SPEED = 69  # px/s
-PLAYER_RUN_SPEED = 75  # px/s
+PLAYER_RUN_SPEED = 75 # px/s
 MONSTER_PATROL_SPEED = 70.0  # px/s
 MONSTER_CHASE_SPEED = 105.0  # px/s
 MONSTER_BERSERK_SPEED = 300  # px/s (+80% speed when enraged)
@@ -93,7 +93,7 @@ COLOR_MONSTER_EYES = (255, 25, 20)
 # Light radii (world px), tunable here for quick testing without touching
 # LightingSystem itself.
 FLASHLIGHT_LIGHT_RADIUS = 92.0
-MONSTER_EYE_LIGHT_RADIUS = 64.0
+MONSTER_EYE_LIGHT_RADIUS = 2.0
 
 # Default fonts using SysFont fallback
 pygame.font.init()

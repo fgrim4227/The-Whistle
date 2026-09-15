@@ -75,6 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Level layouts now rely exclusively on environmental parchment notes (`note_kitchen`, `note_hallway`) and Tiled object layers for storytelling and item yields.
 
 ### Changed
+-`settings.py`: Modified silbon's light radius (in the future it will be 0)
+-`Crowbarminigame.py`: Modified notification radius
 - `House.py` rewritten to be data-driven: `_build_tiled_cabin()`/`_build_default_cabin()` now loop over `src/definitions/rooms.py` instead of repeating a near-identical block of Python per room (422 lines -> ~130 lines). Room name aliases (`"FirstRoom"`/`"first_room"`/`"bedroom"`, etc.) are now declared once per room in that data.
 - `GameObject`: dropped the `name` constructor parameter (confirmed unread anywhere in the codebase; display names come from `i18n`'s `item_<obj_type>` keys instead).
 - `TiledLevelLoader`: the `Interactables` layer now checks `item_type in ITEM_ARCHETYPES` instead of a separate hardcoded tuple + `name_lookup` dict that had to be kept in sync by hand.

@@ -73,7 +73,7 @@ class CrowbarMinigame(BaseMinigame):
         self.snap_timer = 0.0
 
         # Loud wood breaking sound + alert El Silbón
-        self.alert_monster(radius=100, sound_name="minigame_wood_break", volume=1.0)
+        self.alert_monster(radius=2000, sound_name="minigame_wood_break", volume=1.0)
 
         # Deduct a plank from target door
         if hasattr(self.target_object, "planks_remaining"):
