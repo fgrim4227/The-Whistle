@@ -55,7 +55,7 @@ class ThrowableProjectile:
         self.radius = 4
         self.active = True
         self.distance_traveled = 0.0
-        self.max_distance = 160.0
+        self.max_distance = 1000
 
         dir_vectors = {
             "left": (-1.0, 0.0),

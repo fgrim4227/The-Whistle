@@ -6,6 +6,7 @@ import pygame
 from gale.game import Game
 from gale.input_handler import InputData
 from gale.state import StateStack
+from gale.timer import Timer
 
 import settings
 from src.states.game.StartState import StartState
@@ -18,6 +19,7 @@ class TheWhistle(Game):
         self.state_stack.push(StartState(self.state_stack))
 
     def update(self, dt: float) -> None:
+        Timer.update(dt)
         self.state_stack.update(dt)
 
     def render(self, surface: pygame.Surface) -> None:

@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Data-Driven Survivor Notes via Tiled Custom Properties (`src/world/TiledLevelLoader.py`)**:
+  - Replaced hardcoded room name conditionals (`if "kitchen" in room_name...`) with generic, data-driven extraction of custom properties (`note_id`, `yields`, `is_collectible`, `render_graphic`) from Tiled object layers (`Npcs`, `Notes`, `Interactables`).
+  - Added multi-tier fallback for `note_id` (object name -> room name), enabling level designers to place interactive notes in any room without touching Python code.
+  - Configured custom properties for `note_kitchen` (yielding `lockpick`) in `Kitchen.json` and `note_hallway` in `UpperHallway.json`.
+- **Minigame Factory Pattern (`src/minigames/MinigameFactory.py`)**:
+  - Implemented `MinigameFactory` to centralize instantiation and dynamic registration of minigames (`lockpick`, `safe`, `crowbar`, `fuse_box`).
+  - Decoupled `src/definitions/interactions.py` and `PlayState` from concrete minigame classes, adhering to the Open/Closed Principle.
+  - Normalized constructor arguments polymorphically (`target_object`/`target_door`, callbacks, and `**kwargs`).
+- **Interactions Strategy / Dispatcher Pattern (`src/definitions/interactions.py`)**:
+  - Centralized item interaction handlers in `ITEM_INTERACTIONS` and contextual prompt formatters in `ITEM_PROMPTS`.
+  - Added dedicated door interaction handlers (`handle_door_interaction`) and prompt formatters (`get_door_prompt`) covering unbolting, crowbar minigame on barred doors, key unlocks, electronic sensor checks, and monster proximity detection.
+  - Drastically reduced `PlayState._handle_interaction` and `PlayState._update_contextual_prompt` from monolithic conditional blocks to clean, extensible dictionary dispatches.
+- **Atmospheric Dynamic Ambient Darkness Tweening (`gale.timer.Timer.tween`)**:
+  - Added `Timer.update(dt)` in `TheWhistle.update()` to enable Gale engine tweening and scheduled callbacks.
+  - Extended `LightingSystem` with `base_ambient_alpha = 215.0`, `monster_ambient_alpha = 255.0`, and smooth float `darkness_alpha`.
+  - In `PlayState.update()`, dynamically tweens darkness alpha to 255.0 (pitch black) when El Silbón enters the player's room, and back to 215.0 when he exits, using `"in_out_quad"` easing.
 - **Real-Time Active Overlay Minigames System (`src/minigames/`)**:
   - `BaseMinigame`: Abstract lifecycle base class for active overlays running directly over `PlayState`. Crucially preserves real-time world simulation (El Silbón continues stalking, moving, and generating footstep audio; darkness and lighting remain active; player can press `ESC` to cancel and flee anytime).
   - `SafeMinigame`: Rotary acoustic combination safe dial in `master_bedroom`. Features rotational audio cues (`normal_click.wav`), target discovery clicks (`unlock_click.mp3`), and metallic jam penalty (`lock_forced.mp3`) alerting El Silbón upon failure. Yields the Forest Exit Key (`key`).

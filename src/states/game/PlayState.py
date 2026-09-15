@@ -16,8 +16,7 @@ from gale.state import BaseState
 from src.states.game.PauseState import PauseState
 from src.states.game.ObjectiveState import ObjectiveState
 from src.states.game.GameOverState import GameOverState
-from src.states.game.VictoryState import VictoryState
-from src.states.game.NoteState import NoteState
+from gale.timer import Timer
 from src.world.House import House
 from src.entities.Player import Player
 from src.entities.Monster import Monster
@@ -26,10 +25,14 @@ from src.systems.LightingSystem import Light, LightingSystem
 from src.systems.AudioManager import AudioManager
 from src.ui.HUD import HUD
 from src.minigames.BaseMinigame import BaseMinigame
-from src.minigames.SafeMinigame import SafeMinigame
-from src.minigames.LockpickMinigame import LockpickMinigame
-from src.minigames.CrowbarMinigame import CrowbarMinigame
-from src.minigames.FuseBoxMinigame import FuseBoxMinigame
+from src.definitions.interactions import (
+    ITEM_INTERACTIONS,
+    interact_default_collectible,
+    ITEM_PROMPTS,
+    get_default_item_prompt,
+    handle_door_interaction,
+    get_door_prompt,
+)
 
 
 class PlayState(BaseState):
@@ -62,8 +65,14 @@ class PlayState(BaseState):
             "escape": False,
         }
 
+        self._monster_was_in_room: bool = False
+        self._darkness_tween = None
+
     def enter(self, *args, **kwargs) -> None:
         self.player.clear_held()
+        self._monster_was_in_room = False
+        self.lighting.darkness_alpha = self.lighting.base_ambient_alpha
+        self._darkness_tween = None
         # Start atmospheric cabin ambient background music
         self.audio.start_ambient()
 
@@ -118,160 +127,17 @@ class PlayState(BaseState):
                 self.player.hide(spot)
                 return
 
-        # 3. Check nearby floor items & interactables (cabinets, safes, keys, tools, notes)
+        # 3. Check nearby floor items & interactables (via strategy dispatcher)
         for item in room.items:
             if not item.is_picked and interact_zone.colliderect(item.get_rect()):
-                if item.obj_type == "battery":
-                    item.is_picked = True
-                    self.player.recharge_battery()
-                    self.player.set_thought("thought_dark", 3.0)
-                    return
-                elif item.obj_type == "cabinet":
-                    # Vintage cabinet in DiningRoom requiring lockpick
-                    if self.player.has_item("lockpick"):
-                        def on_cabinet_unlocked():
-                            item.is_picked = True
-                            self.player.add_item("old_key")
-                            self.player.set_thought("thought_got_old_key", 4.5)
+                handler = ITEM_INTERACTIONS.get(item.obj_type, interact_default_collectible)
+                handler(self, item)
+                return
 
-                        self.active_minigame = LockpickMinigame(
-                            self,
-                            target_object=item,
-                            on_success=on_cabinet_unlocked,
-                        )
-                    else:
-                        self.player.set_thought("prompt_cabinet_locked", 3.5)
-                    return
-                elif item.obj_type == "safe":
-                    # Master Bedroom safe containing exit key
-                    def on_safe_unlocked():
-                        item.is_picked = True
-                        self.player.add_item("key")
-                        self.objectives_progress["key"] = True
-                        self.player.set_thought("thought_got_exit_key", 4.5)
-
-                    self.active_minigame = SafeMinigame(
-                        self,
-                        target_object=item,
-                        on_success=on_safe_unlocked,
-                    )
-                    return
-                elif item.obj_type == "note":
-                    note_id = getattr(item, "note_id", "note_kitchen")
-                    title_key = f"{note_id}_title"
-                    body_key = f"{note_id}_body"
-                    attached_item = getattr(item, "yields", None)
-
-                    self.player.clear_movement()
-
-                    def on_note_closed():
-                        if attached_item and not item.is_picked:
-                            item.is_picked = True
-                            self.player.add_item(attached_item)
-                            if attached_item == "lockpick":
-                                self.player.set_thought("thought_note_got_lockpick", 4.5)
-                        self.player.sync_movement_keys()
-
-                    self.state_machine.push(
-                        NoteState(
-                            self.state_machine,
-                            title_key,
-                            body_key,
-                            attached_item=attached_item if not item.is_picked else None,
-                            on_close=on_note_closed,
-                        )
-                    )
-                    return
-                elif item.obj_type == "fuse_box":
-                    if getattr(self.house, "power_restored", False):
-                        self.player.set_thought("thought_fuse_box", 3.5)
-                        return
-
-                    if not self.player.has_item("fuse_key"):
-                        self.player.set_thought("thought_fuse_box_locked", 4.0)
-                        return
-
-                    def on_fuse_box_powered():
-                        setattr(self.house, "power_restored", True)
-
-                    self.active_minigame = FuseBoxMinigame(
-                        self,
-                        target_object=item,
-                        on_success=on_fuse_box_powered,
-                    )
-                    return
-                elif item.obj_type == "fuse_key":
-                    item.is_picked = True
-                    self.player.add_item("fuse_key")
-                    self.player.set_thought("thought_got_fuse_key", 4.5)
-                    return
-                else:
-                    item.is_picked = True
-                    self.player.add_item(item.obj_type)
-                    if item.obj_type == "crowbar":
-                        self.objectives_progress["crowbar"] = True
-                    elif item.obj_type == "key":
-                        self.objectives_progress["key"] = True
-                    return
-
-        # 5. Check nearby doors
+        # 4. Check nearby doors (via door interaction handler)
         for door in room.doors:
             if interact_zone.colliderect(door.get_rect()):
-                # Unboltable passage between LivingRoom and DiningRoom
-                if door.is_bolted:
-                    if room.name in ("living_room", "LivingRoom"):
-                        door.unbolt()
-                        # Also unbolt reverse door in dining_room to complete the loop
-                        dining_room = self.house.rooms.get("dining_room")
-                        if dining_room:
-                            for d in dining_room.doors:
-                                if d.target_room_name in ("living_room", "LivingRoom"):
-                                    d.unbolt()
-                        self.player.set_thought("thought_unbolted", 4.0)
-                    else:
-                        self.player.set_thought("prompt_door_bolted", 3.5)
-                    return
-
-                if door.is_barred:
-                    if self.player.has_item("crowbar"):
-                        def on_plank_pried():
-                            if not door.is_barred:
-                                self.objectives_progress["crowbar"] = True
-                                self.player.set_thought("thought_door_unbarred", 3.5)
-
-                        self.active_minigame = CrowbarMinigame(
-                            self,
-                            target_door=door,
-                            on_success=on_plank_pried,
-                        )
-                    else:
-                        self.player.set_thought("prompt_door_barred", 3.5)
-                    return
-
-                if door.is_locked:
-                    if door.can_open(self.player):
-                        if door.is_exit_door and not getattr(self.house, "power_restored", False):
-                            self.player.set_thought("thought_exit_no_power", 4.0)
-                            return
-                        door.unlock()
-                        if door.is_exit_door:
-                            self.objectives_progress["escape"] = True
-                            self.state_machine.push(VictoryState(self.state_machine))
-                            return
-                    else:
-                        self.player.set_thought("prompt_door_locked", 3.0)
-                    return
-
-                if door.is_exit_door:
-                    if not getattr(self.house, "power_restored", False):
-                        self.player.set_thought("thought_exit_no_power", 4.0)
-                        return
-                    self.state_machine.push(VictoryState(self.state_machine))
-                    return
-
-                # Walk through door into target room
-                self.house.change_room(door.target_room_name, door.target_spawn_x, door.target_spawn_y, self.player)
-                self.objectives_progress["explore"] = True
+                handle_door_interaction(self, door)
                 return
 
     def update(self, dt: float) -> None:
@@ -296,6 +162,19 @@ class PlayState(BaseState):
         self.player.update(dt)
 
         monster_in_same_room = (self.monster.current_room_name == room.name)
+
+        # Dynamic ambient darkness tween when El Silbón enters or exits player's room
+        if monster_in_same_room != self._monster_was_in_room:
+            self._monster_was_in_room = monster_in_same_room
+            target_alpha = self.lighting.monster_ambient_alpha if monster_in_same_room else self.lighting.base_ambient_alpha
+            duration = 0.8 if monster_in_same_room else 1.2
+            if self._darkness_tween and not getattr(self._darkness_tween, "to_remove", False):
+                self._darkness_tween.remove()
+            self._darkness_tween = Timer.tween(
+                duration,
+                [(self.lighting, {"darkness_alpha": target_alpha})],
+                ease_function_name="in_out_quad",
+            )
 
         # Footstep acoustics: footsteps can alert El Silbón to investigate
         if self.player.footstep_taken:
@@ -391,7 +270,6 @@ class PlayState(BaseState):
             self.prompt_text = ""
             return
 
-        # Special door banging warning when El Silbón is knocking on the room's door
         current_state = self.monster.state_machine.current
         if self.monster.ai_state == "knocking":
             target_room = getattr(current_state, "target_room", "")
@@ -412,52 +290,13 @@ class PlayState(BaseState):
 
         for item in room.items:
             if not item.is_picked and zone.colliderect(item.get_rect()):
-                if item.obj_type == "cabinet":
-                    if self.player.has_item("lockpick"):
-                        self.prompt_text = t("prompt_pick_cabinet")
-                    else:
-                        self.prompt_text = t("prompt_cabinet_locked")
-                elif item.obj_type == "safe":
-                    self.prompt_text = t("prompt_open_safe")
-                elif item.obj_type == "note":
-                    self.prompt_text = t("prompt_read_note")
-                elif item.obj_type == "fuse_box":
-                    if getattr(self.house, "power_restored", False):
-                        self.prompt_text = t("prompt_fuse_box")
-                    elif not self.player.has_item("fuse_key"):
-                        self.prompt_text = t("prompt_fuse_box_locked")
-                    else:
-                        self.prompt_text = t("prompt_open_fuse_box")
-                else:
-                    item_label = t(f"item_{item.obj_type}")
-                    self.prompt_text = f"{t('prompt_pickup')} ({item_label})"
+                prompt_fn = ITEM_PROMPTS.get(item.obj_type, get_default_item_prompt)
+                self.prompt_text = prompt_fn(self, item)
                 return
 
         for door in room.doors:
             if zone.colliderect(door.get_rect()):
-                # Check if El Silbón is lurking on the other side of this door
-                is_danger = False
-                if self.monster.current_room_name == door.target_room_name:
-                    mx, my = self.monster.get_center()
-                    m_dist = math.hypot(mx - door.target_spawn_x, my - door.target_spawn_y)
-                    if m_dist < 180.0:
-                        is_danger = True
-
-                if door.is_bolted:
-                    if room.name in ("living_room", "LivingRoom"):
-                        self.prompt_text = t("prompt_unbolt_door")
-                    else:
-                        self.prompt_text = t("prompt_door_bolted")
-                elif door.is_barred:
-                    self.prompt_text = t("prompt_door_barred")
-                elif door.is_locked:
-                    self.prompt_text = t("prompt_door_locked")
-                elif is_danger:
-                    self.prompt_text = t("prompt_open_door_danger")
-                elif getattr(door, "is_stairs", False):
-                    self.prompt_text = t("prompt_use_stairs")
-                else:
-                    self.prompt_text = t("prompt_open_door")
+                self.prompt_text = get_door_prompt(self, door)
                 return
 
         self.prompt_text = ""

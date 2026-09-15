@@ -1583,18 +1583,30 @@
    "id": 6,
    "name": "Npcs",
    "objects": [
-    {
-     "height": 0,
-     "id": 26,
-     "name": "",
-     "opacity": 1,
-     "rotation": 0,
-     "type": "",
-     "visible": true,
-     "width": 0,
-     "x": 332.44992227404,
-     "y": 149.13368865201
-    }
+     {
+      "height": 16,
+      "id": 26,
+      "name": "note_hallway",
+      "opacity": 1,
+      "properties": [
+       {
+        "name": "type",
+        "type": "string",
+        "value": "note"
+       },
+       {
+        "name": "note_id",
+        "type": "string",
+        "value": "note_hallway"
+       }
+      ],
+      "rotation": 0,
+      "type": "note",
+      "visible": true,
+      "width": 16,
+      "x": 332.44992227404,
+      "y": 149.13368865201
+     }
    ],
    "opacity": 1,
    "type": "objectgroup",

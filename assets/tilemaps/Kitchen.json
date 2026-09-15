@@ -385,24 +385,34 @@
          "id":7,
          "name":"Npcs",
          "objects":[
-                {
-                 "height":16,
-                 "id":30,
-                 "name":"Elena",
-                 "opacity":1,
-                 "properties":[
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"npc"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":64,
-                 "y":80
-                }],
+                 {
+                  "height":16,
+                  "id":30,
+                  "name":"note_kitchen",
+                  "opacity":1,
+                  "properties":[
+                         {
+                          "name":"type",
+                          "type":"string",
+                          "value":"note"
+                         },
+                         {
+                          "name":"note_id",
+                          "type":"string",
+                          "value":"note_kitchen"
+                         },
+                         {
+                          "name":"yields",
+                          "type":"string",
+                          "value":"lockpick"
+                         }],
+                  "rotation":0,
+                  "type":"note",
+                  "visible":true,
+                  "width":16,
+                  "x":64,
+                  "y":80
+                 }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,

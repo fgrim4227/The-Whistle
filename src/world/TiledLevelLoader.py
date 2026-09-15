@@ -149,7 +149,7 @@ class TiledLevelLoader:
                         oh = float(obj.get("height", 0))
                         if ow > 0 and oh > 0:
                             room.solid_tiles.append(pygame.Rect(int(ox), int(oy), int(ow), int(oh)))
-
+                #Soon will be eliminated
                 elif gname == "interest_points":
                     for obj in objects:
                         ox = float(obj.get("x", 0))
@@ -239,35 +239,43 @@ class TiledLevelLoader:
                                 )
                             )
 
-                elif gname == "Npcs":
+                elif gname.lower() in ("npcs", "notes"):
                     for obj in objects:
                         ox = float(obj.get("x", 0))
                         oy = float(obj.get("y", 0))
-                        # Replace survivor NPC with an environmental parchment note on the floor (Slender-style)
-                        if "kitchen" in room_name.lower():
-                            room.items.append(
-                                GameObject(
-                                    "note",
-                                    ox,
-                                    oy,
-                                    width=16,
-                                    height=16,
-                                    note_id="note_kitchen",
-                                    yields="lockpick",
-                                )
+                        ow = int(float(obj.get("width", 16))) or 16
+                        oh = int(float(obj.get("height", 16))) or 16
+                        props = {p.get("name"): p.get("value") for p in obj.get("properties", [])}
+
+                        # Data-driven note properties loaded directly from Tiled
+                        note_id = props.get("note_id")
+                        if not note_id:
+                            # Graceful fallback: infer from obj name or room
+                            obj_name = obj.get("name", "").strip().lower()
+                            if obj_name.startswith("note_"):
+                                note_id = obj_name
+                            elif obj_name:
+                                note_id = f"note_{obj_name}"
+                            else:
+                                note_id = f"note_{room_name.lower()}"
+
+                        yields_item = props.get("yields")
+                        is_collectible = bool(props.get("is_collectible", False))
+                        render_graphic = bool(props.get("render_graphic", True))
+
+                        room.items.append(
+                            GameObject(
+                                "note",
+                                ox,
+                                oy,
+                                width=ow,
+                                height=oh,
+                                is_collectible=is_collectible,
+                                render_graphic=render_graphic,
+                                note_id=note_id,
+                                yields=yields_item,
                             )
-                        else:
-                            room.items.append(
-                                GameObject(
-                                    "note",
-                                    ox,
-                                    oy,
-                                    width=16,
-                                    height=16,
-                                    note_id="note_hallway",
-                                    yields=None,
-                                )
-                            )
+                        )
 
         # Seamlessly extend bottom wall rows if map height is less than target canvas height (e.g. 16 vs 18 rows)
         map_pixel_h = map_h * tile_size
