@@ -1,11 +1,28 @@
-"""
-GameObject and ThrowableProjectile classes for items, tools, and interactable environmental objects.
-"""
-
-from typing import List, Optional, Tuple
+import os
+from typing import Any, List, Optional, Tuple
 import pygame
 
+import settings
 from src.definitions.items import ITEM_ARCHETYPES
+
+_FUSE_BOX_SPRITES_LOADED = False
+_SPRITE_FUSE_BOX_OPEN: Optional[pygame.Surface] = None
+_SPRITE_FUSE_BOX_CLOSED: Optional[pygame.Surface] = None
+
+
+def _load_fuse_box_sprites() -> None:
+    global _FUSE_BOX_SPRITES_LOADED, _SPRITE_FUSE_BOX_OPEN, _SPRITE_FUSE_BOX_CLOSED
+    if _FUSE_BOX_SPRITES_LOADED:
+        return
+    _FUSE_BOX_SPRITES_LOADED = True
+    sheet_path = os.path.join(settings.BASE_DIR, "assets", "graphics", "environment", "spritesheet.png")
+    if os.path.exists(sheet_path):
+        try:
+            sheet = pygame.image.load(sheet_path).convert_alpha()
+            _SPRITE_FUSE_BOX_OPEN = sheet.subsurface(pygame.Rect(736, 32, 16, 32))
+            _SPRITE_FUSE_BOX_CLOSED = sheet.subsurface(pygame.Rect(720, 32, 16, 32))
+        except Exception as e:
+            print(f"Notice: Failed to load fuse box sprites: {e}")
 
 
 class GameObject:
@@ -35,8 +52,25 @@ class GameObject:
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(int(self.x), int(self.y), self.width, self.height)
 
-    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
-        if self.is_picked or not self.render_graphic:
+    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0), house: Optional[Any] = None) -> None:
+        if self.is_picked:
+            return
+
+        # Special dynamic handling for fuse_box: swaps between closed and open sprite upon restoring power
+        if self.obj_type == "fuse_box":
+            _load_fuse_box_sprites()
+            rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])
+            is_powered = getattr(house, "power_restored", False) if house else False
+            if is_powered and _SPRITE_FUSE_BOX_OPEN is not None:
+                surface.blit(_SPRITE_FUSE_BOX_OPEN, (rect.x, rect.y))
+            elif not is_powered and not self.render_graphic:
+                # Closed fuse box tile is already pre-baked into the room background
+                pass
+            elif _SPRITE_FUSE_BOX_CLOSED is not None:
+                surface.blit(_SPRITE_FUSE_BOX_CLOSED, (rect.x, rect.y))
+            return
+
+        if not self.render_graphic:
             return
 
         rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])
@@ -55,7 +89,7 @@ class ThrowableProjectile:
         self.radius = 4
         self.active = True
         self.distance_traveled = 0.0
-        self.max_distance = 160.0
+        self.max_distance = 1000
 
         dir_vectors = {
             "left": (-1.0, 0.0),

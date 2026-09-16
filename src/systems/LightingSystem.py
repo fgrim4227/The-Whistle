@@ -38,10 +38,12 @@ class LightingSystem:
         self.glow_surface = pygame.Surface(size, pygame.SRCALPHA)
         self.stencil = Stencil(size)
 
-        # Dark enough that nothing outside a light is readable, but not a
-        # flat black block -- a faint silhouette of nearby geometry still
-        # shows through.
-        self.ambient_darkness = (8, 8, 14, 250)
+        # Base ambient darkness alpha: faint silhouettes of nearby geometry still show through.
+        self.base_ambient_alpha: float = 240.0
+        # Monster ambient darkness alpha: suffocating 100% pitch-black darkness when El Silbón enters.
+        self.monster_ambient_alpha: float = 255.0
+        # Current active darkness alpha (dynamically tweenable via Timer.tween).
+        self.darkness_alpha: float = self.base_ambient_alpha
 
         self._reveal_cache: Dict[Tuple[int, float], pygame.Surface] = {}
         self._tint_cache: Dict[Tuple[int, Tuple[int, int, int], float], pygame.Surface] = {}
@@ -104,7 +106,8 @@ class LightingSystem:
         """Renders the darkness layer with every light in `lights` carved out of it."""
         ox, oy = camera_offset
 
-        self.darkness_surface.fill(self.ambient_darkness)
+        alpha_val = max(0, min(255, int(self.darkness_alpha)))
+        self.darkness_surface.fill((8, 8, 14, alpha_val))
         self.glow_surface.fill((0, 0, 0, 0))
         self.stencil.clear()
 

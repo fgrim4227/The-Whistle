@@ -19,8 +19,10 @@ class CrowbarMinigame(BaseMinigame):
         target_door: Any = None,
         on_success: Optional[Callable[[], None]] = None,
         on_fail: Optional[Callable[[], None]] = None,
+        target_object: Any = None,
     ) -> None:
-        super().__init__(play_state, target_door, on_success, on_fail)
+        target = target_door if target_door is not None else target_object
+        super().__init__(play_state, target, on_success, on_fail)
 
         self.progress: float = 0.0  # 0 to 100
         self.decay_rate: float = 24.0  # Resistance pushing back per second

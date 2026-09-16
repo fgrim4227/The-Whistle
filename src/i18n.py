@@ -26,7 +26,6 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "hud_battery": "Batería",
         "hud_equipped": "Objeto",
         "hud_none": "Ninguno",
-        "hud_hidden": "[ OCULTO EN EL ARMARIO - NO TE MUEVAS ]",
         "hud_silbon_near": "[ ¡EL SILBIDO SE ESCUCHA LEJOS... ESTÁ AQUÍ! ]",
         
         # Items
@@ -62,14 +61,17 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_fuse_box_locked": "La caja de fusibles está cerrada con llave.",
         "prompt_open_fuse_box": "Presiona E para abrir con la llave de fusibles",
         "prompt_door_banging": "¡ALGO ESTÁ GOLPEANDO LA PUERTA VIOLENTAMENTE! ¡ESCÓNDETE!",
+        "prompt_exit_sensor_active": "El sensor de seguridad bloquea la puerta de salida.",
         "prompt_talk_npc": "Presiona E para hablar con {name}",
         "prompt_pickup": "Presiona E para recoger",
         "prompt_search": "Presiona E para revisar",
 
         # Survivor Notes
-        "note_kitchen_title": "Nota apresurada de Elena",
+        "note_first_room_title": "Nota Arrugada: Consejos de Supervivencia",
+        "note_first_room_body": "Si escuchas el silbido acercándose, no intentes correr... esconderte es tu única salvación. Métete en los armarios o agáchate debajo de las mesas para que no pueda verte. Aguanta la respiración hasta que se aleje.",
+        "note_kitchen_title": "Nota apresurada de Jose Gregorio",
         "note_kitchen_body": "Si encuentras esto, logré huir hacia el piso superior. Dejé la ganzúa pegada aquí para ti. Úsala en la vitrina del comedor contiguo: allí guardaban llaves viejas de la cabaña. ¡No hagas ruido, esa criatura escucha todo!",
-        "note_hallway_title": "Página de diario arrancada",
+        "note_hallway_title": "Jesus...",
         "note_hallway_body": "Los silbidos son una trampa mortal. Si se oyen cerca, está lejos... pero si los escuchas como un susurro en tu nuca, escóndete de inmediato. La caja fuerte del dormitorio principal tiene la llave de salida, pero necesitas la llave antigua.",
 
         # NPC Elena Story Dialogues
@@ -80,8 +82,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "elena_dialogue_escape": "¡La salida está libre! ¡Abre la puerta del bosque y salgamos de aquí!",
 
         # Monologues / Thoughts
-        "thought_got_lockpick": "Elena me entregó una Ganzúa.",
-        "thought_note_got_lockpick": "Encontré una Ganzúa doblada dentro de la nota de Elena.",
+        "thought_got_lockpick": "Jose gregorio me dejo una Ganzúa...",
+        "thought_note_got_lockpick": "Encontré una Ganzúa doblada dentro de la nota de Jose gregorio.",
         "thought_projectile_crash": "¡El objeto hizo un estruendo al estrellarse!",
         "thought_got_old_key": "Conseguí una Llave Antigua de la vitrina.",
         "thought_got_exit_key": "¡La caja fuerte contenía la Llave de Salida del Bosque!",
@@ -91,6 +93,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_fuse_box_locked": "La caja de fusibles está cerrada con llave. Debe haber una llave en algún lugar abajo...",
         "thought_got_fuse_key": "¡Encontré la llave de la caja de fusibles! Tendré que volver al cuarto de arriba con cuidado...",
         "thought_exit_no_power": "La puerta de salida tiene un sensor de seguridad activo. Debo reactivar la energía en la caja de fusibles arriba.",
+        "thought_exit_locked_chains": "Las cadenas están aseguradas con un candado. Necesito la llave del bosque de la caja fuerte.",
         
         # Instructions Modal
         "inst_move": "WASD / Flechas : Moverse",
@@ -156,7 +159,6 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "hud_battery": "Battery",
         "hud_equipped": "Item",
         "hud_none": "None",
-        "hud_hidden": "[ HIDDEN IN WARDROBE - DO NOT MOVE ]",
         "hud_silbon_near": "[ THE WHISTLE SOUNDS FAR... HE IS HERE! ]",
         
         # Items
@@ -192,14 +194,17 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_fuse_box_locked": "The fuse box is locked tight.",
         "prompt_open_fuse_box": "Press E to unlock fuse box with key",
         "prompt_door_banging": "SOMETHING IS VIOLENTLY BANGING ON THE DOOR! HIDE!",
+        "prompt_exit_sensor_active": "The security sensor blocks the exit door.",
         "prompt_talk_npc": "Press E to talk to {name}",
         "prompt_pickup": "Press E to pick up",
         "prompt_search": "Press E to search",
 
         # Survivor Notes
-        "note_kitchen_title": "Elena's Hurried Note",
+        "note_first_room_title": "Crumpled Note: Survival Advice",
+        "note_first_room_body": "If you hear the whistle drawing near, do not run... hiding is your only salvation. Slip into wardrobes or crawl under tables so he cannot see you. Hold your breath until he wanders away.",
+        "note_kitchen_title": "Jose Gregorio's Hurried Note",
         "note_kitchen_body": "If you find this, I managed to flee upstairs. I left the lockpick taped here for you. Use it on the dining room cabinet next door: they kept old cabin keys in there. Keep quiet, that creature hears everything!",
-        "note_hallway_title": "Torn Journal Page",
+        "note_hallway_title": "Jesus...",
         "note_hallway_body": "The whistles are a deadly trap. If they sound close, he is far... but if you hear them like a whisper on your neck, hide immediately. The master bedroom safe has the exit key, but you need the old key.",
 
         # NPC Elena Story Dialogues
@@ -210,8 +215,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "elena_dialogue_escape": "The exit is clear! Unlock the forest door and let's get out of here!",
 
         # Monologues / Thoughts
-        "thought_got_lockpick": "Elena gave me a Lockpick.",
-        "thought_note_got_lockpick": "Found a Lockpick folded inside Elena's note.",
+        "thought_got_lockpick": "Jose Gregorio left me a Lockpick...",
+        "thought_note_got_lockpick": "Found a Lockpick folded inside Jose Gregorio's note.",
         "thought_projectile_crash": "The object crashed with a loud noise!",
         "thought_got_old_key": "Obtained an Old Key from the display case.",
         "thought_got_exit_key": "The safe contained the Forest Exit Key!",
@@ -221,6 +226,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_fuse_box_locked": "The fuse box is locked. There must be a key somewhere downstairs...",
         "thought_got_fuse_key": "Found the fuse box key! I'll have to head back to the upstairs room carefully...",
         "thought_exit_no_power": "The exit door has an active security sensor. I must restore power at the fuse box upstairs.",
+        "thought_exit_locked_chains": "The chains are secured with a padlock. I need the forest key from the safe.",
 
         # Instructions Modal
         "inst_move": "WASD / Arrow Keys : Move Andreas",
