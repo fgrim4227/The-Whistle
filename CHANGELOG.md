@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Director AI (`src/systems/DirectorAI.py`, `src/entities/Monster.py`, `src/states/entity/monster/MonsterPatrolState.py`, `src/states/game/PlayState.py`)**:
+  - Added a `DirectorAI` layer, ticked once per frame in `PlayState.update()` right before `Monster.update_ai()`, that knows the player's real room and position but never drives the monster directly -- it only ever feeds the same senses the monster's own FSM states already read, so a nudge is indistinguishable from a real noise or a patrol choice.
+  - Tracks two timers: a tension timer that builds only while the monster is idly wandering (`patrol` or `moving_to_door`, reset whenever anything else is happening) and a cooldown that suppresses all nudging for `COOLDOWN_AFTER_CHASE` (25s) after a real `chase`.
+  - Once tension crosses `TENSION_THRESHOLD` (30s) and the monster is back in plain `patrol`, nudges it: if the monster shares the player's room, seeds a fake sound via `Monster.hear_noise()` at a random point `NOISE_JITTER_MIN`-`NOISE_JITTER_MAX` (40-100px) from the player; otherwise it sets `Monster.director_room_hint` to the player's room name.
+  - `Monster.director_room_hint` is a one-shot suggestion: `MonsterPatrolState._leave_room()` picks a matching door when one exists, and clears the hint the moment a door is chosen (matched or not) so it only ever biases a single room change.
 - **Smooth Volumetric Flashlight Diffusion (`src/systems/LightingSystem.py`)**:
   - Upgraded directional flashlight cone from 5 stepped layers to 10 tightly-spaced layers (steps of ~8px length and 5° angular increments; alpha progression 35 -> 255), preserving the exact original 68° to 20° cone width.
   - Fixed angular step interpolation in `_carve_flashlight_cone` (`2.0 * half / steps`), completely eliminating the radial fan bug and harsh contour banding for a smooth, cohesive light falloff.

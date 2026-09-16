@@ -14,6 +14,8 @@ from gale.animation import Animation
 import settings
 
 PLAYER_SIZE = (16, 32)
+PLAYER_SPRITE_SIZE = (32, 48)
+PLAYER_SPRITE_BOTTOM_MARGIN = 0
 PLAYER_FALLBACK_COLOR = (40, 90, 160)
 
 PLAYER_ANIMATIONS: Dict[str, Dict[str, Any]] = {

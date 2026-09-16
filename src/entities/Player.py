@@ -161,7 +161,7 @@ class Player(BaseEntity):
 
     def _create_animations(self) -> Tuple[Dict[str, Animation], Dict[str, str]]:
         return entity_defs.build_animations(
-            entity_defs.PLAYER_ANIMATIONS, entity_defs.PLAYER_FALLBACK_COLOR, entity_defs.PLAYER_SIZE
+            entity_defs.PLAYER_ANIMATIONS, entity_defs.PLAYER_FALLBACK_COLOR, entity_defs.PLAYER_SPRITE_SIZE
         )
 
     def change_animation(self, anim_name: str) -> None:
@@ -323,17 +323,23 @@ class Player(BaseEntity):
         draw_x = int(self.x - ox)
         draw_y = int(self.y - oy)
 
-        # 1. Draw Andreas current animation frame
-        if self.current_animation:
-            frame = self.current_animation.get_current_frame()
-            if isinstance(frame, pygame.Rect):
-                surface.blit(settings.TEXTURES[self.current_texture], (draw_x, draw_y), frame)
-            elif isinstance(frame, pygame.Surface):
-                surface.blit(frame, (draw_x, draw_y))
-            else:
-                pygame.draw.rect(surface, entity_defs.PLAYER_FALLBACK_COLOR, self.get_rect().move(-ox, -oy))
-        else:
+        frame = self.current_animation.get_current_frame() if self.current_animation else None
+        frame_size = None
+        if isinstance(frame, pygame.Rect):
+            frame_size = (frame.width, frame.height)
+        elif isinstance(frame, pygame.Surface):
+            frame_size = frame.get_size()
+
+        if frame_size is None:
             pygame.draw.rect(surface, entity_defs.PLAYER_FALLBACK_COLOR, self.get_rect().move(-ox, -oy))
+        else:
+            fw, fh = frame_size
+            sprite_x = int(self.x - ox + (self.width - fw) / 2)
+            sprite_y = int(self.y - oy + self.height - fh + entity_defs.PLAYER_SPRITE_BOTTOM_MARGIN)
+            if isinstance(frame, pygame.Rect):
+                surface.blit(settings.TEXTURES[self.current_texture], (sprite_x, sprite_y), frame)
+            else:
+                surface.blit(frame, (sprite_x, sprite_y))
 
         # 2. Flashlight origin indicator light if active
         if self.flashlight_on and self.battery > 0:
