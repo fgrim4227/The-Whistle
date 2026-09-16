@@ -8,6 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Visual Environment Sprites for In-World Items (`src/definitions/items.py`)**:
+  - Replaced procedural Pygame primitive placeholders with authored sprites from `assets/graphics/environment/spritesheet.png`.
+  - Added cached subsurfaces for `battery` `(592, 48, 16, 16)`, `fuse_key` `(592, 64, 16, 16)`, and `cabinet` (lockpick box) `(592, 80, 16, 16)`.
+- **Dynamic Door Rendering & State Transitions (`src/world/Door.py` & `UpperHallway.json`)**:
+  - **Master Bedroom Door**: Implemented clean door base in Tiled (`GID 425, 521, 617, 713` in `UpperHallway.json`). In `Door.py`, renders the door with padlock `(704, 64, 16, 64)` while locked. When unlocked, removing the overlay cleanly reveals the unpadlocked door underneath without transparency bleed.
+  - **Living Room Escape Door**: Corrected coordinates from red sofa to authentic 32x32 double door sprites:
+    1. *Active Security Sensor*: Renders chained door with red sensor light `(688, 32, 32, 32)` when power is off.
+    2. *Chained & Padlocked*: Renders chained door with padlock without red sensor `(656, 32, 32, 32)` once cabin power is restored.
+    3. *Free Access*: Renders clear open double door `(624, 32, 32, 32)` upon unlocking with the exit key.
+  - **Sequential Escape Validation (`src/definitions/interactions.py`)**: Enforced two-stage security sequence for escaping:
+    1. *Phase 1 (Electronic Sensor)*: While `house.power_restored == False`, the red sensor beam physically prevents escape; interacting shows `prompt_exit_sensor_active` and triggers `thought_exit_no_power` even if player holds the forest key.
+    2. *Phase 2 (Physical Chains & Padlock)*: Once electricity is restored in the fuse box, the sensor shuts off and chains require the Forest Key. Interacting without the key prompts `thought_exit_locked_chains`. Unlocking with the key triggers `VictoryState`.
+  - **Bidirectional Door Sync (`src/definitions/interactions.py`)**: Unlocking Master Bedroom or unbarring doors automatically unlocks/unbars the reciprocal door in the adjoining room.
+- **Dynamic Fuse Box Visual States (`src/world/GameObject.py` & `FirstRoom.json`)**:
+  - Aligned interactable `fuse_box` object at `(448, 0, 16, 32)` to perfectly match the visual fuse box tile in Tiled.
+  - Dynamically renders the closed fuse box sprite with hazard symbol `(720, 32, 16, 32)` by default, and seamlessly overlays the open fuse box sprite `(736, 32, 16, 32)` with exposed circuitry once `FuseBoxMinigame` is solved, completely covering the closed box underneath.
+- **Fix Duplicate Fuse Key in Dining Room (`src/definitions/rooms.py`)**:
+  - Removed lingering `fuse_key` fallback entry from `TILED_ROOMS["dining_room"]["items"]`, preventing duplicate key injection in the dining room and keeping it exclusively in `LivingRoom.json`.
+- **Door Barricades Progression & Planks Configuration (`DiningRoom.json`, `LowerHallway.json`, `TiledLevelLoader.py`)**:
+  - Configured Dining Room to Living Room door with **2 planks** (`is_barred=True`, `planks_remaining=2`), allowing the player to pry it open from the dining room side using the crowbar.
+  - Configured Lower Hallway to Living Room door with **3 planks** (`planks_remaining=3`).
+  - Added Tiled custom property parsing for `planks_remaining` in `TiledLevelLoader.py`.
+- **FirstRoom Stealth Tutorial Note (`FirstRoom.json` & `src/i18n.py`)**:
+  - Added interactive survivor note `note_first_room` in `FirstRoom` teaching the player how to survive by hiding inside wardrobes and under tables when El Silbón approaches.
+  - Updated all survivor note and thought references from Elena to **Jose Gregorio** across Spanish and English localizations.
 - **Data-Driven Survivor Notes via Tiled Custom Properties (`src/world/TiledLevelLoader.py`)**:
   - Replaced hardcoded room name conditionals (`if "kitchen" in room_name...`) with generic, data-driven extraction of custom properties (`note_id`, `yields`, `is_collectible`, `render_graphic`) from Tiled object layers (`Npcs`, `Notes`, `Interactables`).
   - Added multi-tier fallback for `note_id` (object name -> room name), enabling level designers to place interactive notes in any room without touching Python code.

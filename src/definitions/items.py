@@ -8,14 +8,40 @@ exists, the callers never need to change.
 """
 
 import math
-from typing import Callable, Dict
+import os
+from typing import Callable, Dict, Optional
 
 import pygame
 
+import settings
+
+_SPRITESHEET_SURFACE: Optional[pygame.Surface] = None
+_SPRITE_BATTERY: Optional[pygame.Surface] = None
+_SPRITE_FUSE_KEY: Optional[pygame.Surface] = None
+_SPRITE_CABINET: Optional[pygame.Surface] = None
+
+
+def _get_item_sprites() -> None:
+    global _SPRITESHEET_SURFACE, _SPRITE_BATTERY, _SPRITE_FUSE_KEY, _SPRITE_CABINET
+    if _SPRITE_BATTERY is None:
+        sheet_path = os.path.join(settings.BASE_DIR, "assets", "graphics", "environment", "spritesheet.png")
+        if os.path.exists(sheet_path):
+            try:
+                _SPRITESHEET_SURFACE = pygame.image.load(sheet_path).convert_alpha()
+                _SPRITE_BATTERY = _SPRITESHEET_SURFACE.subsurface(pygame.Rect(592, 48, 16, 16))
+                _SPRITE_FUSE_KEY = _SPRITESHEET_SURFACE.subsurface(pygame.Rect(592, 64, 16, 16))
+                _SPRITE_CABINET = _SPRITESHEET_SURFACE.subsurface(pygame.Rect(592, 80, 16, 16))
+            except Exception as e:
+                print(f"Notice: Failed to load item sprites from {sheet_path}: {e}")
+
 
 def _draw_battery(surface: pygame.Surface, rect: pygame.Rect) -> None:
-    pygame.draw.rect(surface, (60, 180, 60), rect, border_radius=2)
-    pygame.draw.rect(surface, (220, 220, 220), (rect.left + 4, rect.top - 2, 8, 3))
+    _get_item_sprites()
+    if _SPRITE_BATTERY is not None:
+        surface.blit(_SPRITE_BATTERY, rect.topleft)
+    else:
+        pygame.draw.rect(surface, (60, 180, 60), rect, border_radius=2)
+        pygame.draw.rect(surface, (220, 220, 220), (rect.left + 4, rect.top - 2, 8, 3))
 
 
 def _draw_key(surface: pygame.Surface, rect: pygame.Rect) -> None:
@@ -44,9 +70,17 @@ def _draw_old_key(surface: pygame.Surface, rect: pygame.Rect) -> None:
 
 
 def _draw_cabinet(surface: pygame.Surface, rect: pygame.Rect) -> None:
-    pygame.draw.rect(surface, (90, 60, 40), rect, border_radius=2)
-    pygame.draw.rect(surface, (50, 32, 20), rect, width=2, border_radius=2)
-    pygame.draw.circle(surface, (200, 180, 70), rect.center, 2)
+    _get_item_sprites()
+    if _SPRITE_CABINET is not None:
+        if rect.width != 16 or rect.height != 16:
+            scaled = pygame.transform.scale(_SPRITE_CABINET, (rect.width, rect.height))
+            surface.blit(scaled, rect.topleft)
+        else:
+            surface.blit(_SPRITE_CABINET, rect.topleft)
+    else:
+        pygame.draw.rect(surface, (90, 60, 40), rect, border_radius=2)
+        pygame.draw.rect(surface, (50, 32, 20), rect, width=2, border_radius=2)
+        pygame.draw.circle(surface, (200, 180, 70), rect.center, 2)
 
 
 def _draw_safe(surface: pygame.Surface, rect: pygame.Rect) -> None:
@@ -65,16 +99,19 @@ def _draw_note(surface: pygame.Surface, rect: pygame.Rect) -> None:
 
 
 def _draw_fuse_box(surface: pygame.Surface, rect: pygame.Rect) -> None:
-    # Graphical tile is already drawn on tilemap layer
+    # Handled dynamically in GameObject.render() based on power_restored state
     pass
 
 
 def _draw_fuse_key(surface: pygame.Surface, rect: pygame.Rect) -> None:
-    # Small metallic panel key with an electric blue bow
-    pygame.draw.circle(surface, (140, 190, 220), (rect.centerx, rect.top + 5), 4)
-    pygame.draw.circle(surface, (40, 80, 120), (rect.centerx, rect.top + 5), 2)
-    pygame.draw.line(surface, (200, 210, 220), (rect.centerx, rect.top + 5), (rect.centerx, rect.bottom - 2), 2)
-    pygame.draw.line(surface, (200, 210, 220), (rect.centerx, rect.bottom - 4), (rect.right - 2, rect.bottom - 4), 2)
+    _get_item_sprites()
+    if _SPRITE_FUSE_KEY is not None:
+        surface.blit(_SPRITE_FUSE_KEY, rect.topleft)
+    else:
+        pygame.draw.circle(surface, (140, 190, 220), (rect.centerx, rect.top + 5), 4)
+        pygame.draw.circle(surface, (40, 80, 120), (rect.centerx, rect.top + 5), 2)
+        pygame.draw.line(surface, (200, 210, 220), (rect.centerx, rect.top + 5), (rect.centerx, rect.bottom - 2), 2)
+        pygame.draw.line(surface, (200, 210, 220), (rect.centerx, rect.bottom - 4), (rect.right - 2, rect.bottom - 4), 2)
 
 
 ITEM_ARCHETYPES: Dict[str, Callable[[pygame.Surface, pygame.Rect], None]] = {

@@ -220,6 +220,7 @@ class TiledLevelLoader:
                             is_stairs = bool(props.get("is_stairs", False)) or (props.get("id") == "stairs") or (obj.get("type") == "stairs")
                             is_exit = (props.get("is_exit_door") in ("Yes", "yes", True)) or bool(props.get("is_exit", False))
                             req_key = props.get("required_key", "key")
+                            planks_remaining = int(props.get("planks_remaining", 3 if is_barred else 0))
                             room.doors.append(
                                 Door(
                                     x=ox,
@@ -236,6 +237,7 @@ class TiledLevelLoader:
                                     is_exit_door=is_exit,
                                     is_stairs=is_stairs,
                                     render_graphic=False,
+                                    planks_remaining=planks_remaining,
                                 )
                             )
 

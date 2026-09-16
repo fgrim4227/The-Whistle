@@ -207,6 +207,11 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
                 if not door.is_barred:
                     play_state.objectives_progress["crowbar"] = True
                     play_state.player.set_thought("thought_door_unbarred", 3.5)
+                    target_rm = play_state.house.rooms.get(door.target_room_name)
+                    if target_rm:
+                        for d in target_rm.doors:
+                            if d.target_room_name in (room.name, room.display_name):
+                                d.unbar()
 
             play_state.active_minigame = MinigameFactory.create(
                 "crowbar",
@@ -218,27 +223,40 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
             play_state.player.set_thought("prompt_door_barred", 3.5)
         return
 
-    # 3. Locked door requiring key
-    if door.is_locked:
-        if door.can_open(play_state.player):
-            if door.is_exit_door and not getattr(play_state.house, "power_restored", False):
-                play_state.player.set_thought("thought_exit_no_power", 4.0)
-                return
-            door.unlock()
-            if door.is_exit_door:
-                play_state.objectives_progress["escape"] = True
-                play_state.state_machine.push(VictoryState(play_state.state_machine))
-                return
-        else:
-            play_state.player.set_thought("prompt_door_locked", 3.0)
-        return
-
-    # 4. Exit door with electronic sensor check
+    # 3. Exit door: sequential security validation (Power/Sensor -> Key/Padlock -> Victory)
     if door.is_exit_door:
+        # Step 1: Electronic security sensor MUST be deactivated by restoring power first
         if not getattr(play_state.house, "power_restored", False):
             play_state.player.set_thought("thought_exit_no_power", 4.0)
             return
+
+        # Step 2: Once sensor is disabled, padlock and chains must be unlocked with the forest key
+        if door.is_locked:
+            if door.can_open(play_state.player):
+                door.unlock()
+                play_state.objectives_progress["escape"] = True
+                play_state.state_machine.push(VictoryState(play_state.state_machine))
+                return
+            else:
+                play_state.player.set_thought("thought_exit_locked_chains", 3.5)
+                return
+
+        # Step 3: If already unlocked and powered, escape directly
+        play_state.objectives_progress["escape"] = True
         play_state.state_machine.push(VictoryState(play_state.state_machine))
+        return
+
+    # 4. Standard locked door requiring key (e.g. Master Bedroom)
+    if door.is_locked:
+        if door.can_open(play_state.player):
+            door.unlock()
+            target_rm = play_state.house.rooms.get(door.target_room_name)
+            if target_rm:
+                for d in target_rm.doors:
+                    if d.target_room_name in (room.name, room.display_name):
+                        d.unlock()
+        else:
+            play_state.player.set_thought("prompt_door_locked", 3.0)
         return
 
     # 5. Walk through door into target room
@@ -264,7 +282,11 @@ def get_door_prompt(play_state: Any, door: Any) -> str:
         return t("prompt_door_bolted")
     elif door.is_barred:
         return t("prompt_door_barred")
+    elif door.is_exit_door and not getattr(play_state.house, "power_restored", False):
+        return t("prompt_exit_sensor_active")
     elif door.is_locked:
+        if door.can_open(play_state.player):
+            return t("prompt_open_door")
         return t("prompt_door_locked")
     elif is_danger:
         return t("prompt_open_door_danger")

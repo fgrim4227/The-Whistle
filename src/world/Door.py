@@ -1,9 +1,34 @@
-"""
-Door class for room interconnections, supporting locks and wooden barricades.
-"""
-
-from typing import Optional, Tuple
+import os
+from typing import Any, Optional, Tuple
 import pygame
+
+import settings
+
+_DOOR_SPRITES_LOADED = False
+_SPRITE_DOOR_LOCKED: Optional[pygame.Surface] = None
+_SPRITE_DOOR_UNLOCKED: Optional[pygame.Surface] = None
+_SPRITE_ESCAPE_SENSOR: Optional[pygame.Surface] = None
+_SPRITE_ESCAPE_CHAINS: Optional[pygame.Surface] = None
+_SPRITE_ESCAPE_CLEAR: Optional[pygame.Surface] = None
+
+
+def _load_door_sprites() -> None:
+    global _DOOR_SPRITES_LOADED, _SPRITE_DOOR_LOCKED, _SPRITE_DOOR_UNLOCKED
+    global _SPRITE_ESCAPE_SENSOR, _SPRITE_ESCAPE_CHAINS, _SPRITE_ESCAPE_CLEAR
+    if _DOOR_SPRITES_LOADED:
+        return
+    _DOOR_SPRITES_LOADED = True
+    sheet_path = os.path.join(settings.BASE_DIR, "assets", "graphics", "environment", "spritesheet.png")
+    if os.path.exists(sheet_path):
+        try:
+            sheet = pygame.image.load(sheet_path).convert_alpha()
+            _SPRITE_DOOR_LOCKED = sheet.subsurface(pygame.Rect(704, 64, 16, 64))
+            _SPRITE_DOOR_UNLOCKED = sheet.subsurface(pygame.Rect(640, 64, 16, 64))
+            _SPRITE_ESCAPE_SENSOR = sheet.subsurface(pygame.Rect(688, 32, 32, 32))
+            _SPRITE_ESCAPE_CHAINS = sheet.subsurface(pygame.Rect(656, 32, 32, 32))
+            _SPRITE_ESCAPE_CLEAR = sheet.subsurface(pygame.Rect(624, 32, 32, 32))
+        except Exception as e:
+            print(f"Notice: Failed to load door sprites: {e}")
 
 
 class Door:
@@ -63,31 +88,59 @@ class Door:
     def unbolt(self) -> None:
         self.is_bolted = False
 
-    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
+    def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0), house: Optional[Any] = None) -> None:
+        _load_door_sprites()
         rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])
-        if not self.render_graphic:
-            # If the door visual is already baked into the tilemap, only draw barricade or padlock overlays
-            if self.is_barred:
-                pygame.draw.line(surface, (140, 95, 60), (rect.left + 2, rect.top + 4), (rect.right - 2, rect.bottom - 4), 4)
-                pygame.draw.line(surface, (140, 95, 60), (rect.left + 2, rect.bottom - 4), (rect.right - 2, rect.top + 4), 4)
-            elif self.is_locked:
-                pygame.draw.circle(surface, (230, 190, 40), (rect.centerx, rect.centery - 2), 4)
-                pygame.draw.rect(surface, (230, 190, 40), (rect.centerx - 3, rect.centery, 6, 6))
+
+        # 1. Master Bedroom vertical door (replace yellow overlay with real top-down door sprites)
+        is_mb_door = (
+            self.target_room_name.lower() in ("master_bedroom", "masterbedroom")
+            or (self.height >= 40 and self.width <= 32 and (self.is_locked or self.required_key == "old_key"))
+        )
+        if is_mb_door and _SPRITE_DOOR_LOCKED is not None:
+            if self.is_locked:
+                # Snap to tile grid (16x16) for seamless doorway alignment
+                draw_x = int(self.x // 16) * 16 - camera_offset[0]
+                draw_y = int(self.y // 16) * 16 - camera_offset[1]
+                surface.blit(_SPRITE_DOOR_LOCKED, (draw_x, draw_y))
+            # When unlocked, the base tilemap already has the clean door authored without padlock!
             return
 
-        # Door frame
-        pygame.draw.rect(surface, (55, 40, 30), rect)
-        
+        # 2. Escape door (Living Room exit) with 3 reactive sprite states
+        if self.is_exit_door and _SPRITE_ESCAPE_SENSOR is not None:
+            is_powered = getattr(house, "power_restored", False) if house else False
+            draw_x = rect.x + (self.width - 32) // 2
+            draw_y = rect.y + (self.height - 32)
+            if not is_powered:
+                # State 1: Active security sensor (red beam)
+                surface.blit(_SPRITE_ESCAPE_SENSOR, (draw_x, draw_y))
+            elif self.is_locked:
+                # State 2: Power restored, chained door with padlock
+                surface.blit(_SPRITE_ESCAPE_CHAINS, (draw_x, draw_y))
+            else:
+                # State 3: Unlocked / free access
+                surface.blit(_SPRITE_ESCAPE_CLEAR, (draw_x, draw_y))
+            return
+
+        # 3. Barricaded door planks
         if self.is_barred:
-            # Draw diagonal wooden barricade planks
-            pygame.draw.line(surface, (140, 95, 60), (rect.left + 2, rect.top + 4), (rect.right - 2, rect.bottom - 4), 4)
-            pygame.draw.line(surface, (140, 95, 60), (rect.left + 2, rect.bottom - 4), (rect.right - 2, rect.top + 4), 4)
-        elif self.is_locked:
-            # Golden padlock
-            pygame.draw.circle(surface, (230, 190, 40), (rect.centerx, rect.centery - 2), 4)
-            pygame.draw.rect(surface, (230, 190, 40), (rect.centerx - 3, rect.centery, 6, 6))
-        else:
-            # Unlocked door leaf
-            door_inner = rect.inflate(-6, -4)
-            pygame.draw.rect(surface, (90, 60, 40), door_inner)
-            pygame.draw.circle(surface, (220, 200, 80), (door_inner.right - 4, door_inner.centery), 2)
+            if self.render_graphic:
+                pygame.draw.rect(surface, (55, 40, 30), rect)
+
+            # Planks rendered according to planks_remaining
+            if self.planks_remaining >= 1:
+                pygame.draw.line(surface, (140, 95, 60), (rect.left + 2, rect.top + 4), (rect.right - 2, rect.bottom - 4), 4)
+            if self.planks_remaining >= 2:
+                pygame.draw.line(surface, (140, 95, 60), (rect.left + 2, rect.bottom - 4), (rect.right - 2, rect.top + 4), 4)
+            if self.planks_remaining >= 3:
+                pygame.draw.line(surface, (155, 105, 65), (rect.left + 2, rect.centery), (rect.right - 2, rect.centery), 4)
+            return
+
+        if not self.render_graphic:
+            return
+
+        # Fallback procedural door
+        pygame.draw.rect(surface, (55, 40, 30), rect)
+        door_inner = rect.inflate(-6, -4)
+        pygame.draw.rect(surface, (90, 60, 40), door_inner)
+        pygame.draw.circle(surface, (220, 200, 80), (door_inner.right - 4, door_inner.centery), 2)

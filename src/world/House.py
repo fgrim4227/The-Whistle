@@ -20,12 +20,14 @@ class House:
         self.current_room: Optional[Room] = None
         self.is_shifting = False
         self.shift_timer = 0.0
+        self.power_restored: bool = False
 
         # Attempt to load newly authored Tiled levels, fallback to default procedural cabin
         if not self._build_tiled_cabin():
             self._build_default_cabin()
 
     def _register_room(self, room_key: str, room: Room, aliases: list) -> None:
+        room.house = self
         self.rooms[room_key] = room
         for alias in aliases:
             self.rooms[alias] = room

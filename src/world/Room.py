@@ -87,8 +87,9 @@ class Room:
                 pygame.draw.rect(surface, (15, 12, 10), w_rect, width=1)
 
         # Draw doors
+        house_ref = getattr(self, "house", None)
         for door in self.doors:
-            door.render(surface, camera_offset)
+            door.render(surface, camera_offset, house=house_ref)
 
         # Draw hiding spots
         for spot in self.hiding_spots:
@@ -96,4 +97,4 @@ class Room:
 
         # Draw floor items
         for item in self.items:
-            item.render(surface, camera_offset)
+            item.render(surface, camera_offset, house=house_ref)

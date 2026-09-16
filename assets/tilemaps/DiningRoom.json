@@ -401,9 +401,14 @@
                          "value":"door"
                         }, 
                         {
-                         "name":"is_bolted",
+                         "name":"is_barred",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"planks_remaining",
+                         "type":"int",
+                         "value":2
                         }, 
                         {
                          "name":"target_room",
