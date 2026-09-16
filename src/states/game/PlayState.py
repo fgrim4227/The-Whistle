@@ -23,6 +23,7 @@ from src.entities.Monster import Monster
 from src.world.GameObject import ThrowableProjectile
 from src.systems.LightingSystem import Light, LightingSystem
 from src.systems.AudioManager import AudioManager
+from src.systems.DirectorAI import DirectorAI
 from src.ui.HUD import HUD
 from src.minigames.BaseMinigame import BaseMinigame
 from src.definitions.interactions import (
@@ -53,6 +54,7 @@ class PlayState(BaseState):
         self.lighting = LightingSystem()
         self.audio = AudioManager()
         self.hud = HUD()
+        self.director = DirectorAI()
 
         self.projectiles: List[ThrowableProjectile] = []
         self.prompt_text = ""
@@ -66,11 +68,13 @@ class PlayState(BaseState):
         }
 
         self._monster_was_in_room: bool = False
+        self._was_catching: bool = False
         self._darkness_tween = None
 
     def enter(self, *args, **kwargs) -> None:
         self.player.clear_held()
         self._monster_was_in_room = False
+        self._was_catching = False
         self.lighting.darkness_alpha = self.lighting.base_ambient_alpha
         self._darkness_tween = None
         # Start atmospheric cabin ambient background music
@@ -113,18 +117,25 @@ class PlayState(BaseState):
         if not room:
             return
 
-        # 1. Exit hiding spot if currently concealed
+        # 1. Exit hiding spot if currently concealed -- unless El Silbón is
+        # already on its way to drag the player back out, in which case
+        # there's no getting out early.
         if self.player.is_hidden:
-            self.player.exit_hide()
+            if self.monster.ai_state != "catching":
+                self.player.exit_hide()
             return
 
         player_rect = self.player.get_rect()
         interact_zone = player_rect.inflate(24, 24)
 
-        # 2. Check nearby hiding spots (wardrobes / tables)
+        # 2. Check nearby hiding spots (wardrobes / tables). Hiding always
+        # happens -- whether El Silbón already suspected this exact spot
+        # only decides whether it quietly starts walking over to check.
         for spot in room.hiding_spots:
             if interact_zone.colliderect(spot.get_rect()):
                 self.player.hide(spot)
+                if self.monster.checks_hiding_spot(spot):
+                    self.monster.change_state("catching", spot=spot)
                 return
 
         # 3. Check nearby floor items & interactables (via strategy dispatcher)
@@ -156,6 +167,8 @@ class PlayState(BaseState):
                 if self.active_minigame is current_minigame:
                     self.active_minigame = None
                 self.player.sync_movement_keys()
+        elif self.monster.ai_state == "catching":
+            self.player.clear_movement()
         else:
             self.player.update_movement(obstacles, dt)
 
@@ -198,8 +211,33 @@ class PlayState(BaseState):
             self.player.throw_requested = False
             self._handle_throw()
 
+        # The Director watches from above and feeds the monster's senses. It
+        # runs first so a nudge reaches the AI on this same frame instead of
+        # the next one.
+        self.director.update(self.monster, self.player, self.house, dt)
+
         # Update El Silbón (delegating to FSM state machine with house navigation)
         self.monster.update_ai(self.player, self.house, dt)
+
+        # Ambient darkness lifts once the capture animation actually
+        # starts (not while it's still walking over), so it's visible;
+        # the sequence always ends in the jumpscare, so nothing needs to
+        # tween it back down afterward. Checked right after update_ai so
+        # this reacts the same frame the animation switches over, not one
+        # frame later.
+        if self.monster.current_animation_name == "catching" and not self._was_catching:
+            self._was_catching = True
+            if self.player.is_hidden:
+                # El Silbón reached the hiding spot -- drag the player back
+                # out into the open right as the reveal starts.
+                self.player.exit_hide()
+            if self._darkness_tween and not getattr(self._darkness_tween, "to_remove", False):
+                self._darkness_tween.remove()
+            self._darkness_tween = Timer.tween(
+                1.0,
+                [(self.lighting, {"darkness_alpha": self.lighting.catching_ambient_alpha})],
+                ease_function_name="in_out_quad",
+            )
 
         # Update thrown projectiles, obstacle collisions, and monster hit collisions
         for p in self.projectiles:
@@ -250,15 +288,22 @@ class PlayState(BaseState):
         self.hud.update(dt)
 
         # Game Over Condition: caught by El Silbón in the same room while unhidden
-        is_safe_state = self.monster.ai_state == "stunned"
+        is_safe_state = self.monster.ai_state in ("stunned", "catching")
         if monster_in_same_room and not self.player.is_hidden and not is_safe_state:
             if self.player.get_rect().colliderect(self.monster.get_rect()):
-                if self.active_minigame:
-                    self.active_minigame.close()
-                settings.stop_channel("silbon_footsteps")
-                settings.stop_channel("minigame")
-                self.audio.current_footstep_sound = None
-                self.state_machine.push(GameOverState(self.state_machine))
+                self._trigger_game_over()
+
+        # The capture animation resolves itself once its single playthrough finishes.
+        if self.monster.current_animation_name == "catching" and self.monster.current_animation.times_played >= 1:
+            self._trigger_game_over()
+
+    def _trigger_game_over(self) -> None:
+        if self.active_minigame:
+            self.active_minigame.close()
+        settings.stop_channel("silbon_footsteps")
+        settings.stop_channel("minigame")
+        self.audio.current_footstep_sound = None
+        self.state_machine.push(GameOverState(self.state_machine))
 
     def _update_contextual_prompt(self) -> None:
         if self.active_minigame and self.active_minigame.is_active:

@@ -33,14 +33,13 @@ MONSTER_SPRITE_SIZE = (92, 92)
 MONSTER_FALLBACK_COLOR = (160, 40, 40)
 # render_sprite anchors the sprite's bottom this many px below the
 # collision box's bottom edge (feet/shadow margin) and centers it
-# horizontally -- computed from each frame's own size, so idle's smaller
+# horizontally computed from each frame's own size, so idle's smaller
 # 64x64 sheet and walk/running's 92x92 sheets don't visually jump
 # position when the animation changes.
 MONSTER_SPRITE_BOTTOM_MARGIN = 8
 
 # monster_walk/monster_running are each one 8-col x 4-row sheet, rows in
-# down/left/up/right order (verified by rendering each row -- this differs
-# from a naive top/left/right/bottom guess). monster_idle is a single
+# down/left/up/right order. monster_idle is a single
 # 4-frame row with no per-direction variants. Frame indices below are
 # 1-based, row-major across the whole sheet.
 MONSTER_ANIMATIONS: Dict[str, Dict[str, Any]] = {
@@ -49,6 +48,7 @@ MONSTER_ANIMATIONS: Dict[str, Dict[str, Any]] = {
     "walk-up": {"texture": "monster_walk", "frames": list(range(17, 25)), "interval": 0.10},
     "walk-right": {"texture": "monster_walk", "frames": list(range(25, 33)), "interval": 0.10},
     "idle": {"texture": "monster_idle", "frames": list(range(1, 5)), "interval": 0.20},
+    "catching": {"texture": "monster_catching", "frames": list(range(1, 10)), "interval": 0.7, "loops": 1},
 }
 
 
@@ -65,7 +65,7 @@ def build_animations(
     fallback_size: Tuple[int, int],
 ) -> Tuple[Dict[str, Animation], Dict[str, str]]:
     """
-    :returns: (animations, textures) -- animations[name] plays back
+    :returns: (animations, textures) animations[name] plays back
     settings.FRAMES rects on settings.TEXTURES[textures[name]]; when
     that texture never loaded, animations[name] instead holds a single
     solid-color placeholder frame (a plain pygame.Surface, not a rect,

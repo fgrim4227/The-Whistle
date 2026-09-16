@@ -42,6 +42,9 @@ class LightingSystem:
         self.base_ambient_alpha: float = 240.0
         # Monster ambient darkness alpha: suffocating 100% pitch-black darkness when El Silbón enters.
         self.monster_ambient_alpha: float = 255.0
+        # Ambient darkness alpha while the "catching" capture animation
+        # plays: clearer than normal so the animation itself is visible.
+        self.catching_ambient_alpha: float = 200.0
         # Current active darkness alpha (dynamically tweenable via Timer.tween).
         self.darkness_alpha: float = self.base_ambient_alpha
 

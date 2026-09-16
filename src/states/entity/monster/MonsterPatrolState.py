@@ -53,7 +53,7 @@ class MonsterPatrolState(MonsterBaseState):
             self.room_change_cooldown -= dt
             if self.room_change_cooldown <= 0.0:
                 self.room_change_cooldown = random.uniform(5, 8)
-                self._leave_room(house, target_room_preference=player_room_name)
+                self._leave_room(house, target_room_preference=self.monster.director_room_hint)
 
     def _patrol_room(self, current_room, dt: float, avoid_pos: Optional[Tuple[float, float]] = None) -> None:
 
@@ -121,8 +121,14 @@ class MonsterPatrolState(MonsterBaseState):
                 (d for d in valid_doors if d.target_room_name == target_room_preference),
                 None
             )
+
+        # A suggestion is spent the moment a door gets picked, matched or
+        # not, so it nudges one decision rather than biasing every future one.
+        self.monster.director_room_hint = None
+
         if not chosen_door and valid_doors:
             chosen_door = random.choice(valid_doors)
-
+            
         if chosen_door:
             self.monster.change_state("moving_to_door", door=chosen_door, target_room=chosen_door.target_room_name)
+

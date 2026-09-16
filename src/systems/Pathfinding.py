@@ -226,7 +226,7 @@ def find_path(
         if not grid[goal_cell[1]][goal_cell[0]]:
             nearest = _nearest_walkable_cell(grid, cols, rows, goal_cell)
             if nearest is None:
-                return []
+                return [goal]
             goal_cell = nearest
 
         _open_start_area(grid, cols, rows, start_cell, raw_obstacles)
@@ -237,7 +237,7 @@ def find_path(
             break
 
         if width <= min_entity_width:
-            return []
+            return [goal]
         width = max(min_entity_width, width - 8)
 
     cell_path = _smooth(grid, cols, rows, cell_path)

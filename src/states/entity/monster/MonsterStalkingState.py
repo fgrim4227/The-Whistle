@@ -13,6 +13,15 @@ WAYPOINT_ARRIVAL_DIST = 10.0
 
 LISTEN_SOUND_INTERVAL = 1.8
 
+# How far the player has to actually move before the route to them gets
+# recalculated. Sustained detection (the flashlight makes this common,
+# tripling view distance) would otherwise re-plan on every single frame
+# even while the player stands still, and a freshly re-planned route can
+# start off in a slightly different direction than the one it replaces --
+# showing up as the monster rocking between two positions instead of
+# committing to a path.
+REPATH_DIST = 32.0
+
 
 class MonsterStalkingState(MonsterBaseState):
 
@@ -49,9 +58,11 @@ class MonsterStalkingState(MonsterBaseState):
             return
 
         if not player.is_hidden and self.monster.can_detect_player(player, house):
-            
-            self.target_x, self.target_y = player.get_center()
-            self.needs_path = True
+
+            new_target_x, new_target_y = player.get_center()
+            if math.hypot(new_target_x - self.target_x, new_target_y - self.target_y) > REPATH_DIST:
+                self.needs_path = True
+            self.target_x, self.target_y = new_target_x, new_target_y
             self.time_since_detection = 0.0
             self.listen_timer = 0.0
             self.confirm_timer += dt
