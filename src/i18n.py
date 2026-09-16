@@ -67,9 +67,9 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_search": "Presiona E para revisar",
 
         # Survivor Notes
-        "note_kitchen_title": "Nota apresurada de Elena",
+        "note_kitchen_title": "Nota apresurada de Jose Gregorio",
         "note_kitchen_body": "Si encuentras esto, logré huir hacia el piso superior. Dejé la ganzúa pegada aquí para ti. Úsala en la vitrina del comedor contiguo: allí guardaban llaves viejas de la cabaña. ¡No hagas ruido, esa criatura escucha todo!",
-        "note_hallway_title": "Página de diario arrancada",
+        "note_hallway_title": "Jesus...",
         "note_hallway_body": "Los silbidos son una trampa mortal. Si se oyen cerca, está lejos... pero si los escuchas como un susurro en tu nuca, escóndete de inmediato. La caja fuerte del dormitorio principal tiene la llave de salida, pero necesitas la llave antigua.",
 
         # NPC Elena Story Dialogues
@@ -80,8 +80,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "elena_dialogue_escape": "¡La salida está libre! ¡Abre la puerta del bosque y salgamos de aquí!",
 
         # Monologues / Thoughts
-        "thought_got_lockpick": "Elena me entregó una Ganzúa.",
-        "thought_note_got_lockpick": "Encontré una Ganzúa doblada dentro de la nota de Elena.",
+        "thought_got_lockpick": "Jose gregorio me dejo una Ganzúa...",
+        "thought_note_got_lockpick": "Encontré una Ganzúa doblada dentro de la nota de Jose gregorio.",
         "thought_projectile_crash": "¡El objeto hizo un estruendo al estrellarse!",
         "thought_got_old_key": "Conseguí una Llave Antigua de la vitrina.",
         "thought_got_exit_key": "¡La caja fuerte contenía la Llave de Salida del Bosque!",
