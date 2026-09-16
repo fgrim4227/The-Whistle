@@ -20,7 +20,7 @@ class AudioManager:
         self.current_footstep_sound: Optional[str] = None
         
         # Cooldown timer for periodic whistling bursts (not continuous loops)
-        self.whistle_cooldown = random.uniform(4.0, 15.0)
+        self.whistle_cooldown = random.uniform(2.0, 6.0)
 
     def start_ambient(self, track_name: Optional[str] = None) -> None:
         """Starts looping atmospheric cabin background music if not already playing."""
@@ -81,7 +81,7 @@ class AudioManager:
             player_center[1] - monster_center[1]
         )
         max_range = 2000
-        normalized = min(1.0, max(0.0, dist / max_range))
+        normalized = min(1.0, max(0.06, dist / max_range))
 
         # Modulate whistle volume inversely proportional to distance
         whistle_vol = max(0.08, normalized)
@@ -105,7 +105,7 @@ class AudioManager:
         # Ambient music volume ducking when listening closely at a door
         ch_amb = settings.AUDIO_CHANNELS.get("ambience")
         if ch_amb and ch_amb.get_busy():
-            if door_listening_proximity > 0.05:
+            if door_listening_proximity > 0.1:
                 # Duck ambient volume from 0.45 down towards 0.15 for acoustic clarity
                 ducked_vol = max(0.12, 0.45 * (1.0 - door_listening_proximity * 0.70))
                 ch_amb.set_volume(ducked_vol)
@@ -115,15 +115,15 @@ class AudioManager:
         # Panicked or door-listening breathing modulation
         ch_breath = settings.AUDIO_CHANNELS.get("silbon_breath")
         if ch_breath:
-            if monster_in_same_room and (dist < 150.0 or is_hidden):
-                breath_vol = max(0.2, (1.0 - min(1.0, dist / 180.0)) * 0.90)
+            if monster_in_same_room and (dist < 180.0 or is_hidden):
+                breath_vol = max(0.3, (1.0 - min(1.0, dist / 180.0)) * 0.90)
                 if not ch_breath.get_busy():
                     settings.play_sound("breathing", loops=-1, volume=breath_vol, channel_name="silbon_breath")
                 else:
                     ch_breath.set_volume(breath_vol)
             elif door_listening_proximity > 0.05:
                 # Audible heavy breathing through wooden door
-                breath_vol = max(0.35, min(0.95, door_listening_proximity * 0.95))
+                breath_vol = max(0.5, min(0.95, door_listening_proximity * 0.95))
                 if not ch_breath.get_busy():
                     settings.play_sound("breathing", loops=-1, volume=breath_vol, channel_name="silbon_breath")
                 else:
@@ -143,7 +143,7 @@ class AudioManager:
             )
             if should_play_steps:
                 target_sound = "run_sound" if monster_ai_state in ("chase", "berserk") else "walk_sound"
-                step_vol = max(0.12, (1.0 - min(1.0, dist / 260.0)) * 0.85)
+                step_vol = max(0.3, (1.0 - min(1.0, dist / 500)) * 0.85)
 
                 if self.current_footstep_sound != target_sound or not ch_steps.get_busy():
                     settings.play_sound(target_sound, loops=-1, volume=step_vol, channel_name="silbon_footsteps")

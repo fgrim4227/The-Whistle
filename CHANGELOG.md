@@ -7,33 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Horror Atmosphere & Pacing Balancing (`src/systems/LightingSystem.py`, `AudioManager.py`, `DirectorAI.py`, `settings.py`, `Kitchen.json`)**:
+  - **Shadowy El Silbón Silhouette**: Removed glowing eye points (`MONSTER_EYE_LIGHT_RADIUS = 0`), fully cloaking the monster in darkness as an unseen, terrifying presence.
+  - **Denser Ambient Darkness**: Deepened base ambient darkness alpha to `252.0` (from `240.0`) and capture sequence alpha to `245.0` (from `200.0`) for intense claustrophobia and reliance on the flashlight.
+  - **Intensified Audio Landscape (`AudioManager.py`)**:
+    - Reduced periodic whistle cooldown to `2.0 - 6.0s` (from `4.0 - 15.0s`) with higher minimum baseline audibility (`0.06`), making his whistling far more persistent and unnerving.
+    - Extended monster footstep audibility radius through cabin floors to `500px` (from `260px`) with higher minimum volume (`0.3`).
+    - Heightened breathing sensitivity and volume (up to `0.5` through closed doors and `0.3` within same-room proximity).
+  - **Relentless Director AI Pacing (`DirectorAI.py`)**: Shortened tension threshold to `5.0s` (from `30.0s`) and chase recovery cooldown to `5.0s` (from `25.0s`), drastically reducing idle wandering downtime and keeping El Silbón actively stalking Andreas.
+  - **Level Geometry Collision Tuning (`Kitchen.json`)**: Adjusted kitchen island counter collision box for smooth player and entity navigation.
 - **Director AI (`src/systems/DirectorAI.py`, `src/entities/Monster.py`, `src/states/entity/monster/MonsterPatrolState.py`, `src/states/game/PlayState.py`)**:
   - Added a `DirectorAI` layer, ticked once per frame in `PlayState.update()` right before `Monster.update_ai()`, that knows the player's real room and position but never drives the monster directly -- it only ever feeds the same senses the monster's own FSM states already read, so a nudge is indistinguishable from a real noise or a patrol choice.
-  - Tracks two timers: a tension timer that builds only while the monster is idly wandering (`patrol` or `moving_to_door`, reset whenever anything else is happening) and a cooldown that suppresses all nudging for `COOLDOWN_AFTER_CHASE` (25s) after a real `chase`.
-  - Once tension crosses `TENSION_THRESHOLD` (30s) and the monster is back in plain `patrol`, nudges it: if the monster shares the player's room, seeds a fake sound via `Monster.hear_noise()` at a random point `NOISE_JITTER_MIN`-`NOISE_JITTER_MAX` (40-100px) from the player; otherwise it sets `Monster.director_room_hint` to the player's room name.
+  - Tracks two timers: a tension timer that builds only while the monster is idly wandering (`patrol` or `moving_to_door`, reset whenever anything else is happening) and a cooldown that suppresses all nudging after a real `chase`.
+  - Once tension crosses `TENSION_THRESHOLD` and the monster is back in plain `patrol`, nudges it: if the monster shares the player's room, seeds a fake sound via `Monster.hear_noise()` at a random point `NOISE_JITTER_MIN`-`NOISE_JITTER_MAX` (40-100px) from the player; otherwise it sets `Monster.director_room_hint` to the player's room name.
   - `Monster.director_room_hint` is a one-shot suggestion: `MonsterPatrolState._leave_room()` picks a matching door when one exists, and clears the hint the moment a door is chosen (matched or not) so it only ever biases a single room change.
 - **Smooth Volumetric Flashlight Diffusion (`src/systems/LightingSystem.py`)**:
-  - Upgraded directional flashlight cone from 5 stepped layers to 10 tightly-spaced layers (steps of ~8px length and 5° angular increments; alpha progression 35 -> 255), preserving the exact original 68° to 20° cone width.
+  - Upgraded directional flashlight cone from 5 stepped layers to 10 tightly-spaced layers (steps of ~8px length and 5° angular increments; alpha progression 35 -> 255), preserving the exact original 68° to 20° cone width oriented to player facing direction (`down`, `up`, `right`, `left`).
   - Fixed angular step interpolation in `_carve_flashlight_cone` (`2.0 * half / steps`), completely eliminating the radial fan bug and harsh contour banding for a smooth, cohesive light falloff.
-- **Reciprocal Barred Door Blocking & Minigame Enforcement (`src/definitions/interactions.py`, `src/i18n.py`, `src/world/Room.py`, `src/states/entity/MonsterPatrolState.py`)**:
-  - Implemented `get_reciprocal_door` and `is_reciprocal_door_barred` helpers to detect when a doorway is barricaded with wooden planks from the opposite side.
-  - Strictly prevents passing through or opening doors from the unbarred side (e.g. `living_room -> dining_room` and `living_room -> lower_hallway`), forcing the player to navigate the cabin layout and pry the planks off with the crowbar minigame on the barred side.
-  - Added dedicated bilingual prompts (`prompt_door_barred_other_side`: *"La puerta está tapiada con tablones desde el otro lado."*) and internal thoughts (`thought_door_barred_other_side`: *"Está bloqueada con tablones por el otro lado. Tendré que encontrar otra forma de llegar y quitarlos."*).
-  - Synchronized `on_plank_pried` to unbar both doorways once the minigame is completed.
-  - Updated `Room.get_obstacles` and `MonsterPatrolState._leave_room` to ensure neither the player nor El Silbón can phase or path through doors barred from either side.
-- **Procedural Intro Highway Cutscene (`src/states/game/IntroRoadState.py`, `StartState.py`, `assets/graphics/intro/`)**:
-  - Authored cinematic sequence along Carretera Trasandina (Mérida - Barinas).
-  - Multi-layer horizontal parallax scrolling (night sky, silhouette mountains, seamless 2-lane asphalt highway from `roads2W.png`, procedural roadside flora from `TopDownPlants_Free`).
-  - Integrated authored vintage pickup truck sprite `car_082.png` with calibrated dimensions, dynamic forward headlights, and Gale engine `ParticleSystem` for smoking radiator breakdown.
-  - Interactive stages: deceleration tween, Andreas steps out with animated walking cycle, roadside stillness, ambush knockout jumpscare, blackout transition, and skip support via `ENTER` / `SPACE` / `ESC`.
-  - Vehicle Audio Pipeline (`settings.py`, `AUDIO_CHANNELS["vehicle"]`): loops authentic `car_running.mp3` during the highway cruise, seamlessly transitions into `car_break_and_stop.mp3` upon engine sputtering, and silences all vehicle audio when Andreas turns off the ignition and exits the truck.
-  - Audio Isolation: cleanly silences menu background tracks upon launch via `settings.stop_all_audio()`, eliminating premature cabin ambience and whistle playback until player formally enters the house in `PlayState`.
-- **Directional Flashlight Cone & Sinusoidal Eye Flicker (`src/systems/LightingSystem.py`, `PlayState.py`)**:
-  - Replaced binary circular cutout with smooth 5-layer directional illumination cone (`cone_layers`) oriented to player facing direction (`down`, `up`, `right`, `left`).
   - Single faint circular personal glow (`player_ambient_radius = 18`, `player_ambient_alpha = 70`): unified personal player light without concentric diffusion rings, preserving smooth multi-layer diffusion exclusively for the directional cone.
-  - Subtractive alpha blending (`pygame.BLEND_RGBA_SUB`) with smooth diffusion into the darkness.
-  - Absolute darkness (0 light) when Andreas hides inside wardrobes/tables.
-  - Anatomically aligned El Silbón's glowing red eyes (`Monster.get_eye_position()`): raised 11px from shoulder/chest level into the shadowy eye sockets under the straw hat, pulsating menacingly with sinusoidal wave modulation (`math.sin(flicker_timer * freq)`).
+  - Subtractive alpha blending (`pygame.BLEND_RGBA_SUB`) with smooth diffusion into the darkness; absolute darkness (0 light) when Andreas hides inside wardrobes/tables.
 - **Granny-Style Single-Slot Inventory & Persistent In-World Item Dropping (`src/entities/Player.py`, `src/commands.py`, `src/definitions/interactions.py`, `src/ui/HUD.py`, `settings.py`)**:
   - Restricted player hand capacity to 1 active physical item at a time.
   - Spatial dropping (`G` key / `DROP` command): drops held item as an interactive `GameObject` at `(player.x, player.y)` into the active room's item list (`house.current_room.items`).

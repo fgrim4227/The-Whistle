@@ -29,12 +29,12 @@ class LightingSystem:
         self.light_mask = pygame.Surface(size, pygame.SRCALPHA)
 
         # Base ambient darkness alpha: faint silhouettes of nearby walls/floors still visible
-        self.base_ambient_alpha: float = 240.0
+        self.base_ambient_alpha: float = 252.0
         # Monster ambient darkness alpha: suffocating 100% pitch-black darkness when El Silbón is in room
         self.monster_ambient_alpha: float = 255.0
         # Ambient darkness alpha while the "catching" capture animation
         # plays: clearer than normal so the animation itself is visible.
-        self.catching_ambient_alpha: float = 200.0
+        self.catching_ambient_alpha: float = 245.0
         # Current active darkness alpha (dynamically tweenable via Timer.tween).
         self.darkness_alpha: float = self.base_ambient_alpha
 
@@ -117,11 +117,6 @@ class LightingSystem:
                     direction = getattr(player, "direction", "right")
                     self._carve_flashlight_cone(spx, spy, direction)
 
-        # 3. El Silbón glowing eyes and sine-wave flicker
-        if monster and not getattr(monster, "is_dead", False):
-            self._render_monster_eyes(target_surface, monster, ox, oy)
-
-        # 4. Subtract lights from darkness overlay and blit darkness onto target surface
         self.darkness_surface.blit(self.light_mask, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
         target_surface.blit(self.darkness_surface, (0, 0))
 
@@ -143,39 +138,3 @@ class LightingSystem:
                 pts.append((spx + length * math.cos(a), spy + length * math.sin(a)))
             pygame.draw.polygon(self.light_mask, (0, 0, 0, alpha), pts)
 
-    def _render_monster_eyes(
-        self, target_surface: pygame.Surface, monster: Any, ox: float, oy: float
-    ) -> None:
-        """
-        Renders El Silbón's eyes piercing through darkness with sine-wave pulsating intensity.
-        When the sine wave dips low, the eyes flicker and fade out into blackness.
-        """
-        if hasattr(monster, "get_eye_position"):
-            eye_x, eye_y = monster.get_eye_position()
-            smx = eye_x - ox
-            smy = eye_y - oy
-        else:
-            mx, my = monster.get_center()
-            smx = mx - ox
-            smy = my - oy - 39.0
-
-        # Sine wave modulation: frequency faster when hunting/berserk
-        freq = 8.0 if getattr(monster, "ai_state", "") == "berserk" else 4.5
-        sine_val = math.sin(self.flicker_timer * freq)
-
-        # Thresholding: below -0.15, eyes are completely shrouded in darkness
-        if sine_val <= -0.15:
-            return
-
-        factor = (sine_val + 0.15) / 1.15
-        factor = max(0.0, min(1.0, factor))
-
-        # Carve a tiny pinhole in the light mask
-        eye_radius = max(1, int(settings.MONSTER_EYE_LIGHT_RADIUS))
-        cutout_alpha = int(90 * factor)
-        pygame.draw.circle(self.light_mask, (0, 0, 0, cutout_alpha), (int(smx), int(smy)), eye_radius + 2)
-
-        # Draw glowing red eye dots directly onto target_surface
-        eye_col = (int(255 * factor), int(25 * factor), int(20 * factor))
-        pygame.draw.circle(target_surface, eye_col, (int(smx - 4), int(smy)), eye_radius)
-        pygame.draw.circle(target_surface, eye_col, (int(smx + 4), int(smy)), eye_radius)

@@ -23,6 +23,7 @@ class MonsterInvestigateState(MonsterBaseState):
     def process_ai(self, house, player, dt: float) -> None:
         player_room_name = house.current_room.name if house.current_room else "bedroom"
         if self.monster.current_room_name != player_room_name:
+            #I think we should cheat a little and teleport him to the player's room or get him closer
             PATROL(self.monster)
             return
 

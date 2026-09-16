@@ -13,11 +13,11 @@ from typing import Optional
 
 # How long the monster has to have been wandering with nothing happening
 # at all before the Director is willing to stir something up.
-TENSION_THRESHOLD = 30.0
+TENSION_THRESHOLD = 5.0
 
 # How long it holds off entirely after a real chase, so a scare is
 # followed by room to breathe instead of another scare.
-COOLDOWN_AFTER_CHASE = 25.0
+COOLDOWN_AFTER_CHASE = 5.0
 
 # A seeded noise lands somewhere in this band around the player: close
 # enough to bring the monster into the area, never so exact that being
