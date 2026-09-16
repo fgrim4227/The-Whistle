@@ -9,6 +9,7 @@ find_path()'s waypoints one at a time instead of one raw target.
 
 import heapq
 import math
+import random 
 from typing import Dict, List, Optional, Tuple
 
 import pygame
@@ -140,39 +141,104 @@ def _smooth(grid: List[List[bool]], cols: int, rows: int, cells: List[Tuple[int,
         i = j
     return smoothed
 
+def _open_start_area(
+    grid: List[List[bool]],
+    cols: int,
+    rows: int,
+    start_cell: Tuple[int, int],
+    obstacles: List[pygame.Rect],
+    radius: int = 2,
+) -> None:
+    """
+    Around where the entity already stands, decide which cells are walkable
+    from the obstacles' real footprint instead of their padded one. The
+    padding keeps a route from hugging furniture, but an entity standing
+    close to a piece of it is already inside that padding -- judged by the
+    padded grid it would be boxed in with nowhere to step, and no route
+    would exist at all. Its own body is proof those cells are passable, so
+    near the start reality wins and it can walk back out to the padded
+    route further along.
+    """
+    sx, sy = start_cell
+    for gy in range(max(0, sy - radius), min(rows, sy + radius + 1)):
+        for gx in range(max(0, sx - radius), min(cols, sx + radius + 1)):
+            if grid[gy][gx]:
+                continue
+            cell_rect = pygame.Rect(gx * CELL_SIZE, gy * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            if not any(cell_rect.colliderect(obs) for obs in obstacles):
+                grid[gy][gx] = True
+
+
+def _nearest_walkable_cell(
+    grid: List[List[bool]], cols: int, rows: int, cell: Tuple[int, int], max_radius: int = 6
+) -> Optional[Tuple[int, int]]:
+    """
+    If `cell` itself isn't walkable (e.g. it fell inside an obstacle's
+    safety margin), looks outward ring by ring for the closest cell
+    that is -- so a goal right next to furniture still gets a real
+    path instead of find_path giving up entirely.
+    """
+    if grid[cell[1]][cell[0]]:
+        return cell
+
+    cx, cy = cell
+    for radius in range(1, max_radius + 1):
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                if max(abs(dx), abs(dy)) != radius:
+                    continue
+                nx, ny = cx + dx, cy + dy
+                if 0 <= nx < cols and 0 <= ny < rows and grid[ny][nx]:
+                    return (nx, ny)
+    return None
+
 
 def find_path(
-    room, start: Tuple[float, float], goal: Tuple[float, float], entity_width: float = 24.0
+    room,
+    start: Tuple[float, float],
+    goal: Tuple[float, float],
+    entity_width: float = 24.0,
+    min_entity_width: Optional[float] = None,
 ) -> List[Tuple[float, float]]:
     """
-    A list of world-space (x, y) points to walk through, in order, to
-    get from start to goal while routing around room.get_obstacles()
-    -- the real goal position is always the last entry. Returns an
-    empty list if no route exists (the goal itself is unreachable).
-
-    This rebuilds the room's walkable grid on every call, so it's fast
-    enough for occasional use but callers driving a chase should ask
-    for a fresh path every second or so, not every frame -- the target
-    is usually still roughly where it was a moment ago anyway.
+    A list of (x, y) points in world space traversed in order to 
+    get from the start to the destination while avoiding obstacles 
+    returned by `room.get_obstacles()` (the actual final position is
+      always the last element). Returns an empty list if no path exists
     """
-    grid, cols, rows = _build_walkable_grid(room, entity_width)
+    if min_entity_width is None:
+        min_entity_width = entity_width
 
-    def to_cell(point: Tuple[float, float]) -> Tuple[int, int]:
-        cx = max(0, min(cols - 1, int(point[0] // CELL_SIZE)))
-        cy = max(0, min(rows - 1, int(point[1] // CELL_SIZE)))
-        return cx, cy
+    raw_obstacles = room.get_obstacles()
 
-    start_cell = to_cell(start)
-    goal_cell = to_cell(goal)
+    width = entity_width
+    while True:
+        grid, cols, rows = _build_walkable_grid(room, width)
 
-    # An entity hugging a wall can have its own current cell padded
-    # solid by _build_walkable_grid's margin -- always allow leaving
-    # from wherever it actually already is.
-    grid[start_cell[1]][start_cell[0]] = True
+        def to_cell(point: Tuple[float, float]) -> Tuple[int, int]:
+            cx = max(0, min(cols - 1, int(point[0] // CELL_SIZE)))
+            cy = max(0, min(rows - 1, int(point[1] // CELL_SIZE)))
+            return cx, cy
 
-    cell_path = _search(grid, cols, rows, start_cell, goal_cell)
-    if cell_path is None:
-        return []
+        start_cell = to_cell(start)
+        goal_cell = to_cell(goal)
+
+        if not grid[goal_cell[1]][goal_cell[0]]:
+            nearest = _nearest_walkable_cell(grid, cols, rows, goal_cell)
+            if nearest is None:
+                return [goal]
+            goal_cell = nearest
+
+        _open_start_area(grid, cols, rows, start_cell, raw_obstacles)
+        grid[start_cell[1]][start_cell[0]] = True
+
+        cell_path = _search(grid, cols, rows, start_cell, goal_cell)
+        if cell_path is not None:
+            break
+
+        if width <= min_entity_width:
+            return [goal]
+        width = max(min_entity_width, width - 8)
 
     cell_path = _smooth(grid, cols, rows, cell_path)
 
@@ -181,3 +247,35 @@ def find_path(
     ]
     waypoints[-1] = goal
     return waypoints
+
+
+def sample_walkable_points(
+    room, count: int = 4, min_spacing: float = 120.0, entity_width: float = 24.0
+) -> List[Tuple[float, float]]:
+    """
+    create random points on the walkable floor, each separated from
+    the others by at least 'min_spacing' px—so they don't all end up
+    clustered in a corner. If the room is too small to find that many
+    points with that spacing, it returns the ones it managed to find
+    instead of failing
+    """
+    grid, cols, rows = _build_walkable_grid(room, entity_width)
+    candidates = [
+        (gx * CELL_SIZE + CELL_SIZE / 2.0, gy * CELL_SIZE + CELL_SIZE / 2.0)
+        for gy in range(rows)
+        for gx in range(cols)
+        if grid[gy][gx]
+    ]
+    random.shuffle(candidates)
+
+    points: List[Tuple[float, float]] = []
+    for point in candidates:
+        if len(points) >= count:
+            break
+        if all(math.hypot(point[0] - p[0], point[1] - p[1]) >= min_spacing for p in points):
+            points.append(point)
+
+    if not points and candidates:
+        points.append(candidates[0])
+
+    return points

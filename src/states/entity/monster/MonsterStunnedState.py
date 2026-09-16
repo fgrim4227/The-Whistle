@@ -1,5 +1,5 @@
 from src.commands import BERSERK
-from src.states.entity.MonsterBaseState import MonsterBaseState
+from src.states.entity.monster.MonsterBaseState import MonsterBaseState
 
 
 class MonsterStunnedState(MonsterBaseState):

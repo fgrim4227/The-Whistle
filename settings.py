@@ -67,16 +67,16 @@ GRID_ROWS = VIRTUAL_HEIGHT // TILE_SIZE  # 9
 
 # Gameplay and survival parameters
 PLAYER_SPEED = 69  # px/s
-PLAYER_RUN_SPEED = 75 # px/s
+PLAYER_RUN_SPEED = 80 # px/s
 MONSTER_PATROL_SPEED = 70.0  # px/s
-MONSTER_CHASE_SPEED = 105.0  # px/s
+MONSTER_CHASE_SPEED = 170.0  # px/s
 MONSTER_BERSERK_SPEED = 300  # px/s (+80% speed when enraged)
 
 BATTERY_DRAIN_RATE = 0.9  # Percentage per second while flashlight is ON
 BATTERY_RECHARGE_AMOUNT = 35.0  # Battery refill per picked-up battery item
 
 # Throw probabilities
-THROW_STUN_CHANCE = 0.8  # 75% chance to stun the monster
+THROW_STUN_CHANCE = 0.8 # 75% chance to stun the monster
 THROW_BERSERK_CHANCE = 0.2  # 25% chance to enrage the monster
 
 # Global color definitions (RGB)
@@ -211,6 +211,7 @@ TEXTURES = {
     "monster_idle": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_idle.png"),
     "monster_walk": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_walk.png"),
     "monster_running": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_running.png"),
+    "monster_catching": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_catching.png"),
 
     # Jumpscare textures
     "silbon_attack": pygame.image.load(BASE_DIR / "assets" / "graphics" / "jumpscare" / "silbon_attack.png"),
@@ -230,6 +231,7 @@ FRAMES = {
     "monster_idle": frames.generate_frames(TEXTURES["monster_idle"], 64, 64),
     "monster_walk": frames.generate_frames(TEXTURES["monster_walk"], 92, 92),
     "monster_running":frames.generate_frames(TEXTURES["monster_running"], 92, 92),
+    "monster_catching": frames.generate_frames(TEXTURES["monster_catching"], 92, 92),
 }
 
 

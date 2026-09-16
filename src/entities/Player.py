@@ -36,9 +36,9 @@ from src.commands import (
 from src.definitions import entity as entity_defs
 from src.entities.BaseEntity import BaseEntity
 from src.i18n import t
-from src.states.entity.PlayerHidingState import PlayerHidingState
-from src.states.entity.PlayerIdleState import PlayerIdleState
-from src.states.entity.PlayerWalkState import PlayerWalkState
+from src.states.entity.player.PlayerHidingState import PlayerHidingState
+from src.states.entity.player.PlayerIdleState import PlayerIdleState
+from src.states.entity.player.PlayerWalkState import PlayerWalkState
 
 
 class Player(BaseEntity):
