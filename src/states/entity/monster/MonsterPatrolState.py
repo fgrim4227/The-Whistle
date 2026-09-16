@@ -4,7 +4,9 @@ from typing import Optional, Tuple
 
 import settings
 from src.commands import CHASE
-from src.states.entity.MonsterBaseState import MonsterBaseState
+from src.systems import Pathfinding
+from src.states.entity.monster.MonsterBaseState import MonsterBaseState
+
 
 
 class MonsterPatrolState(MonsterBaseState):
@@ -17,6 +19,10 @@ class MonsterPatrolState(MonsterBaseState):
         self.room_change_cooldown = random.uniform(2, 4)
         self.suspicion_timer = 0.0
         self.hidden_leave_timer = random.uniform(6, 8)
+        self.path = []
+        self.path_index = 0
+        self.path_target_idx = None
+
 
     def process_ai(self, house, player, dt: float) -> None:
         player_room_name = house.current_room.name if house.current_room else "bedroom"
@@ -32,10 +38,11 @@ class MonsterPatrolState(MonsterBaseState):
                 self._patrol_room(current_room, dt, avoid_pos=(player.x, player.y))
                 return
 
-            if self.monster.can_detect_player(player):
+            if self.monster.can_detect_player(player, house):
                 self.suspicion_timer += dt
                 if self.suspicion_timer >= 0.3:
-                    CHASE(self.monster)
+                    px, py = player.get_center()
+                    self.monster.change_state("stalking", target_x=px, target_y=py)
                     return
             else:
                 self.suspicion_timer = max(0.0, self.suspicion_timer - dt * 1.5)
@@ -49,8 +56,16 @@ class MonsterPatrolState(MonsterBaseState):
                 self._leave_room(house, target_room_preference=player_room_name)
 
     def _patrol_room(self, current_room, dt: float, avoid_pos: Optional[Tuple[float, float]] = None) -> None:
-        if not current_room or not current_room.patrol_waypoints:
+
+        if not current_room:
             return
+
+        if not current_room.patrol_waypoints:
+            current_room.patrol_waypoints = Pathfinding.sample_walkable_points(
+                current_room, entity_width=self.monster.get_route_widths()[1]
+            )
+            if not current_room.patrol_waypoints:
+                return
 
         wp = current_room.patrol_waypoints[self.monster.current_wp_idx % len(current_room.patrol_waypoints)]
 
@@ -61,12 +76,31 @@ class MonsterPatrolState(MonsterBaseState):
                 wp = current_room.patrol_waypoints[self.monster.current_wp_idx % len(current_room.patrol_waypoints)]
 
         self.monster.target_x, self.monster.target_y = wp
-        mx, my = self.monster.get_center()
-        if math.hypot(wp[0] - mx, wp[1] - my) < 16:
+
+        # Only recompute the route when the target waypoint itself
+        # changed (arrival or an avoid_pos skip), not every frame.
+        if self.path_target_idx != self.monster.current_wp_idx or not self.path:
+            route_width, min_route_width = self.monster.get_route_widths()
+            self.path = Pathfinding.find_path(
+                current_room, self.monster.get_collision_center(), wp,
+                entity_width=route_width, min_entity_width=min_route_width
+            )
+
+            self.path_index = 0
+            self.path_target_idx = self.monster.current_wp_idx
+
+        if self.path_index >= len(self.path):
             self.monster.current_wp_idx = (self.monster.current_wp_idx + 1) % len(current_room.patrol_waypoints)
+            return
 
         obstacles = current_room.get_obstacles()
-        self.monster.move_towards(self.monster.target_x, self.monster.target_y, obstacles, dt)
+        step_x, step_y = self.path[self.path_index]
+        self.monster.move_towards(step_x, step_y, obstacles, dt)
+
+        mx, my = self.monster.get_collision_center()
+        if math.hypot(step_x - mx, step_y - my) < 10:
+            self.path_index += 1
+
 
     def _leave_room(self, house, target_room_preference: Optional[str] = None) -> None:
         current_room = house.rooms.get(self.monster.current_room_name)

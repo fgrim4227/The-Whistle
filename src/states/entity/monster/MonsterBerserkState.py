@@ -1,6 +1,6 @@
 import settings
 from src.commands import PATROL
-from src.states.entity.MonsterBaseState import MonsterBaseState
+from src.states.entity.monster.MonsterBaseState import MonsterBaseState
 
 
 class MonsterBerserkState(MonsterBaseState):

@@ -36,7 +36,7 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
         "aliases": ["first_room", "bedroom"],
         "player_spawn": (94.0, 129.0),
         "hiding_spots": [
-            {"spot_type": "wardrobe", "x": 32, "y": 16, "width": 48, "height": 48, "render_graphic": False, "is_solid": False},
+            {"spot_type": "wardrobe", "x": 32, "y": 16, "width": 48, "height": 48, "render_graphic": False, "is_solid": True},
         ],
         "doors": [
             {"x": 464, "y": 104, "target_room_name": "UpperHallway", "target_spawn_x": 48, "target_spawn_y": 116, "width": 32, "height": 48, "render_graphic": False},
@@ -49,8 +49,8 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
         "display_name": "Pasillo Superior",
         "aliases": ["upper_hallway", "hallway"],
         "hiding_spots": [
-            {"spot_type": "table", "x": 64, "y": 48, "width": 48, "height": 28, "render_graphic": False, "is_solid": False},
-            {"spot_type": "table", "x": 464, "y": 144, "width": 48, "height": 28, "render_graphic": False, "is_solid": False},
+            {"spot_type": "table", "x": 64, "y": 48, "width": 48, "height": 28, "render_graphic": False, "is_solid": True},
+            {"spot_type": "table", "x": 464, "y": 144, "width": 48, "height": 28, "render_graphic": False, "is_solid": True},
         ],
         "doors": [
             {"x": 0, "y": 96, "target_room_name": "FirstRoom", "target_spawn_x": 440, "target_spawn_y": 120, "width": 32, "height": 54, "render_graphic": False},
@@ -67,10 +67,10 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
         "display_name": "Pasillo Inferior",
         "aliases": ["LowerHallway"],
         "hiding_spots": [
-            {"spot_type": "table", "x": 80, "y": 64, "width": 48, "height": 32, "render_graphic": False, "is_solid": False},
-            {"spot_type": "table", "x": 448, "y": 192, "width": 48, "height": 32, "render_graphic": False, "is_solid": False},
-            {"spot_type": "table", "x": 768, "y": 80, "width": 48, "height": 32, "render_graphic": False, "is_solid": False},
-            {"spot_type": "wardrobe", "x": 928, "y": 48, "width": 48, "height": 48, "render_graphic": False, "is_solid": False},
+            {"spot_type": "table", "x": 80, "y": 64, "width": 48, "height": 32, "render_graphic": False, "is_solid": True},
+            {"spot_type": "table", "x": 448, "y": 192, "width": 48, "height": 32, "render_graphic": False, "is_solid": True},
+            {"spot_type": "table", "x": 768, "y": 80, "width": 48, "height": 32, "render_graphic": False, "is_solid": True},
+            {"spot_type": "wardrobe", "x": 928, "y": 48, "width": 48, "height": 48, "render_graphic": False, "is_solid": True},
         ],
         "doors": [
             {"x": 160, "y": 16, "target_room_name": "UpperHallway", "target_spawn_x": 260, "target_spawn_y": 60, "width": 80, "height": 32, "is_stairs": True, "render_graphic": False},
@@ -83,7 +83,7 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
         "display_name": "Cocina Abandonada",
         "aliases": ["Kitchen"],
         "hiding_spots": [
-            {"spot_type": "table", "x": 224, "y": 112, "width": 64, "height": 32, "render_graphic": False, "is_solid": False},
+            {"spot_type": "table", "x": 224, "y": 112, "width": 64, "height": 32, "render_graphic": False, "is_solid": True},
         ],
         "doors": [
             {"x": 488, "y": 96, "target_room_name": "dining_room", "target_spawn_x": 48, "target_spawn_y": 116, "width": 24, "height": 48, "render_graphic": False},
@@ -96,7 +96,7 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
         "display_name": "Comedor Principal",
         "aliases": ["DiningRoom"],
         "hiding_spots": [
-            {"spot_type": "table", "x": 12 * 16, "y": 7 * 16, "width": 8 * 16, "height": 2 * 16, "render_graphic": False, "is_solid": False},
+            {"spot_type": "table", "x": 12 * 16, "y": 7 * 16, "width": 8 * 16, "height": 2 * 16, "render_graphic": False, "is_solid": True},
         ],
         "doors": [
             {"x": 0, "y": 96, "target_room_name": "kitchen", "target_spawn_x": 440, "target_spawn_y": 116, "width": 24, "height": 48, "render_graphic": False},
@@ -113,7 +113,7 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
         "display_name": "Sala Principal",
         "aliases": ["LivingRoom"],
         "hiding_spots": [
-            {"spot_type": "wardrobe", "x": 432, "y": 48, "width": 48, "height": 48, "render_graphic": False, "is_solid": False},
+            {"spot_type": "wardrobe", "x": 432, "y": 48, "width": 48, "height": 48, "render_graphic": False, "is_solid": True},
         ],
         "doors": [
             {"x": 0, "y": 180, "target_room_name": "dining_room", "target_spawn_x": 450, "target_spawn_y": 116, "width": 24, "height": 48, "is_bolted": True, "render_graphic": False},
@@ -126,7 +126,7 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
         "display_name": "Almacén Oscuro",
         "aliases": ["StorageRoom"],
         "hiding_spots": [
-            {"spot_type": "wardrobe", "x": 400, "y": 48, "width": 48, "height": 48, "render_graphic": False, "is_solid": False},
+            {"spot_type": "wardrobe", "x": 400, "y": 48, "width": 48, "height": 48, "render_graphic": False, "is_solid": True},
         ],
         "doors": [],
         "patrol_waypoints": [(120, 130), (360, 130)],
@@ -140,7 +140,7 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
         "display_name": "Dormitorio Principal",
         "aliases": ["MasterBedroom"],
         "hiding_spots": [
-            {"spot_type": "wardrobe", "x": 26 * 16, "y": 2 * 16, "width": 32, "height": 48, "render_graphic": False, "is_solid": False},
+            {"spot_type": "wardrobe", "x": 26 * 16, "y": 2 * 16, "width": 32, "height": 48, "render_graphic": False, "is_solid": True},
         ],
         "doors": [
             {"x": 0, "y": 96, "target_room_name": "UpperHallway", "target_spawn_x": 440, "target_spawn_y": 116, "width": 24, "height": 48, "render_graphic": False},

@@ -204,7 +204,7 @@ class TiledLevelLoader:
                             dw = int(obj.get("width", 48))
                             dh = int(obj.get("height", 32))
                             room.hiding_spots.append(
-                                HidingSpot(spot_type, ox, oy, width=dw, height=dh, render_graphic=False, is_solid=False)
+                                HidingSpot(spot_type, ox, oy, width=dw, height=dh, render_graphic=False, is_solid=True)
                             )
 
                         # Check if door or stairs object is authored in Tiled

@@ -1,4 +1,4 @@
-from src.states.entity.PlayerBaseState import PlayerBaseState
+from src.states.entity.player.PlayerBaseState import PlayerBaseState
 
 
 class PlayerHidingState(PlayerBaseState):
