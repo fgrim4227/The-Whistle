@@ -13,6 +13,7 @@ from gale.state import StateMachine
 import settings
 from src.commands import (
     CYCLE_ITEM,
+    DROP,
     FLASHLIGHT,
     INTERACT,
     MOVE_DOWN,
@@ -67,11 +68,12 @@ class Player(BaseEntity):
             "move_down": False,
         }
 
-        # Edge-triggered intent: interact/throw are one-shot actions
+        # Edge-triggered intent: interact/throw/drop are one-shot actions
         # resolved (and cleared) by PlayState.update(), since they need
         # access to the current room/house/monster to resolve.
         self.interact_requested = False
         self.throw_requested = False
+        self.drop_requested = False
 
         self.command_bindings = CommandBindings()
         self.command_bindings.bind("move_left", press=MOVE_LEFT, release=STOP_MOVE_LEFT)
@@ -82,6 +84,7 @@ class Player(BaseEntity):
         self.command_bindings.bind("interact", press=INTERACT)
         self.command_bindings.bind("throw", press=THROW)
         self.command_bindings.bind("action", press=THROW)
+        self.command_bindings.bind("drop", press=DROP)
         self.command_bindings.bind("flashlight", press=FLASHLIGHT)
         self.command_bindings.bind("cycle_item", press=CYCLE_ITEM)
         self.command_bindings.bind("slot_1", press=SELECT_SLOT_1)
@@ -112,41 +115,31 @@ class Player(BaseEntity):
 
     @property
     def equipped_item(self) -> Optional[str]:
-        """Returns the currently selected item in the inventory, if any."""
-        if 0 <= self.selected_item_index < len(self.inventory):
-            return self.inventory[self.selected_item_index]
+        """Returns the currently held item in hand (Granny single-slot), if any."""
+        if self.inventory:
+            return self.inventory[0]
         return None
 
     @equipped_item.setter
     def equipped_item(self, item: Optional[str]) -> None:
         if item is None:
+            self.inventory.clear()
+            self.selected_item_index = 0
             return
-        if item not in self.inventory:
-            if len(self.inventory) < 6:
-                self.inventory.append(item)
-                self.selected_item_index = len(self.inventory) - 1
-            else:
-                self.inventory[self.selected_item_index] = item
-        else:
-            self.selected_item_index = self.inventory.index(item)
+        self.inventory = [item]
+        self.selected_item_index = 0
 
     def add_item(self, item: str) -> bool:
-        """Adds an item to inventory without overwriting existing items."""
-        if item not in self.inventory:
-            if len(self.inventory) < 6:
-                self.inventory.append(item)
-                self.selected_item_index = len(self.inventory) - 1
-                return True
-            return False
-        self.selected_item_index = self.inventory.index(item)
+        """Adds or sets the single active item in hand."""
+        self.inventory = [item]
+        self.selected_item_index = 0
         return True
 
     def remove_item(self, item: str) -> bool:
-        """Removes an item from inventory (e.g. consumed keys)."""
+        """Removes an item from hand (e.g. dropped or consumed keys)."""
         if item in self.inventory:
             self.inventory.remove(item)
-            if self.selected_item_index >= len(self.inventory):
-                self.selected_item_index = max(0, len(self.inventory) - 1)
+            self.selected_item_index = 0
             return True
         return False
 

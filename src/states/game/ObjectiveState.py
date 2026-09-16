@@ -41,25 +41,67 @@ class ObjectiveState(BaseState):
         pygame.draw.rect(surface, (230, 220, 195), book_rect, border_radius=6)
         pygame.draw.rect(surface, (100, 70, 40), book_rect, width=3, border_radius=6)
 
+        # Title
         title = settings.FONTS["medium"].render(t("obj_title"), True, (50, 30, 15))
-        surface.blit(title, (book_rect.centerx - title.get_width() // 2, book_rect.top + 16))
+        surface.blit(title, (book_rect.centerx - title.get_width() // 2, book_rect.top + 14))
 
-        pygame.draw.line(surface, (150, 120, 90), (book_rect.left + 20, book_rect.top + 42), (book_rect.right - 20, book_rect.top + 42), 2)
+        pygame.draw.line(surface, (150, 120, 90), (book_rect.left + 20, book_rect.top + 38), (book_rect.right - 20, book_rect.top + 38), 2)
 
-        objectives = [
-            ("obj_1_flashlight", self.objectives_progress.get("flashlight", True)),
-            ("obj_2_explore", self.objectives_progress.get("explore", True)),
-            ("obj_3_crowbar", self.objectives_progress.get("crowbar", False)),
-            ("obj_4_key", self.objectives_progress.get("key", False)),
-            ("obj_5_escape", self.objectives_progress.get("escape", False)),
+        # Stage progression list: (key, is_done, is_unlocked)
+        p = self.objectives_progress
+        milestones = [
+            ("obj_explore", bool(p.get("explore", False)), True),
+            ("obj_kitchen_lockpick", bool(p.get("kitchen_lockpick", False)), bool(p.get("explore", False))),
+            ("obj_dining_cabinet", bool(p.get("dining_cabinet", False)), bool(p.get("kitchen_lockpick", False))),
+            ("obj_crowbar", bool(p.get("crowbar", False)), bool(p.get("dining_cabinet", False))),
+            ("obj_fuse_power", bool(p.get("fuse_power", False)), bool(p.get("crowbar", False))),
+            ("obj_master_safe", bool(p.get("master_safe", False)), bool(p.get("dining_cabinet", False))),
+            ("obj_escape_forest", bool(p.get("escape", False)), bool(p.get("fuse_power", False) and p.get("master_safe", False))),
         ]
 
-        for i, (key, done) in enumerate(objectives):
-            color = (60, 120, 60) if done else (40, 40, 45)
-            check = "[✓] " if done else "[ ] "
-            text = check + t(key)
-            surf = settings.FONTS["small"].render(text, True, color)
-            surface.blit(surf, (book_rect.left + 25, book_rect.top + 55 + i * 28))
+        # Find current primary objective (first unlocked and not yet completed)
+        current_obj_key = "obj_explore"
+        for key, done, unlocked in milestones:
+            if unlocked and not done:
+                current_obj_key = key
+                break
+        else:
+            if all(done for _, done, _ in milestones):
+                current_obj_key = "obj_escape_forest"
+
+        # 1. Primary Active Mission Banner
+        cur_header = settings.FONTS["small"].render(t("obj_current_task"), True, (120, 50, 20))
+        surface.blit(cur_header, (book_rect.left + 25, book_rect.top + 46))
+
+        cur_text = "▶ " + t(current_obj_key)
+        cur_surf = settings.FONTS["medium"].render(cur_text, True, (160, 20, 10))
+        surface.blit(cur_surf, (book_rect.left + 25, book_rect.top + 64))
+
+        pygame.draw.line(surface, (180, 160, 130), (book_rect.left + 20, book_rect.top + 92), (book_rect.right - 20, book_rect.top + 92), 1)
+
+        # 2. Checklist of discovered steps
+        y_pos = book_rect.top + 102
+        visible_count = 0
+        for key, done, unlocked in milestones:
+            if not unlocked and not done and key != current_obj_key:
+                continue
+
+            if done:
+                color = (55, 115, 55)
+                prefix = "[✓] "
+            elif key == current_obj_key:
+                color = (130, 40, 20)
+                prefix = "[•] "
+            else:
+                color = (90, 85, 80)
+                prefix = "[ ] "
+
+            line_surf = settings.FONTS["small"].render(prefix + t(key), True, color)
+            surface.blit(line_surf, (book_rect.left + 25, y_pos))
+            y_pos += 22
+            visible_count += 1
+            if visible_count >= 5:
+                break
 
         close_hint = settings.FONTS["small"].render(t("obj_close"), True, (110, 90, 70))
-        surface.blit(close_hint, (book_rect.centerx - close_hint.get_width() // 2, book_rect.bottom - 24))
+        surface.blit(close_hint, (book_rect.centerx - close_hint.get_width() // 2, book_rect.bottom - 20))

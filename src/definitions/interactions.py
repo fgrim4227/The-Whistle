@@ -5,12 +5,13 @@ Decouples PlayState from item-specific and door-specific interaction branching.
 """
 
 import math
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 from src.i18n import t
 from src.states.game.NoteState import NoteState
 from src.states.game.VictoryState import VictoryState
 from src.minigames.MinigameFactory import MinigameFactory
+from src.world.GameObject import GameObject
 
 
 # =========================================================================
@@ -30,6 +31,7 @@ def interact_cabinet(play_state: Any, item: Any) -> None:
         def on_cabinet_unlocked():
             item.is_picked = True
             play_state.player.add_item("old_key")
+            play_state.objectives_progress["dining_cabinet"] = True
             play_state.player.set_thought("thought_got_old_key", 4.5)
 
         play_state.active_minigame = MinigameFactory.create(
@@ -48,6 +50,7 @@ def interact_safe(play_state: Any, item: Any) -> None:
         item.is_picked = True
         play_state.player.add_item("key")
         play_state.objectives_progress["key"] = True
+        play_state.objectives_progress["master_safe"] = True
         play_state.player.set_thought("thought_got_exit_key", 4.5)
 
     play_state.active_minigame = MinigameFactory.create(
@@ -66,12 +69,14 @@ def interact_note(play_state: Any, item: Any) -> None:
     attached_item = getattr(item, "yields", None)
 
     play_state.player.clear_movement()
+    play_state.objectives_progress["explore"] = True
 
     def on_note_closed():
         if attached_item and not item.is_picked:
             item.is_picked = True
             play_state.player.add_item(attached_item)
             if attached_item == "lockpick":
+                play_state.objectives_progress["kitchen_lockpick"] = True
                 play_state.player.set_thought("thought_note_got_lockpick", 4.5)
         play_state.player.sync_movement_keys()
 
@@ -98,6 +103,7 @@ def interact_fuse_box(play_state: Any, item: Any) -> None:
 
     def on_fuse_box_powered():
         setattr(play_state.house, "power_restored", True)
+        play_state.objectives_progress["fuse_power"] = True
 
     play_state.active_minigame = MinigameFactory.create(
         "fuse_box",
@@ -107,17 +113,38 @@ def interact_fuse_box(play_state: Any, item: Any) -> None:
     )
 
 
-def interact_fuse_key(play_state: Any, item: Any) -> None:
-    """Collects the fuse box key."""
+def _collect_with_granny_swap(play_state: Any, item: Any, new_item_type: str) -> None:
+    player = play_state.player
+    room = play_state.house.current_room
+
+    # Si ya tiene un objeto en mano distinto, lo suelta en el suelo de la habitación actual
+    if player.equipped_item and player.equipped_item != new_item_type:
+        old_item = player.equipped_item
+        player.remove_item(old_item)
+        dropped_obj = GameObject(
+            obj_type=old_item,
+            x=player.x,
+            y=player.y,
+            width=16,
+            height=16,
+            is_collectible=True,
+            render_graphic=True,
+        )
+        room.items.append(dropped_obj)
+
     item.is_picked = True
-    play_state.player.add_item("fuse_key")
+    player.add_item(new_item_type)
+
+
+def interact_fuse_key(play_state: Any, item: Any) -> None:
+    """Collects the fuse box key with Granny swap."""
+    _collect_with_granny_swap(play_state, item, "fuse_key")
     play_state.player.set_thought("thought_got_fuse_key", 4.5)
 
 
 def interact_default_collectible(play_state: Any, item: Any) -> None:
-    """Default pickup handler for items and tools."""
-    item.is_picked = True
-    play_state.player.add_item(item.obj_type)
+    """Default pickup handler for items and tools with Granny swap."""
+    _collect_with_granny_swap(play_state, item, item.obj_type)
     if item.obj_type == "crowbar":
         play_state.objectives_progress["crowbar"] = True
     elif item.obj_type == "key":
@@ -179,10 +206,44 @@ ITEM_PROMPTS: Dict[str, Callable[[Any, Any], str]] = {
 # Door Interactions and Prompts
 # =========================================================================
 
+def get_reciprocal_door(house: Any, current_room: Any, door: Any) -> Optional[Any]:
+    """Finds the corresponding door in target_room leading back to current_room."""
+    if not house or not current_room or not door:
+        return None
+    target_rm = house.rooms.get(door.target_room_name)
+    if not target_rm:
+        return None
+
+    names = {current_room.name}
+    if hasattr(current_room, "display_name") and current_room.display_name:
+        names.add(current_room.display_name)
+    for k, v in getattr(house, "rooms", {}).items():
+        if v is current_room:
+            names.add(k)
+
+    for d in getattr(target_rm, "doors", []):
+        if d.target_room_name in names:
+            return d
+    return None
+
+
+def is_reciprocal_door_barred(house: Any, current_room: Any, door: Any) -> bool:
+    """Returns True if the matching door on the opposite side has barricaded planks."""
+    reciprocal = get_reciprocal_door(house, current_room, door)
+    if reciprocal and (reciprocal.is_barred or getattr(reciprocal, "planks_remaining", 0) > 0):
+        return True
+    return False
+
+
 def handle_door_interaction(play_state: Any, door: Any) -> None:
     """Handles unlocking, unbolting, prying planks, and room navigation."""
     room = play_state.house.current_room
     if not room:
+        return
+
+    # Check if door is barred with planks on the opposite side
+    if is_reciprocal_door_barred(play_state.house, room, door):
+        play_state.player.set_thought("thought_door_barred_other_side", 4.0)
         return
 
     # 1. Unboltable passage between LivingRoom and DiningRoom
@@ -207,11 +268,18 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
                 if not door.is_barred:
                     play_state.objectives_progress["crowbar"] = True
                     play_state.player.set_thought("thought_door_unbarred", 3.5)
+                    reciprocal = get_reciprocal_door(play_state.house, room, door)
+                    if reciprocal:
+                        reciprocal.unbar()
+                        if getattr(reciprocal, "is_bolted", False):
+                            reciprocal.unbolt()
                     target_rm = play_state.house.rooms.get(door.target_room_name)
                     if target_rm:
                         for d in target_rm.doors:
                             if d.target_room_name in (room.name, room.display_name):
                                 d.unbar()
+                                if getattr(d, "is_bolted", False):
+                                    d.unbolt()
 
             play_state.active_minigame = MinigameFactory.create(
                 "crowbar",
@@ -276,12 +344,14 @@ def get_door_prompt(play_state: Any, door: Any) -> str:
         if m_dist < 180.0:
             is_danger = True
 
-    if door.is_bolted:
+    if door.is_barred:
+        return t("prompt_door_barred")
+    elif is_reciprocal_door_barred(play_state.house, room, door):
+        return t("prompt_door_barred_other_side")
+    elif door.is_bolted:
         if room and room.name in ("living_room", "LivingRoom"):
             return t("prompt_unbolt_door")
         return t("prompt_door_bolted")
-    elif door.is_barred:
-        return t("prompt_door_barred")
     elif door.is_exit_door and not getattr(play_state.house, "power_restored", False):
         return t("prompt_exit_sensor_active")
     elif door.is_locked:

@@ -46,16 +46,13 @@ class HUD:
         bat_label = settings.FONTS["small"].render(f"{t('hud_battery')}: {int(player.battery)}%", True, settings.COLOR_WHITE)
         surface.blit(bat_label, (bat_x + bat_w + 8, bat_y - 1))
 
-        # 2. Compact Multi-slot inventory badge (Top-Right) [Option B]
-        if hasattr(player, "inventory") and player.inventory:
-            total_items = len(player.inventory)
-            cur_slot = player.selected_item_index + 1
+        # 2. Granny-style single item held in hand (Top-Right)
+        if hasattr(player, "equipped_item") and player.equipped_item:
             equipped = player.equipped_item
             name = t(f"item_{equipped}") if equipped else t("hud_none")
-
-            badge_text = f"[{cur_slot}/{total_items}] > {name} <"
+            badge_text = f"Mano: {name}" if not settings.IS_ENGLISH else f"Hand: {name}"
             badge_surf = settings.FONTS["small"].render(badge_text, True, settings.COLOR_GOLD)
-            sub_text = "(C: Cambiar | 1-5)" if not settings.IS_ENGLISH else "(C: Cycle | 1-5)"
+            sub_text = "(G: Soltar objeto)" if not settings.IS_ENGLISH else "(G: Drop item)"
             sub_surf = settings.FONTS.get("hud", settings.FONTS["small"]).render(sub_text, True, (160, 155, 140))
 
             w = max(badge_surf.get_width(), sub_surf.get_width()) + 14
@@ -70,10 +67,14 @@ class HUD:
             surface.blit(badge_surf, (bg_box.centerx - badge_surf.get_width() // 2, box_y + 3))
             surface.blit(sub_surf, (bg_box.centerx - sub_surf.get_width() // 2, box_y + badge_surf.get_height() + 3))
         else:
-            item_name = t(f"item_{player.equipped_item}") if player.equipped_item else t("hud_none")
-            item_text = f"{t('hud_equipped')}: {item_name}"
-            item_surf = settings.FONTS["small"].render(item_text, True, settings.COLOR_GOLD)
-            surface.blit(item_surf, (settings.VIRTUAL_WIDTH - item_surf.get_width() - 12, 12))
+            empty_text = "Mano: Vacía" if not settings.IS_ENGLISH else "Hand: Empty"
+            empty_surf = settings.FONTS["small"].render(empty_text, True, (140, 140, 140))
+            box_x = settings.VIRTUAL_WIDTH - empty_surf.get_width() - 18
+            box_y = 8
+            bg_box = pygame.Rect(box_x, box_y, empty_surf.get_width() + 12, empty_surf.get_height() + 6)
+            pygame.draw.rect(surface, (15, 15, 22, 180), bg_box, border_radius=4)
+            pygame.draw.rect(surface, (70, 70, 70), bg_box, width=1, border_radius=4)
+            surface.blit(empty_surf, (bg_box.centerx - empty_surf.get_width() // 2, box_y + 3))
 
         # 4. Terror warning when El Silbón is stalking close
         if audio_manager.is_near_alert and not player.is_hidden:

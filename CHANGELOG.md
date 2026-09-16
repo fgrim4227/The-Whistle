@@ -7,7 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+- **Smooth Volumetric Flashlight Diffusion (`src/systems/LightingSystem.py`)**:
+  - Upgraded directional flashlight cone from 5 stepped layers to 10 tightly-spaced layers (steps of ~8px length and 5° angular increments; alpha progression 35 -> 255), preserving the exact original 68° to 20° cone width.
+  - Fixed angular step interpolation in `_carve_flashlight_cone` (`2.0 * half / steps`), completely eliminating the radial fan bug and harsh contour banding for a smooth, cohesive light falloff.
+- **Reciprocal Barred Door Blocking & Minigame Enforcement (`src/definitions/interactions.py`, `src/i18n.py`, `src/world/Room.py`, `src/states/entity/MonsterPatrolState.py`)**:
+  - Implemented `get_reciprocal_door` and `is_reciprocal_door_barred` helpers to detect when a doorway is barricaded with wooden planks from the opposite side.
+  - Strictly prevents passing through or opening doors from the unbarred side (e.g. `living_room -> dining_room` and `living_room -> lower_hallway`), forcing the player to navigate the cabin layout and pry the planks off with the crowbar minigame on the barred side.
+  - Added dedicated bilingual prompts (`prompt_door_barred_other_side`: *"La puerta está tapiada con tablones desde el otro lado."*) and internal thoughts (`thought_door_barred_other_side`: *"Está bloqueada con tablones por el otro lado. Tendré que encontrar otra forma de llegar y quitarlos."*).
+  - Synchronized `on_plank_pried` to unbar both doorways once the minigame is completed.
+  - Updated `Room.get_obstacles` and `MonsterPatrolState._leave_room` to ensure neither the player nor El Silbón can phase or path through doors barred from either side.
+- **Procedural Intro Highway Cutscene (`src/states/game/IntroRoadState.py`, `StartState.py`, `assets/graphics/intro/`)**:
+  - Authored cinematic sequence along Carretera Trasandina (Mérida - Barinas).
+  - Multi-layer horizontal parallax scrolling (night sky, silhouette mountains, seamless 2-lane asphalt highway from `roads2W.png`, procedural roadside flora from `TopDownPlants_Free`).
+  - Integrated authored vintage pickup truck sprite `car_082.png` with calibrated dimensions, dynamic forward headlights, and Gale engine `ParticleSystem` for smoking radiator breakdown.
+  - Interactive stages: deceleration tween, Andreas steps out with animated walking cycle, roadside stillness, ambush knockout jumpscare, blackout transition, and skip support via `ENTER` / `SPACE` / `ESC`.
+  - Vehicle Audio Pipeline (`settings.py`, `AUDIO_CHANNELS["vehicle"]`): loops authentic `car_running.mp3` during the highway cruise, seamlessly transitions into `car_break_and_stop.mp3` upon engine sputtering, and silences all vehicle audio when Andreas turns off the ignition and exits the truck.
+  - Audio Isolation: cleanly silences menu background tracks upon launch via `settings.stop_all_audio()`, eliminating premature cabin ambience and whistle playback until player formally enters the house in `PlayState`.
+- **Directional Flashlight Cone & Sinusoidal Eye Flicker (`src/systems/LightingSystem.py`, `PlayState.py`)**:
+  - Replaced binary circular cutout with smooth 5-layer directional illumination cone (`cone_layers`) oriented to player facing direction (`down`, `up`, `right`, `left`).
+  - Single faint circular personal glow (`player_ambient_radius = 18`, `player_ambient_alpha = 70`): unified personal player light without concentric diffusion rings, preserving smooth multi-layer diffusion exclusively for the directional cone.
+  - Subtractive alpha blending (`pygame.BLEND_RGBA_SUB`) with smooth diffusion into the darkness.
+  - Absolute darkness (0 light) when Andreas hides inside wardrobes/tables.
+  - Anatomically aligned El Silbón's glowing red eyes (`Monster.get_eye_position()`): raised 11px from shoulder/chest level into the shadowy eye sockets under the straw hat, pulsating menacingly with sinusoidal wave modulation (`math.sin(flicker_timer * freq)`).
+- **Granny-Style Single-Slot Inventory & Persistent In-World Item Dropping (`src/entities/Player.py`, `src/commands.py`, `src/definitions/interactions.py`, `src/ui/HUD.py`, `settings.py`)**:
+  - Restricted player hand capacity to 1 active physical item at a time.
+  - Spatial dropping (`G` key / `DROP` command): drops held item as an interactive `GameObject` at `(player.x, player.y)` into the active room's item list (`house.current_room.items`).
+  - Automatic item swap (`_collect_with_granny_swap`): picking up an item while holding another immediately drops the previous item on the floor.
+  - Guaranteed persistence: dropped items remain in their room across room transitions and can be picked back up anytime.
+  - Batteries bypass hand slot and instantly recharge the flashlight.
+  - HUD updated to display single hand item with clean status badge (`Mano: [Item] | G: Soltar` or `Mano: Vacía`).
+- **Dynamic Multi-Stage Objectives Notebook (`src/states/game/ObjectiveState.py`, `src/definitions/interactions.py`, `src/i18n.py`)**:
+  - Replaced static item checklist with an immersive stage-based narrative progression (`obj_explore` -> `obj_kitchen_lockpick` -> `obj_dining_cabinet` -> `obj_crowbar` -> `obj_fuse_power` -> `obj_master_safe` -> `obj_escape_forest`).
+  - Notebook interface renders prominent `[▶] Misión Actual` pointer with strikethrough completed objectives and locked future milestones.
+  - Dynamically triggers milestone advances upon reading notes, picking locks, prying door planks, solving the fuse box, and opening the master safe.
+- **Guidance Survivor Notes Environmental Expansion (`assets/tilemaps/*.json`, `src/i18n.py`)**:
+  - Authored interactive parchment survivor notes across cabin rooms: Lower Hallway (`note_lower_hallway`), Dining Room (`note_dining_room`), Master Bedroom (`note_master_safe`), and Living Room (`note_fuse_warning`).
+  - Notes provide organic in-world hints and survivor lore from José Gregorio, guiding the player through the house layout and escape sequence.
 - **Visual Environment Sprites for In-World Items (`src/definitions/items.py`)**:
   - Replaced procedural Pygame primitive placeholders with authored sprites from `assets/graphics/environment/spritesheet.png`.
   - Added cached subsurfaces for `battery` `(592, 48, 16, 16)`, `fuse_key` `(592, 64, 16, 16)`, and `cabinet` (lockpick box) `(592, 80, 16, 16)`.

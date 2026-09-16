@@ -73,11 +73,32 @@ class MonsterPatrolState(MonsterBaseState):
         if not current_room:
             return
 
-        valid_doors = [
-            d for d in current_room.doors
-            if not d.is_exit_door and not d.is_barred and not d.is_locked and not getattr(d, "is_bolted", False)
-            and d.target_room_name in house.rooms
-        ]
+        valid_doors = []
+        for d in current_room.doors:
+            if d.is_exit_door or d.is_barred or d.is_locked or getattr(d, "is_bolted", False):
+                continue
+            if getattr(d, "planks_remaining", 0) > 0:
+                continue
+            if d.target_room_name not in house.rooms:
+                continue
+            # Check if door is barred or locked from the opposite side
+            target_rm = house.rooms.get(d.target_room_name)
+            reciprocal_blocked = False
+            if target_rm:
+                current_names = {current_room.name}
+                if getattr(current_room, "display_name", None):
+                    current_names.add(current_room.display_name)
+                for k, v in getattr(house, "rooms", {}).items():
+                    if v is current_room:
+                        current_names.add(k)
+                for rd in getattr(target_rm, "doors", []):
+                    if rd.target_room_name in current_names:
+                        if rd.is_barred or rd.is_locked or getattr(rd, "is_bolted", False) or getattr(rd, "planks_remaining", 0) > 0:
+                            reciprocal_blocked = True
+                            break
+            if reciprocal_blocked:
+                continue
+            valid_doors.append(d)
         if not valid_doors:
             return
 

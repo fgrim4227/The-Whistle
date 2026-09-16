@@ -76,6 +76,11 @@ class ThrowCommand(Command):
         receiver.throw_requested = True
 
 
+class DropCommand(Command):
+    def execute(self, receiver, dt: float = 0.0) -> None:
+        receiver.drop_requested = True
+
+
 class FlashlightCommand(Command):
     def execute(self, receiver, dt: float = 0.0) -> None:
         receiver.toggle_flashlight()
@@ -123,6 +128,7 @@ RUN = RunCommand()
 STOP_RUN = StopRunCommand()
 INTERACT = InteractCommand()
 THROW = ThrowCommand()
+DROP = DropCommand()
 FLASHLIGHT = FlashlightCommand()
 CYCLE_ITEM = CycleItemCommand()
 SELECT_SLOT_1 = SelectSlot1Command()

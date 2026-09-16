@@ -1,22 +1,13 @@
 """
-Generic light-source darkness system, built on gale.stencil.
-
-LightingSystem itself knows nothing about flashlights or monster eyes --
-it just takes a list of Light (world position, radius, color, intensity)
-every frame and carves each one, as a hard-edged circle of full
-visibility, out of a solid darkness overlay; a light with intensity > 0
-also casts its own color over that same circle. Whoever calls render()
-(PlayState today) decides what counts as a light and builds that list --
-the player's flashlight (colorless, intensity 0) and El Silbón's red
-eyes are just two entries in it, and any future emitter (a thrown lit
-lantern, say) is a third with no change needed here.
+2D Atmospheric Lighting and Darkness System (LightingSystem).
+Generates dynamic darkness and realistic directional flashlight cones with multi-layer
+alpha diffusion, ambient personal glow, and eerie sine-wave pulsating monster eyes.
 """
 
+import math
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
-
+from typing import Any, Dict, List, Optional, Tuple, Union
 import pygame
-from gale.stencil import Stencil
 
 import settings
 
@@ -27,108 +18,161 @@ class Light:
     y: float
     radius: float
     color: Tuple[int, int, int]
-    intensity: float = 0.4  # 0..1, max fraction of `color` added at the light's own center
-    reveal: float = 1.0  # 0..1, how much of the ambient darkness this light removes -- 1 = fully lit like a real flashlight, lower = still dim inside its own circle. Flat, not a gradient.
+    intensity: float = 0.4
+    reveal: float = 1.0
 
 
 class LightingSystem:
     def __init__(self) -> None:
         size = (settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
         self.darkness_surface = pygame.Surface(size, pygame.SRCALPHA)
-        self.glow_surface = pygame.Surface(size, pygame.SRCALPHA)
-        self.stencil = Stencil(size)
+        self.light_mask = pygame.Surface(size, pygame.SRCALPHA)
 
-        # Base ambient darkness alpha: faint silhouettes of nearby geometry still show through.
+        # Base ambient darkness alpha: faint silhouettes of nearby walls/floors still visible
         self.base_ambient_alpha: float = 240.0
-        # Monster ambient darkness alpha: suffocating 100% pitch-black darkness when El Silbón enters.
+        # Monster ambient darkness alpha: suffocating 100% pitch-black darkness when El Silbón is in room
         self.monster_ambient_alpha: float = 255.0
-        # Current active darkness alpha (dynamically tweenable via Timer.tween).
+        # Current active darkness alpha (tweenable via Timer.tween)
         self.darkness_alpha: float = self.base_ambient_alpha
 
-        self._reveal_cache: Dict[Tuple[int, float], pygame.Surface] = {}
-        self._tint_cache: Dict[Tuple[int, Tuple[int, int, int], float], pygame.Surface] = {}
+        self.flicker_timer: float = 0.0
 
-    def _reveal_circle(self, radius: int, reveal: float) -> pygame.Surface:
-        """
-        A cached white circle, one flat level of see-through-ness all
-        the way across (no soft edge): clears the darkness inside its
-        radius down to `1 - reveal` of its normal strength, and leaves
-        everything outside untouched. A softer, fading edge was tried
-        first, but the library we cut this shape out of the darkness
-        with treats any pixel that was drawn at all -- even a barely
-        visible one at the edge -- as fully drawn, so the edge came out
-        as a ring darker than the darkness around it instead of fading
-        smoothly. A flat, hard-edged circle sidesteps that.
-        """
-        key = (radius, round(reveal, 3))
-        cached = self._reveal_cache.get(key)
-        if cached is not None:
-            return cached
+        # Multi-layer flashlight cone configuration: (length_px, spread_deg, subtract_alpha, arc_steps)
+        # Tightly-spaced diffusion surfaces preserving the exact original cone width (68 deg to 20 deg)
+        self.cone_layers = [
+            (165.0, 68.0, 35, 14),
+            (157.0, 62.0, 55, 14),
+            (149.0, 56.0, 80, 12),
+            (141.0, 50.0, 105, 12),
+            (133.0, 44.0, 130, 10),
+            (125.0, 39.0, 155, 10),
+            (117.0, 34.0, 180, 8),
+            (108.0, 29.0, 205, 8),
+            (99.0,  24.0, 230, 6),
+            (90.0,  20.0, 255, 6),
+        ]
 
-        diameter = radius * 2
-        surface = pygame.Surface((diameter, diameter), pygame.SRCALPHA)
-        alpha = max(0, min(255, int(255 * reveal)))
-        pygame.draw.circle(surface, (255, 255, 255, alpha), (radius, radius), radius)
-        self._reveal_cache[key] = surface
-        return surface
+        # Single simple faint circular glow for the player (no multi-layer rings or stepped diffusion)
+        self.player_ambient_radius: int = 18
+        self.player_ambient_alpha: int = 70
 
-    def _tint_circle(self, radius: int, color: Tuple[int, int, int], strength: float) -> pygame.Surface:
-        """
-        A cached, flat colored circle, the same hard-edged shape as
-        _reveal_circle: `color` dimmed by `strength` applies evenly
-        across the whole circle, not just at its center. We dim the
-        color itself instead of making it see-through, because this
-        glow gets laid on top of the scene by brightening it directly --
-        it adds the color's full brightness wherever it's drawn, no
-        matter how transparent that pixel looks. A faint, see-through
-        edge would still show up at full strength, so we dim the color
-        instead of the transparency.
-        """
-        key = (radius, color, round(strength, 3))
-        cached = self._tint_cache.get(key)
-        if cached is not None:
-            return cached
-
-        diameter = radius * 2
-        surface = pygame.Surface((diameter, diameter), pygame.SRCALPHA)
-        r0, g0, b0 = color
-        col = (int(r0 * strength), int(g0 * strength), int(b0 * strength), 255)
-        pygame.draw.circle(surface, col, (radius, radius), radius)
-        self._tint_cache[key] = surface
-        return surface
+    def update(self, dt: float) -> None:
+        """Updates internal timers for sine wave light modulations."""
+        self.flicker_timer += dt
 
     def render(
         self,
         target_surface: pygame.Surface,
-        lights: List[Light],
+        player_or_lights: Union[Any, List[Light]],
+        monster: Optional[Any] = None,
         camera_offset: Tuple[int, int] = (0, 0),
+        dt: float = 0.0,
     ) -> None:
-        """Renders the darkness layer with every light in `lights` carved out of it."""
+        """
+        Renders the darkness layer, carving out the player's flashlight cone / ambient halo
+        and pulsating the eerie glowing eyes of El Silbón.
+        """
+        if dt > 0.0:
+            self.flicker_timer += dt
+
         ox, oy = camera_offset
-
         alpha_val = max(0, min(255, int(self.darkness_alpha)))
+
+        # 1. Fill darkness overlay and clear subtraction mask
         self.darkness_surface.fill((8, 8, 14, alpha_val))
-        self.glow_surface.fill((0, 0, 0, 0))
-        self.stencil.clear()
+        self.light_mask.fill((0, 0, 0, 0))
 
-        for light in lights:
-            radius = int(light.radius)
-            if radius <= 0:
-                continue
+        # 2. Support both modern Entity-based rendering and legacy Light-list rendering
+        if isinstance(player_or_lights, list):
+            for light in player_or_lights:
+                radius = int(light.radius)
+                if radius <= 0:
+                    continue
+                lx = int(light.x - ox)
+                ly = int(light.y - oy)
+                alpha_cut = int(255 * light.reveal)
+                pygame.draw.circle(self.light_mask, (0, 0, 0, alpha_cut), (lx, ly), radius)
+        else:
+            player = player_or_lights
+            if player and not getattr(player, "is_hidden", False):
+                px, py = player.get_center()
+                spx = px - ox
+                spy = py - oy
 
-            pos = (int(light.x - ox - radius), int(light.y - oy - radius))
+                # Single simple faint circular glow around player (no multi-layer rings or stepped diffusion)
+                pygame.draw.circle(
+                    self.light_mask,
+                    (0, 0, 0, self.player_ambient_alpha),
+                    (int(spx), int(spy)),
+                    self.player_ambient_radius,
+                )
 
-            # Reveal: add this light's circle onto the shared cutout
-            # shape, so overlapping lights combine into a wider revealed area.
-            reveal = self._reveal_circle(radius, light.reveal)
-            self.stencil.draw(lambda mask, g=reveal, p=pos: mask.blit(g, p, special_flags=pygame.BLEND_RGBA_ADD))
+                is_flashlight_on = getattr(player, "flashlight_on", False) and getattr(player, "battery", 0) > 0
 
-            # Tint: a much gentler color cast on its own layer, so the
-            # room still reads normally inside the light instead of
-            # being painted over solid.
-            tint = self._tint_circle(radius, light.color, light.intensity)
-            self.glow_surface.blit(tint, pos, special_flags=pygame.BLEND_RGBA_ADD)
+                if is_flashlight_on:
+                    # Directional cone facing player.direction
+                    direction = getattr(player, "direction", "right")
+                    self._carve_flashlight_cone(spx, spy, direction)
 
-        self.stencil.apply(self.darkness_surface, invert=True)
+        # 3. El Silbón glowing eyes and sine-wave flicker
+        if monster and not getattr(monster, "is_dead", False):
+            self._render_monster_eyes(target_surface, monster, ox, oy)
+
+        # 4. Subtract lights from darkness overlay and blit darkness onto target surface
+        self.darkness_surface.blit(self.light_mask, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
         target_surface.blit(self.darkness_surface, (0, 0))
-        target_surface.blit(self.glow_surface, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+
+    def _carve_flashlight_cone(self, spx: float, spy: float, direction: str) -> None:
+        """Carves a smooth, multi-layer arched cone in the direction of the player."""
+        dir_angles = {
+            "right": 0.0,
+            "down": 90.0,
+            "left": 180.0,
+            "up": 270.0,
+        }
+        base_angle = math.radians(dir_angles.get(direction, 0.0))
+
+        for length, spread_deg, alpha, steps in self.cone_layers:
+            half = math.radians(spread_deg / 2.0)
+            pts = [(spx, spy)]
+            for i in range(steps + 1):
+                a = base_angle - half + i * (2.0 * half / steps)
+                pts.append((spx + length * math.cos(a), spy + length * math.sin(a)))
+            pygame.draw.polygon(self.light_mask, (0, 0, 0, alpha), pts)
+
+    def _render_monster_eyes(
+        self, target_surface: pygame.Surface, monster: Any, ox: float, oy: float
+    ) -> None:
+        """
+        Renders El Silbón's eyes piercing through darkness with sine-wave pulsating intensity.
+        When the sine wave dips low, the eyes flicker and fade out into blackness.
+        """
+        if hasattr(monster, "get_eye_position"):
+            eye_x, eye_y = monster.get_eye_position()
+            smx = eye_x - ox
+            smy = eye_y - oy
+        else:
+            mx, my = monster.get_center()
+            smx = mx - ox
+            smy = my - oy - 39.0
+
+        # Sine wave modulation: frequency faster when hunting/berserk
+        freq = 8.0 if getattr(monster, "ai_state", "") == "berserk" else 4.5
+        sine_val = math.sin(self.flicker_timer * freq)
+
+        # Thresholding: below -0.15, eyes are completely shrouded in darkness
+        if sine_val <= -0.15:
+            return
+
+        factor = (sine_val + 0.15) / 1.15
+        factor = max(0.0, min(1.0, factor))
+
+        # Carve a tiny pinhole in the light mask
+        eye_radius = max(1, int(settings.MONSTER_EYE_LIGHT_RADIUS))
+        cutout_alpha = int(90 * factor)
+        pygame.draw.circle(self.light_mask, (0, 0, 0, cutout_alpha), (int(smx), int(smy)), eye_radius + 2)
+
+        # Draw glowing red eye dots directly onto target_surface
+        eye_col = (int(255 * factor), int(25 * factor), int(20 * factor))
+        pygame.draw.circle(target_surface, eye_col, (int(smx - 4), int(smy)), eye_radius)
+        pygame.draw.circle(target_surface, eye_col, (int(smx + 4), int(smy)), eye_radius)

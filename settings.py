@@ -33,6 +33,7 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_SPACE, "action"
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_TAB, "objectives")
 
 # Inventory management
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_g, "drop")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_c, "cycle_item")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_1, "slot_1")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_2, "slot_2")
@@ -133,6 +134,8 @@ SOUNDS = {
     "minigame_normal_click": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "minigames" / "normal_click.wav"),
     "minigame_unlock_click": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "minigames" / "unlock_click.mp3"),
     "minigame_wood_break": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "minigames" / "wood_break.mp3"),
+    "car_running": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "car_running.mp3"),
+    "car_break_and_stop": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "car_break_and_stop.mp3"),
 }
 # Dedicated Audio Channels (Ultimate Fantasy architecture pattern)
 AUDIO_CHANNELS = {
@@ -145,6 +148,7 @@ AUDIO_CHANNELS = {
     "sfx": pygame.mixer.Channel(6) if pygame.mixer.get_init() else None,
     "silbon_footsteps": pygame.mixer.Channel(7) if pygame.mixer.get_init() else None,
     "minigame": pygame.mixer.Channel(8) if pygame.mixer.get_init() else None,
+    "vehicle": pygame.mixer.Channel(9) if pygame.mixer.get_init() else None,
 }
 
 def play_sound(name: str, loops: int = 0, volume: float = 1.0, channel_name: str = None):

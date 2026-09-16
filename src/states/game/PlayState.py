@@ -20,7 +20,7 @@ from gale.timer import Timer
 from src.world.House import House
 from src.entities.Player import Player
 from src.entities.Monster import Monster
-from src.world.GameObject import ThrowableProjectile
+from src.world.GameObject import GameObject, ThrowableProjectile
 from src.systems.LightingSystem import Light, LightingSystem
 from src.systems.AudioManager import AudioManager
 from src.ui.HUD import HUD
@@ -60,7 +60,11 @@ class PlayState(BaseState):
         self.objectives_progress = {
             "flashlight": True,
             "explore": False,
+            "kitchen_lockpick": False,
+            "dining_cabinet": False,
             "crowbar": False,
+            "fuse_power": False,
+            "master_safe": False,
             "key": False,
             "escape": False,
         }
@@ -107,6 +111,26 @@ class PlayState(BaseState):
             # Loud crash alerts El Silbón if in the same room
             if self.monster.current_room_name == self.house.current_room.name:
                 self.monster.hear_noise(px, py, radius=320.0)
+
+    def _handle_drop_item(self) -> None:
+        """Granny-style drop: places the currently held item on the floor of the room."""
+        if not self.player.equipped_item:
+            return
+        item_dropped = self.player.equipped_item
+        self.player.remove_item(item_dropped)
+        room = self.house.current_room
+        if room:
+            dropped_obj = GameObject(
+                item_dropped,
+                self.player.x,
+                self.player.y,
+                width=16,
+                height=16,
+                is_collectible=True,
+                render_graphic=True,
+            )
+            room.items.append(dropped_obj)
+            settings.play_sound("knock_door", volume=0.25, channel_name="sfx")
 
     def _handle_interaction(self) -> None:
         room = self.house.current_room
@@ -198,6 +222,10 @@ class PlayState(BaseState):
             self.player.throw_requested = False
             self._handle_throw()
 
+        if getattr(self.player, "drop_requested", False):
+            self.player.drop_requested = False
+            self._handle_drop_item()
+
         # Update El Silbón (delegating to FSM state machine with house navigation)
         self.monster.update_ai(self.player, self.house, dt)
 
@@ -248,6 +276,7 @@ class PlayState(BaseState):
         # Update HUD and contextual action prompts
         self._update_contextual_prompt()
         self.hud.update(dt)
+        self.lighting.update(dt)
 
         # Game Over Condition: caught by El Silbón in the same room while unhidden
         is_safe_state = self.monster.ai_state == "stunned"
@@ -362,9 +391,9 @@ class PlayState(BaseState):
         for p in self.projectiles:
             p.render(surface, camera_offset)
 
-        # 4. Draw darkness with every active light carved out of it
+        # 4. Draw darkness with directional flashlight and atmospheric lighting
         active_monster = self.monster if (self.monster.current_room_name == self.house.current_room.name) else None
-        self.lighting.render(surface, self._collect_lights(active_monster), camera_offset)
+        self.lighting.render(surface, self.player, active_monster, camera_offset)
 
         # 5. Draw top HUD and prompts
         self.hud.render(surface, self.player, self.audio, self.prompt_text)

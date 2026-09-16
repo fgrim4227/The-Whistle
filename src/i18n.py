@@ -50,6 +50,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_use_stairs": "Presiona E para usar las escaleras",
         "prompt_door_locked": "La puerta está cerrada con llave.",
         "prompt_door_barred": "La puerta está bloqueada con tablones clavados.",
+        "prompt_door_barred_other_side": "La puerta está tapiada con tablones desde el otro lado.",
         "prompt_door_bolted": "La puerta está trabada con un cerrojo desde el otro lado.",
         "prompt_unbolt_door": "Presiona E para descorrer el cerrojo",
         "prompt_pick_cabinet": "Presiona E para forzar la vitrina con la ganzúa",
@@ -73,6 +74,14 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "note_kitchen_body": "Si encuentras esto, logré huir hacia el piso superior. Dejé la ganzúa pegada aquí para ti. Úsala en la vitrina del comedor contiguo: allí guardaban llaves viejas de la cabaña. ¡No hagas ruido, esa criatura escucha todo!",
         "note_hallway_title": "Jesus...",
         "note_hallway_body": "Los silbidos son una trampa mortal. Si se oyen cerca, está lejos... pero si los escuchas como un susurro en tu nuca, escóndete de inmediato. La caja fuerte del dormitorio principal tiene la llave de salida, pero necesitas la llave antigua.",
+        "note_lower_hallway_title": "Nota Ensangrentada: Salida",
+        "note_lower_hallway_body": "Tengo que escapar por la sala principal. La puerta exterior está asegurada con un sistema electrónico y cadenas pesadas. Necesito buscar herramientas en las habitaciones contiguas para abrir el paso.",
+        "note_dining_room_title": "Diario de Jose Gregorio: La Barricada",
+        "note_dining_room_body": "Tapié la puerta que conecta con la sala usando tablones para detener a la bestia. Dejé la ganzúa en la cocina y guardé la llave antigua en la vitrina de este comedor. Necesitarás una palanca o barreta para arrancar las maderas de la puerta.",
+        "note_fuse_warning_title": "Aviso: Cuadro Eléctrico",
+        "note_fuse_warning_body": "El sistema de seguridad de la puerta de escape está energizado. Para desconectarlo, hay que subir al cuarto del generador en el piso superior y restaurar los fusibles con la llave de circuitos.",
+        "note_master_safe_title": "Pista: La Caja Fuerte",
+        "note_master_safe_body": "La combinación de la caja fuerte es difícil, pero el mecanismo hace un chasquido metálico especial cuando la perilla alcanza el número correcto. Escucha con atención cada rotación.",
 
         # NPC Elena Story Dialogues
         "elena_dialogue_intro": "¡Andreas! Menos mal... El Silbón trancó la salida con tablones. Toma esta ganzúa, la escondí en mi delantal... busca en el comedor contiguo.",
@@ -89,6 +98,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_got_exit_key": "¡La caja fuerte contenía la Llave de Salida del Bosque!",
         "thought_unbolted": "He descorrido el cerrojo. ¡El pasaje hacia el comedor está abierto!",
         "thought_door_unbarred": "He retirado los tablones con la palanca.",
+        "thought_door_barred_other_side": "Está bloqueada con tablones por el otro lado. Tendré que encontrar otra forma de llegar y quitarlos.",
         "thought_fuse_box": "La caja de fusibles principal. Parece que los cables están desconectados... tal vez pueda restaurar la energía más tarde.",
         "thought_fuse_box_locked": "La caja de fusibles está cerrada con llave. Debe haber una llave en algún lugar abajo...",
         "thought_got_fuse_key": "¡Encontré la llave de la caja de fusibles! Tendré que volver al cuarto de arriba con cuidado...",
@@ -118,11 +128,15 @@ STRINGS: Dict[str, Dict[str, str]] = {
         
         # Objective Log
         "obj_title": "OBJETIVOS DE SUPERVIVENCIA",
-        "obj_1_flashlight": "1. Busca una fuente de luz o pilas de repuesto.",
-        "obj_2_explore": "2. Explora las habitaciones contiguas con sigilo.",
-        "obj_3_crowbar": "3. Encuentra la palanca para retirar los tablones del pasillo.",
-        "obj_4_key": "4. Encuentra la llave maestra de la puerta principal.",
-        "obj_5_escape": "5. Abre la puerta de salida y escapa hacia el bosque.",
+        "obj_current_task": "Misión Actual:",
+        "obj_explore": "Explora la casa y busca una salida al exterior.",
+        "obj_kitchen_lockpick": "Consigue la ganzúa dejada en la cocina.",
+        "obj_dining_cabinet": "Abre la vitrina del comedor con la ganzúa para conseguir la llave antigua.",
+        "obj_crowbar": "Encuentra la palanca y retira los tablones de la puerta hacia la sala.",
+        "obj_fuse_power": "Restaura la energía en la caja de fusibles (piso superior) para desactivar el sensor.",
+        "obj_master_safe": "Abre el dormitorio principal y descifra la caja fuerte para obtener la llave del bosque.",
+        "obj_escape_forest": "¡Desbloquea las cadenas de la puerta de salida en la sala y escapa!",
+        "obj_completed_stamp": "[COMPLETADO]",
         "obj_close": "Presiona TAB o ESC para cerrar la libreta.",
         
         # Minigames
@@ -183,6 +197,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_use_stairs": "Press E to use the stairs",
         "prompt_door_locked": "The door is locked tight.",
         "prompt_door_barred": "The door is blocked with nailed planks.",
+        "prompt_door_barred_other_side": "The door is barred with planks from the other side.",
         "prompt_door_bolted": "The door is bolted from the other side.",
         "prompt_unbolt_door": "Press E to unbolt the door",
         "prompt_pick_cabinet": "Press E to pick the display case lock",
@@ -206,6 +221,14 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "note_kitchen_body": "If you find this, I managed to flee upstairs. I left the lockpick taped here for you. Use it on the dining room cabinet next door: they kept old cabin keys in there. Keep quiet, that creature hears everything!",
         "note_hallway_title": "Jesus...",
         "note_hallway_body": "The whistles are a deadly trap. If they sound close, he is far... but if you hear them like a whisper on your neck, hide immediately. The master bedroom safe has the exit key, but you need the old key.",
+        "note_lower_hallway_title": "Bloodstained Note: The Exit",
+        "note_lower_hallway_body": "I have to escape through the main living room. The exterior door is secured by an electronic system and heavy chains. I must search adjoining rooms for tools to clear the way.",
+        "note_dining_room_title": "Jose Gregorio's Journal: The Barricade",
+        "note_dining_room_body": "I barricaded the door connecting to the living room with planks to stall the beast. I left the lockpick in the kitchen and stored the old key inside this dining room cabinet. You'll need a crowbar to pry the planks off.",
+        "note_fuse_warning_title": "Notice: Electrical Breaker",
+        "note_fuse_warning_body": "The exit door security lock is energized. To disconnect it, head upstairs to the generator room and restore the fuse box with the circuit key.",
+        "note_master_safe_title": "Clue: The Safe",
+        "note_master_safe_body": "The safe combination is difficult, but the internal gear produces a distinctive metallic click when the dial aligns. Listen carefully with each rotation.",
 
         # NPC Elena Story Dialogues
         "elena_dialogue_intro": "Andreas! Thank goodness... The Whistler barred the exit. Take this lockpick from my apron... search the dining room next door.",
@@ -222,6 +245,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_got_exit_key": "The safe contained the Forest Exit Key!",
         "thought_unbolted": "I've unbolted the door. The passage to the dining room is now open!",
         "thought_door_unbarred": "Pried off the wooden planks with the crowbar.",
+        "thought_door_barred_other_side": "It's barred with planks from the other side. I'll have to find another way around to pry them off.",
         "thought_fuse_box": "The main fuse box. The wiring seems disconnected... maybe I can restore power later.",
         "thought_fuse_box_locked": "The fuse box is locked. There must be a key somewhere downstairs...",
         "thought_got_fuse_key": "Found the fuse box key! I'll have to head back to the upstairs room carefully...",
@@ -251,11 +275,15 @@ STRINGS: Dict[str, Dict[str, str]] = {
         
         # Objective Log
         "obj_title": "SURVIVAL OBJECTIVES",
-        "obj_1_flashlight": "1. Find a light source or spare batteries.",
-        "obj_2_explore": "2. Stealthily explore the adjacent rooms.",
-        "obj_3_crowbar": "3. Locate a crowbar to pry the boarded hallway door.",
-        "obj_4_key": "4. Locate the master key to the main entrance.",
-        "obj_5_escape": "5. Unlock the exit door and flee into the dark woods.",
+        "obj_current_task": "Current Mission:",
+        "obj_explore": "Explore the cabin and search for an exit.",
+        "obj_kitchen_lockpick": "Retrieve the lockpick left in the kitchen.",
+        "obj_dining_cabinet": "Unlock the dining room cabinet to get the old key.",
+        "obj_crowbar": "Find the crowbar and pry off the planks to the living room.",
+        "obj_fuse_power": "Restore power at the upstairs fuse box to deactivate the exit sensor.",
+        "obj_master_safe": "Unlock the master bedroom and crack the safe to get the forest key.",
+        "obj_escape_forest": "Unlock the chains on the living room exit door and escape!",
+        "obj_completed_stamp": "[COMPLETED]",
         "obj_close": "Press TAB or ESC to close notebook.",
         
         # Minigames

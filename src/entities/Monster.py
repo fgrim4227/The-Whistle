@@ -93,6 +93,12 @@ class Monster(BaseEntity):
             self.change_state("stunned", duration=duration)
             return "stunned"
 
+    def get_eye_position(self) -> Tuple[float, float]:
+        """Returns the world coordinates of El Silbón's glowing eyes in his face under the hat."""
+        cx = self.x + self.width / 2.0
+        # For walk/patrol/chase (92x92 sheets), face is 39px above collision center (self.y + 22 - 39 = self.y - 17)
+        return (cx, self.y - 17.0)
+
     def can_detect_player(self, player) -> bool:
         """Checks whether the player is currently detected by line of sight or flashlight."""
         if player.is_hidden:

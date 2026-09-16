@@ -60,10 +60,23 @@ class Room:
     def get_obstacles(self) -> List[pygame.Rect]:
         """Returns all solid obstacles that entities collide against."""
         obs = list(self.solid_tiles)
-        # Add locked or barred doors as solid obstacles
+        # Add locked, barred, bolted doors, or doors barred from opposite side as solid obstacles
         for door in self.doors:
-            if door.is_locked or door.is_barred:
+            if door.is_locked or door.is_barred or getattr(door, "is_bolted", False):
                 obs.append(door.get_rect())
+            elif getattr(self, "house", None):
+                target_rm = self.house.rooms.get(door.target_room_name)
+                if target_rm:
+                    current_names = {self.name}
+                    if self.display_name:
+                        current_names.add(self.display_name)
+                    for k, v in getattr(self.house, "rooms", {}).items():
+                        if v is self:
+                            current_names.add(k)
+                    for rd in getattr(target_rm, "doors", []):
+                        if rd.target_room_name in current_names and (rd.is_barred or getattr(rd, "planks_remaining", 0) > 0):
+                            obs.append(door.get_rect())
+                            break
         # Add furniture and hiding spots that are marked as solid
         for spot in self.hiding_spots:
             if getattr(spot, "is_solid", True):

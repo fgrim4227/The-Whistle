@@ -44,11 +44,16 @@ class StartState(BaseState):
         elif input_id == "enter":
             self._select_option()
 
+    def exit(self) -> None:
+        settings.stop_all_audio()
+
     def _select_option(self) -> None:
         if self.selected_index == 0:
-            # Launch game: push PlayState
-            from src.states.game.PlayState import PlayState
-            self.state_machine.push(PlayState(self.state_machine))
+            # Stop menu music before entering cinematic intro
+            settings.stop_all_audio()
+            # Launch game: play cinematic intro road sequence
+            from src.states.game.IntroRoadState import IntroRoadState
+            self.state_machine.push(IntroRoadState(self.state_machine))
         elif self.selected_index == 1:
             toggle_language()
         elif self.selected_index == 2:
