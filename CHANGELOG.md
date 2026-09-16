@@ -111,6 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added dedicated spritesheets for El Silbón (`assets/graphics/characters/monster/`): `monster_idle.png` (64x64 idle pose), `monster_walk.png` (92x92 4-directional walking cycles in down/left/up/right order), and `monster_running.png` (92x92 chase/running cycle).
 
 ### Removed
+-**HUD for when the player hides**: Removed message for the hud
 - **Legacy NPC Code & Cleanup**:
   - Completely deleted `src/entities/NPC.py` and purged all obsolete references and imports across `src/world/Room.py`, `src/world/House.py`, `src/world/TiledLevelLoader.py`, `src/definitions/rooms.py`, and `src/states/game/PlayState.py`.
   - Level layouts now rely exclusively on environmental parchment notes (`note_kitchen`, `note_hallway`) and Tiled object layers for storytelling and item yields.

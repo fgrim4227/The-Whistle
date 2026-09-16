@@ -75,11 +75,6 @@ class HUD:
             item_surf = settings.FONTS["small"].render(item_text, True, settings.COLOR_GOLD)
             surface.blit(item_surf, (settings.VIRTUAL_WIDTH - item_surf.get_width() - 12, 12))
 
-        # 3. Concealment status indicator (Wardrobe / Table)
-        if player.is_hidden:
-            hidden_surf = settings.FONTS["small"].render(t("hud_hidden"), True, (100, 220, 100))
-            surface.blit(hidden_surf, (settings.VIRTUAL_WIDTH // 2 - hidden_surf.get_width() // 2, 12))
-
         # 4. Terror warning when El Silbón is stalking close
         if audio_manager.is_near_alert and not player.is_hidden:
             pulse = int(180 + 75 * math.sin(self.pulse_timer * 12.0))

@@ -26,7 +26,6 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "hud_battery": "Batería",
         "hud_equipped": "Objeto",
         "hud_none": "Ninguno",
-        "hud_hidden": "[ OCULTO EN EL ARMARIO - NO TE MUEVAS ]",
         "hud_silbon_near": "[ ¡EL SILBIDO SE ESCUCHA LEJOS... ESTÁ AQUÍ! ]",
         
         # Items
@@ -160,7 +159,6 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "hud_battery": "Battery",
         "hud_equipped": "Item",
         "hud_none": "None",
-        "hud_hidden": "[ HIDDEN IN WARDROBE - DO NOT MOVE ]",
         "hud_silbon_near": "[ THE WHISTLE SOUNDS FAR... HE IS HERE! ]",
         
         # Items
