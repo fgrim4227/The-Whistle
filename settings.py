@@ -94,7 +94,7 @@ COLOR_MONSTER_EYES = (255, 25, 20)
 # Light radii (world px), tunable here for quick testing without touching
 # LightingSystem itself.
 FLASHLIGHT_LIGHT_RADIUS = 92.0
-MONSTER_EYE_LIGHT_RADIUS = 2.0
+MONSTER_EYE_LIGHT_RADIUS = 0
 
 # Default fonts using SysFont fallback
 pygame.font.init()
