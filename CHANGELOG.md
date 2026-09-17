@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Audio Lifecycle & Whistle Pacing Fixes (`src/states/game/IntroRoadState.py`, `src/systems/AudioManager.py`)**:
+  - **Timer Isolation in Intro Scene (`IntroRoadState.py`)**: Cleared global engine timers on intro exit (`Timer.clear()`) and guarded roadside whistle callbacks so they cannot bleed post-transition or abruptly kill El Silbón's whistling channel inside `PlayState`.
+  - **Recurrent Whistle Pacing Synchronization (`AudioManager.py`)**: Unified the repeat whistle cooldown to `2.0 - 6.0s` (fixing the legacy `4.0 - 15.0s` fallback), ensuring consistent, persistent folklore cues across the cabin.
+  - **Baseline Audibility Enhancement (`AudioManager.py`)**: Raised the minimum distance-attenuated whistle volume to `0.22` (from `0.08`), preventing folklore paradox volume drops from being drowned out by ambient cabin music, breathing, and monster footsteps.
+- **Repository Cleanup (`scratch/`)**:
+  - Purged obsolete temporary sprite inspection dumps from `scratch/inspect_sprites/`; all dynamic door overlays, padlocks, and interactive items continue rendering cleanly from `assets/graphics/environment/spritesheet.png`.
+
 - **Intro Visual Atmosphere Calibration & Dependency Fix (`src/states/game/IntroRoadState.py`, `assets/graphics/intro/roads2W.png`, `requirements.txt`)**:
   - **Nocturnal Grass Palette (`IntroRoadState.py`)**: Updated roadside ground color to deep nocturnal pine green `(5, 55, 3)` (from bright olive `(160, 192, 112)`), seamlessly blending the highway verge into the midnight mountain aesthetic.
   - **Roadside Horizon Alignment (`IntroRoadState.py`)**: Re-anchored grass rectangle positioning to `road_y` (removing the `-30px` vertical overlap), creating clean visual layer separation between the highway asphalt and the distant mountain silhouettes.

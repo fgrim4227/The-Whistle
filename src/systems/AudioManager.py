@@ -83,8 +83,8 @@ class AudioManager:
         max_range = 2000
         normalized = min(1.0, max(0.06, dist / max_range))
 
-        # Modulate whistle volume inversely proportional to distance
-        whistle_vol = max(0.08, normalized)
+        # Modulate whistle volume inversely proportional to distance (baseline audibility >= 0.22)
+        whistle_vol = max(0.22, normalized)
 
         ch_whistle = settings.AUDIO_CHANNELS.get("silbon_whistle")
         if ch_whistle:
@@ -96,8 +96,8 @@ class AudioManager:
                 self.whistle_cooldown -= dt
                 if self.whistle_cooldown <= 0.0:
                     self.play_silbon_whistle(volume=whistle_vol)
-                    # Next whistle burst interval (14 to 24s silence)
-                    self.whistle_cooldown = random.uniform(4, 15)
+                    # Next whistle burst interval
+                    self.whistle_cooldown = random.uniform(2.0, 6.0)
 
         # Proximity alert flag for UI
         self.is_near_alert = (dist < 100.0 and monster_in_same_room)

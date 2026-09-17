@@ -157,6 +157,7 @@ class IntroRoadState(BaseState):
         settings.play_sound("car_running", loops=-1, volume=0.5, channel_name="vehicle")
 
     def exit(self) -> None:
+        Timer.clear()
         settings.stop_all_audio()
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
@@ -171,6 +172,7 @@ class IntroRoadState(BaseState):
         if self.skipped:
             return
         self.skipped = True
+        Timer.clear()
         settings.stop_all_audio()
         from src.states.game.PlayState import PlayState
         self.state_machine.pop()
@@ -238,9 +240,13 @@ class IntroRoadState(BaseState):
                     self.time_ambush_wait = self.time
                     # Player pauses in the dark silence by the roadside
                     def _start_whistle() -> None:
+                        if self.skipped or self.phase != "player_exit":
+                            return
                         channel = settings.play_sound("whistle", volume=0.05, channel_name="silbon_whistle")
 
                         def _end_whistle() -> None:
+                            if self.skipped or self.phase != "player_exit":
+                                return
                             if channel:
                                 channel.stop()
                             self.sub_text = "¿Quién anda ahí...? ¿Hay alguien?" if not settings.IS_ENGLISH else "Who's out there...? Anyone around?"
