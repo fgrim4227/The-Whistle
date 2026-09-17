@@ -76,13 +76,7 @@ class HUD:
             pygame.draw.rect(surface, (70, 70, 70), bg_box, width=1, border_radius=4)
             surface.blit(empty_surf, (bg_box.centerx - empty_surf.get_width() // 2, box_y + 3))
 
-        # 4. Terror warning when El Silbón is stalking close
-        if audio_manager.is_near_alert and not player.is_hidden:
-            pulse = int(180 + 75 * math.sin(self.pulse_timer * 12.0))
-            alert_surf = settings.FONTS["small"].render(t("hud_silbon_near"), True, (pulse, 30, 30))
-            surface.blit(alert_surf, (settings.VIRTUAL_WIDTH // 2 - alert_surf.get_width() // 2, 28))
-
-        # 5. Contextual interaction prompt at bottom center
+        # 4. Contextual interaction prompt at bottom center
         if prompt_text:
             p_surf = settings.FONTS["small"].render(prompt_text, True, settings.COLOR_WHITE)
             bg_rect = p_surf.get_rect(center=(settings.VIRTUAL_WIDTH // 2, settings.VIRTUAL_HEIGHT - 18))

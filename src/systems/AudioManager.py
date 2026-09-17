@@ -84,7 +84,7 @@ class AudioManager:
         normalized = min(1.0, max(0.06, dist / max_range))
 
         # Modulate whistle volume inversely proportional to distance (baseline audibility >= 0.22)
-        whistle_vol = max(0.22, normalized)
+        whistle_vol = max(0.1, normalized)
 
         ch_whistle = settings.AUDIO_CHANNELS.get("silbon_whistle")
         if ch_whistle:
@@ -115,7 +115,7 @@ class AudioManager:
         # Panicked or door-listening breathing modulation
         ch_breath = settings.AUDIO_CHANNELS.get("silbon_breath")
         if ch_breath:
-            if monster_in_same_room and (dist < 180.0 or is_hidden):
+            if monster_in_same_room and (dist < 100):
                 breath_vol = max(0.3, (1.0 - min(1.0, dist / 180.0)) * 0.90)
                 if not ch_breath.get_busy():
                     settings.play_sound("breathing", loops=-1, volume=breath_vol, channel_name="silbon_breath")
@@ -123,7 +123,7 @@ class AudioManager:
                     ch_breath.set_volume(breath_vol)
             elif door_listening_proximity > 0.05:
                 # Audible heavy breathing through wooden door
-                breath_vol = max(0.5, min(0.95, door_listening_proximity * 0.95))
+                breath_vol = max(0.8, min(0.95, door_listening_proximity * 0.95))
                 if not ch_breath.get_busy():
                     settings.play_sound("breathing", loops=-1, volume=breath_vol, channel_name="silbon_breath")
                 else:

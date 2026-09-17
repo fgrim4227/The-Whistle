@@ -113,6 +113,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "inst_inventory": "1-5 / C : Seleccionar / Ciclar objeto en inventario",
         "inst_objectives": "TAB : Libreta de Objetivos",
         "inst_pause": "P / ESC : Pausa",
+        "inst_fullscreen": "F11 / Alt+Enter : Pantalla Completa",
         "inst_warning": "Atención: Cuando escuches el silbido lejano, ¡está muy cerca!",
         "inst_back": "Presiona ENTER para regresar",
 
@@ -260,6 +261,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "inst_inventory": "1-5 / C : Select / Cycle inventory item",
         "inst_objectives": "TAB : Objectives Log",
         "inst_pause": "P / ESC : Pause",
+        "inst_fullscreen": "F11 / Alt+Enter : Toggle Fullscreen",
         "inst_warning": "Warning: When the whistle sounds far away, HE IS NEAR!",
         "inst_back": "Press ENTER to return",
 

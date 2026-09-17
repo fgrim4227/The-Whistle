@@ -7,10 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Immersive Audio & Minimalist HUD Polish (`src/systems/AudioManager.py`, `src/definitions/interactions.py`, `src/ui/HUD.py`, `src/systems/LightingSystem.py`, `src/minigames/LockpickMinigame.py`)**:
+  - **Audio Threshold Calibration (`AudioManager.py`)**: Calibrated baseline whistle volume to `0.10`, heightened closed-door breathing volume to `0.80 - 0.95` for distinct acoustic proximity cues, and refined same-room breathing detection to `100px`.
+  - **Organic Acoustic Tension**: Removed textual door breathing spoiler prompt (`prompt_open_door_danger`), letting directional door breathing audio convey danger naturally without UI spoilers.
+  - **Text Banner Removal (`hud_silbon_near`)**: Stripped the red text warning banner from the HUD, immersing the player in auditory awareness where El Silbón's proximity is tracked solely through the whistling folklore paradox.
+  - **Ambient Darkness Calibration (`LightingSystem.py`)**: Fine-tuned base ambient darkness alpha to `251.0` for balanced nocturnal room contrast.
+  - **Minigame UI Minimalism (`LockpickMinigame.py`)**: Simplified lockpicking interface by removing redundant header text, focusing attention on the brass tumbler mechanics.
+
+- **Level Geometry & Tilemap Collisions Calibration (`assets/tilemaps/*.json`)**:
+  - Refined wall collisions, door boundaries, stair trigger dimensions, and note placements across cabin tilemaps (`Kitchen.json`, `UpperHallway.json`, `LowerHallway.json`, `LivingRoom.json`, `MasterBedroom.json`, `StorageRoom.json`) for smooth entity navigation and accurate room transitions.
+
+- **Hardware-Accelerated Fullscreen & Aspect-Ratio Scaling (`src/TheWhistle.py`, `settings.py`, `src/states/game/StartState.py`, `src/i18n.py`)**:
+  - **SDL2 Hardware Scaling & Native Maximize (`pygame.SCALED | pygame.RESIZABLE`)**: Initialized display with combined hardware scaling and resizable window flags, enabling the OS window frame's native Maximize button while maintaining GPU-accelerated letterboxing across any monitor aspect ratio.
+  - **Fullscreen Toggle Shortcuts (`F11` and `Alt+Enter`)**: Bound universal toggle keys to `toggle_fullscreen` in `settings.py` and handled globally in `TheWhistle.on_input` across all game states.
+  - **Physics & Collision Integrity**: Kept internal virtual resolution strictly locked at 512x288, guaranteeing that character hitboxes, door interaction zones, lighting diffusion, and AI pathfinding operate without displacement or desynchronization.
+  - **Controls Modal Expansion**: Updated instructions dialog in `StartState.py` and `i18n.py` to document the fullscreen shortcuts in both Spanish and English.
+
+- **Intro Cinematic Polish & Asset Calibration (`src/states/game/IntroRoadState.py`, `assets/graphics/intro/car_084.png`, `assets/graphics/intro/car_083.png`)**:
+  - **High-Fidelity Vehicle Sprite (`car_084.png`)**: Configured intro road cinematic to render the calibrated vehicle model (`car_084.png`, 95x45), improving visual fidelity and proportions during the breakdown sequence.
+  - **Deduplication of `enter()`**: Removed redundant duplicate `enter()` method definition in `IntroRoadState.py`.
+  - **Dialogue Subtitle Timing**: Synchronized roadside whistle cue with Andreas' dialogue prompt (`"¿Quién anda ahí...? ¿Hay alguien?"`), extending the stillness window to 4.5s so dialogue and atmospheric tension are clearly experienced before entering the forest.
+
 - **Audio Lifecycle & Whistle Pacing Fixes (`src/states/game/IntroRoadState.py`, `src/systems/AudioManager.py`)**:
   - **Timer Isolation in Intro Scene (`IntroRoadState.py`)**: Cleared global engine timers on intro exit (`Timer.clear()`) and guarded roadside whistle callbacks so they cannot bleed post-transition or abruptly kill El Silbón's whistling channel inside `PlayState`.
   - **Recurrent Whistle Pacing Synchronization (`AudioManager.py`)**: Unified the repeat whistle cooldown to `2.0 - 6.0s` (fixing the legacy `4.0 - 15.0s` fallback), ensuring consistent, persistent folklore cues across the cabin.
-  - **Baseline Audibility Enhancement (`AudioManager.py`)**: Raised the minimum distance-attenuated whistle volume to `0.22` (from `0.08`), preventing folklore paradox volume drops from being drowned out by ambient cabin music, breathing, and monster footsteps.
 - **Repository Cleanup (`scratch/`)**:
   - Purged obsolete temporary sprite inspection dumps from `scratch/inspect_sprites/`; all dynamic door overlays, padlocks, and interactive items continue rendering cleanly from `assets/graphics/environment/spritesheet.png`.
 

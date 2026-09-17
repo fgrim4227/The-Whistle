@@ -101,7 +101,7 @@ class IntroRoadState(BaseState):
 
     def _load_intro_assets(self) -> None:
         intro_dir = os.path.join(settings.BASE_DIR, "assets", "graphics", "intro")
-        car_path = os.path.join(intro_dir, "car_082.png")
+        car_path = os.path.join(intro_dir, "car_084.png")
         if not os.path.exists(car_path):
             car_path = os.path.join(intro_dir, "car.png")
 
@@ -138,13 +138,6 @@ class IntroRoadState(BaseState):
         )
         self.current_anim = self.player_animations.get("walk-right")
         self.current_anim_key = self.player_textures.get("walk-right")
-
-    def enter(self, *args, **kwargs) -> None:
-        self.time = 0.0
-        self.speed = 145.0
-        self.phase = "driving"
-        self.skipped = False
-        self.sub_text = "Carretera Trasandina, Mérida - Barinas (2:14 AM)" if not settings.IS_ENGLISH else "Trasandina Highway, Mérida - Barinas (2:14 AM)"
 
     def enter(self, *args, **kwargs) -> None:
         self.time = 0.0
@@ -242,23 +235,21 @@ class IntroRoadState(BaseState):
                     def _start_whistle() -> None:
                         if self.skipped or self.phase != "player_exit":
                             return
-                        channel = settings.play_sound("whistle", volume=0.05, channel_name="silbon_whistle")
+                        settings.play_sound("whistle", volume=0.08, channel_name="silbon_whistle")
 
-                        def _end_whistle() -> None:
-                            if self.skipped or self.phase != "player_exit":
-                                return
-                            if channel:
-                                channel.stop()
-                            self.sub_text = "¿Quién anda ahí...? ¿Hay alguien?" if not settings.IS_ENGLISH else "Who's out there...? Anyone around?"
-
-                        Timer.after(5.5, _end_whistle)
+                    def _ask_who() -> None:
+                        if self.skipped or self.phase != "player_exit":
+                            return
+                        self.sub_text = "¿Quién anda ahí...? ¿Hay alguien?" if not settings.IS_ENGLISH else "Who's out there...? Anyone around?"
 
                     Timer.after(0.5, _start_whistle)
+                    Timer.after(1.6, _ask_who)
 
-            elif hasattr(self, "time_ambush_wait") and (self.time - self.time_ambush_wait >= 2.5):
+            elif hasattr(self, "time_ambush_wait") and (self.time - self.time_ambush_wait >= 4.5):
                 self.phase = "entering_forest"
                 self.time_entering_forest = self.time
                 self.player_walking = True
+                self.sub_text = ""
                 self.current_anim = self.player_animations.get("walk-up")
                 self.current_anim_key = self.player_textures.get("walk-up")
 

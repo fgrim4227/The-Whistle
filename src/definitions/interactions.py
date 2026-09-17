@@ -336,14 +336,6 @@ def get_door_prompt(play_state: Any, door: Any) -> str:
     """Returns the contextual prompt string for a door."""
     room = play_state.house.current_room
 
-    # Check if El Silbón is lurking on the other side of this door
-    is_danger = False
-    if play_state.monster.current_room_name == door.target_room_name:
-        mx, my = play_state.monster.get_center()
-        m_dist = math.hypot(mx - door.target_spawn_x, my - door.target_spawn_y)
-        if m_dist < 180.0:
-            is_danger = True
-
     if door.is_barred:
         return t("prompt_door_barred")
     elif is_reciprocal_door_barred(play_state.house, room, door):
@@ -358,8 +350,6 @@ def get_door_prompt(play_state: Any, door: Any) -> str:
         if door.can_open(play_state.player):
             return t("prompt_open_door")
         return t("prompt_door_locked")
-    elif is_danger:
-        return t("prompt_open_door_danger")
     elif getattr(door, "is_stairs", False):
         return t("prompt_use_stairs")
     return t("prompt_open_door")

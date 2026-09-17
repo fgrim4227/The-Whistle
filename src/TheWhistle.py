@@ -13,19 +13,29 @@ from src.states.game.StartState import StartState
 
 
 class TheWhistle(Game):
+    def __init__(self, *args, **kwargs) -> None:
+        # Enable hardware-accelerated scaling, letterboxing, and the OS window maximize button
+        kwargs.setdefault("flags", pygame.SCALED | pygame.RESIZABLE)
+        super().__init__(*args, **kwargs)
+        self.is_fullscreen: bool = False
+
     def init(self) -> None:
         self.state_stack = StateStack()
         # Game initializes into the StartState title screen
         self.state_stack.push(StartState(self.state_stack))
 
     def update(self, dt: float) -> None:
-        Timer.update(dt)
         self.state_stack.update(dt)
 
     def render(self, surface: pygame.Surface) -> None:
         self.state_stack.render(surface)
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
+        if input_id == "toggle_fullscreen" and input_data.pressed:
+            pygame.display.toggle_fullscreen()
+            self.is_fullscreen = not self.is_fullscreen
+            return
+
         if input_id == "quit" and input_data.pressed:
             # If in StartState, exit game; during gameplay, active states or PauseState handle quit
             if len(self.state_stack.states) == 1 and isinstance(self.state_stack.states[0], StartState):

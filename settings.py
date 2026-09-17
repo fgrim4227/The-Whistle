@@ -41,10 +41,12 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_3, "slot_3")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_4, "slot_4")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_5, "slot_5")
 
-# Menu navigation
+# Menu navigation and screen control
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RETURN, "enter")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_KP_ENTER, "enter")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_l, "toggle_language")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_F11, "toggle_fullscreen")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RETURN, "toggle_fullscreen", modifiers=input_handler.MOD_ALT)
 
 TITLE = "El Silbon"
 

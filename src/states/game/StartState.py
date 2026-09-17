@@ -108,12 +108,12 @@ class StartState(BaseState):
 
     def _render_instructions(self, surface: pygame.Surface) -> None:
         # Modal instructions dialog
-        modal_rect = pygame.Rect(40, 30, settings.VIRTUAL_WIDTH - 80, settings.VIRTUAL_HEIGHT - 60)
+        modal_rect = pygame.Rect(40, 22, settings.VIRTUAL_WIDTH - 80, settings.VIRTUAL_HEIGHT - 44)
         pygame.draw.rect(surface, (20, 20, 30), modal_rect, border_radius=8)
         pygame.draw.rect(surface, settings.COLOR_DARK_RED, modal_rect, width=2, border_radius=8)
 
         title = settings.FONTS["medium"].render(t("menu_instructions"), True, settings.COLOR_GOLD)
-        surface.blit(title, (modal_rect.centerx - title.get_width() // 2, modal_rect.top + 15))
+        surface.blit(title, (modal_rect.centerx - title.get_width() // 2, modal_rect.top + 10))
 
         lines = [
             t("inst_move"),
@@ -122,11 +122,13 @@ class StartState(BaseState):
             t("inst_throw"),
             t("inst_objectives"),
             t("inst_pause"),
+            t("inst_fullscreen"),
             "",
             t("inst_warning"),
             t("inst_back"),
         ]
 
         for idx, line in enumerate(lines):
-            line_surf = settings.FONTS["small"].render(line, True, settings.COLOR_WHITE)
-            surface.blit(line_surf, (modal_rect.left + 25, modal_rect.top + 45 + idx * 18))
+            color = settings.COLOR_GOLD if idx == 8 else settings.COLOR_WHITE
+            line_surf = settings.FONTS["small"].render(line, True, color)
+            surface.blit(line_surf, (modal_rect.left + 25, modal_rect.top + 36 + idx * 16))

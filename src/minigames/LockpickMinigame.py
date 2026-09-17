@@ -144,9 +144,9 @@ class LockpickMinigame(BaseMinigame):
         pygame.draw.rect(surface, (85, 60, 40), panel_rect, width=2, border_radius=8)
 
         # Header Title
-        title_font = settings.FONTS.get("medium", settings.FONTS["small"])
-        title_surf = title_font.render("FORZAR CERRADURA - GANZÚA", True, (240, 215, 160))
-        surface.blit(title_surf, (center_x - title_surf.get_width() // 2, panel_rect.top + 8))
+        #title_font = settings.FONTS.get("medium", settings.FONTS["small"])
+        #title_surf = title_font.render("FORZAR CERRADURA - GANZÚA", True, (240, 215, 160))
+        #surface.blit(title_surf, (center_x - title_surf.get_width() // 2, panel_rect.top + 8))
 
         # 3. Outer Brass Plate
         plate_radius = 45

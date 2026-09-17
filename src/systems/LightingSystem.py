@@ -29,7 +29,7 @@ class LightingSystem:
         self.light_mask = pygame.Surface(size, pygame.SRCALPHA)
 
         # Base ambient darkness alpha: faint silhouettes of nearby walls/floors still visible
-        self.base_ambient_alpha: float = 253.0
+        self.base_ambient_alpha: float = 251.0
         # Monster ambient darkness alpha: suffocating 100% pitch-black darkness when El Silbón is in room
         self.monster_ambient_alpha: float = 255.0
         # Ambient darkness alpha while the "catching" capture animation
