@@ -7,10 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- **Immersive Audio & Minimalist HUD Polish (`src/systems/AudioManager.py`, `src/definitions/interactions.py`, `src/ui/HUD.py`, `src/systems/LightingSystem.py`, `src/minigames/LockpickMinigame.py`)**:
+- **Cabin Room Expansions & Architectural Topology (`assets/tilemaps/*.json`, `src/definitions/rooms.py`)**:
+  - **Secret Passage (`SecretPassage.json`)**: Added an inverted L-shaped vertical corridor connecting Master Bedroom to Storage Room, furnished with atmospheric cobwebs and an authentic survivor lore note (`note_secret_passage`).
+  - **Abandoned Bathroom (`Bathroom.json`)**: Added a 32x18 centered sanitary chamber connected to Lower Hallway with black void padding, calibrated collision barriers, battery pickup, and survivor note (`note_bathroom`).
+  - **Private Study Room (`StudyRoom.json`)**: Added a private study with dark wood tiling, survivor note (`note_study`), battery, and connections to Lower Hallway and the connecting service corridor.
+  - **Service Hallway (`BathroomHallway.json`)**: Created a connecting corridor with dark wood flooring and wall sconces bridging the south exit of the Bathroom to the south exit of the Study Room, providing natural architectural topology and removing direct cross-room teleportation.
+  - **Director AI Patrol Waypoints (`src/definitions/rooms.py`)**: Registered `bathroom`, `study_room`, `secret_passage`, and `bathroom_hallway` into `TILED_ROOMS` with dedicated waypoints, enabling El Silbón's Director AI to actively stalk Andreas through all newly expanded sectors.
+
+- **Security Keypad Minigame & Recursive Shortcut Network (`src/minigames/KeypadMinigame.py`, `src/minigames/MinigameFactory.py`, `src/definitions/interactions.py`, `src/world/Door.py`, `src/world/TiledLevelLoader.py`, `src/i18n.py`)**:
+  - **4-Digit Combination Lock Puzzle (`KeypadMinigame.py`)**: Developed an electronic keypad puzzle with LCD screen displaying real-time digit inputs, illuminated buttons (0-9, CLEAR, ENTER), tactile input beeps, buzzer alert with monster audio trigger on incorrect attempts (`hear_noise`), and success chimes.
+  - **Recursive Room Network Unlock (`unlock_secret_passage_network`)**: Successfully completing the combination on either door (`Master Bedroom` or `Storage Room`) recursively unlocks all interconnecting doors across `master_bedroom`, `secret_passage`, and `storage_room`, permanently granting access to the cabin shortcut.
+  - **Closure Scope & Sound Mapping Resolution (`interactions.py`)**: Resolved a Python closure scoping issue where an inner local import shadowed global `settings` upon passcode completion, and mapped keypad unlock feedback to the authentic `"minigame_unlock_click"` audio cue.
+  - **Decoupled Door Metadata (`Door.py`, `TiledLevelLoader.py`)**: Added support for Tiled custom properties `lock_type`, `passcode`, and `unlocked` onto `Door` objects, allowing level maps to define specialized locking mechanisms declaratively.
+  - **Bilingual Translations (`src/i18n.py`)**: Added `prompt_keypad`, `keypad_title`, `keypad_clear`, `keypad_enter`, and related UI keys in both English and Spanish.
+
+- **Collision Boundaries & Aerial Door Spawns Calibration (`LowerHallway.json`, `StorageRoom.json`, `Bathroom.json`, `StudyRoom.json`)**:
+  - **Storage Room Spawn Bug Fix**: Fixed player movement lock when entering Storage Room from Lower Hallway caused by the south wall's aerial-perspective collision barrier overlapping player feet rect (`target_spawn_y = 190`). Removed duplicate door entity and aligned interactable trigger `id: 20` at `(224, 236.5, 64, 32)`.
+  - **Bathroom Centering & Void Barriers**: Resized Bathroom map from 16 to 32 tiles (512x288), centering the active room with 8 tiles of black void padding on each side and impenetrable collision boundaries (`id: 16`, `id: 17`) to keep camera rendering stable.
+  - **Transit Clearance Verification**: Calibrated player feet collision bounds across all newly authored room transitions (`Bathroom`, `BathroomHallway`, `StudyRoom`), guaranteeing zero obstacle overlap on entry.
+
+- **Reciprocal Door Lock Synchronization & Master Bedroom Validation (`MasterBedroom.json`, `src/definitions/rooms.py`, `src/definitions/interactions.py`, `src/world/House.py`, `src/world/Door.py`)**:
+  - **Locked Door Bypass Resolution**: Fixed an exploit where entering Master Bedroom via the secret passage allowed the player to open and exit through the locked hallway door without possessing the Master Bedroom key (`old_key`).
+  - **Reciprocal Lock Enforcement (`House.py` & `interactions.py`)**: Synchronized reciprocal door lock states during cabin loading and runtime interactions (`get_reciprocal_door`), strictly forbidding transit through any door whose counterpart is locked unless unlocked with the required key.
+  - **Door Sprite Presentation Scope (`Door.py`)**: Scoped top-down padlock overlay rendering to Upper Hallway entrance, preserving authored clean interior door frames inside Master Bedroom.
+
+- **Authentic Pixel Art Sprites for Dropped & Floor Items (`src/definitions/items.py`, `assets/graphics/environment/spritesheet.png`)**:
+  - **Master Bedroom Key (`old_key`)**: Mapped floor and drop item rendering to the authored golden key sprite at `(592, 96, 16, 16)`.
+  - **Forest Exit Key (`key`)**: Mapped floor and drop item rendering to the authored mossy green key sprite at `(608, 96, 16, 16)`.
+  - **Lockpick Sprite (`lockpick`)**: Extracted custom pixel art lockpick sprite directly into the environment spritesheet at `(624, 96, 16, 16)`, completely replacing procedural geometry rendering when dropped with `G` or placed in-world.
+
+- **Immersive Audio & Minimalist HUD Polish (`src/systems/AudioManager.py`, `src/definitions/interactions.py`, `src/ui/HUD.py`, `src/systems/LightingSystem.py`, `src/minigames/LockpickMinigame.py`, `src/states/game/PlayState.py`, `src/i18n.py`):**
   - **Audio Threshold Calibration (`AudioManager.py`)**: Calibrated baseline whistle volume to `0.10`, heightened closed-door breathing volume to `0.80 - 0.95` for distinct acoustic proximity cues, and refined same-room breathing detection to `100px`.
   - **Organic Acoustic Tension**: Removed textual door breathing spoiler prompt (`prompt_open_door_danger`), letting directional door breathing audio convey danger naturally without UI spoilers.
   - **Text Banner Removal (`hud_silbon_near`)**: Stripped the red text warning banner from the HUD, immersing the player in auditory awareness where El Silbón's proximity is tracked solely through the whistling folklore paradox.
+  - **Door Banging Banner & Prompt Cleanup (`PlayState.py`, `i18n.py`)**: Removed obsolete door banging warning text (`prompt_door_banging`) and stripped dead monster banging prompt evaluation in `PlayState._update_contextual_prompt()`, relying entirely on authentic 3D banging sound effects.
+  - **Unused & Legacy String Pruning (`src/i18n.py`)**: Pruned obsolete prototype localization keys (`elena_dialogue_*`, `prompt_talk_npc`, `prompt_keypad_locked`, `inst_inventory`, `minigame_crowbar_title`, `minigame_safe_title`, etc.), ensuring identical 117-key bilingual consistency across English and Spanish.
+  - **AST Structural Audit (`src/`)**: Inspected all game modules via Python Abstract Syntax Tree analysis, verifying clean execution flow and zero duplicate method declarations.
   - **Ambient Darkness Calibration (`LightingSystem.py`)**: Fine-tuned base ambient darkness alpha to `251.0` for balanced nocturnal room contrast.
   - **Minigame UI Minimalism (`LockpickMinigame.py`)**: Simplified lockpicking interface by removing redundant header text, focusing attention on the brass tumbler mechanics.
 

@@ -142,12 +142,56 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
             {"spot_type": "wardrobe", "x": 26 * 16, "y": 2 * 16, "width": 32, "height": 48, "render_graphic": False, "is_solid": True},
         ],
         "doors": [
-            {"x": 0, "y": 96, "target_room_name": "UpperHallway", "target_spawn_x": 440, "target_spawn_y": 116, "width": 24, "height": 48, "render_graphic": False},
+            {"x": 0, "y": 96, "target_room_name": "UpperHallway", "target_spawn_x": 440, "target_spawn_y": 116, "width": 24, "height": 48, "is_locked": True, "required_key": "old_key", "render_graphic": False},
         ],
         "patrol_waypoints": [(120, 130), (256, 140), (380, 130)],
         "items": [
             {"obj_type": "safe", "x": 9 * 16, "y": 3 * 16},
         ],
+    },
+    "bathroom": {
+        "path": str(TILEMAPS_DIR / "Bathroom.json"),
+        "display_name": "Baño Abandonado",
+        "aliases": ["Bathroom"],
+        "hiding_spots": [],
+        "doors": [],
+        "patrol_waypoints": [(256, 80), (256, 180)],
+        "items": [
+            {"obj_type": "battery", "x": 256, "y": 140},
+            {"obj_type": "note", "x": 188, "y": 80, "note_id": "note_bathroom", "is_collectible": False, "render_graphic": True},
+        ],
+    },
+    "study_room": {
+        "path": str(TILEMAPS_DIR / "StudyRoom.json"),
+        "display_name": "Estudio Privado",
+        "aliases": ["StudyRoom", "study"],
+        "hiding_spots": [],
+        "doors": [],
+        "patrol_waypoints": [(140, 100), (370, 100), (256, 180)],
+        "items": [
+            {"obj_type": "note", "x": 200, "y": 100, "note_id": "note_study", "is_collectible": False, "render_graphic": True},
+            {"obj_type": "battery", "x": 350, "y": 140},
+        ],
+    },
+    "secret_passage": {
+        "path": str(TILEMAPS_DIR / "SecretPassage.json"),
+        "display_name": "Pasadizo Oculto",
+        "aliases": ["SecretPassage", "secret_corridor", "passage"],
+        "hiding_spots": [],
+        "doors": [],
+        "patrol_waypoints": [(48, 70), (240, 70), (240, 280), (240, 480)],
+        "items": [
+            {"obj_type": "note", "x": 230, "y": 180, "note_id": "note_secret_passage", "is_collectible": False, "render_graphic": True},
+        ],
+    },
+    "bathroom_hallway": {
+        "path": str(TILEMAPS_DIR / "BathroomHallway.json"),
+        "display_name": "Pasillo de Servicio",
+        "aliases": ["BathroomHallway", "study_hallway", "bathroom_corridor"],
+        "hiding_spots": [],
+        "doors": [],
+        "patrol_waypoints": [(112, 80), (256, 80), (384, 80)],
+        "items": [],
     },
 }
 

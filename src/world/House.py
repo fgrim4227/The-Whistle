@@ -85,12 +85,26 @@ class House:
                 built[room_key] = room
                 self._register_room(room_key, room, spec.get("aliases", []))
 
+            self._sync_reciprocal_doors()
             self.current_room = built[room_defs.TILED_START_ROOM]
             return True
 
         except Exception as e:
             print(f"Error loading Tiled cabin: {e}. Falling back to default cabin layout.")
             return False
+
+    def _sync_reciprocal_doors(self) -> None:
+        """Ensures that reciprocal doors share lock states and required keys."""
+        for rname, room in self.rooms.items():
+            for door in room.doors:
+                if door.is_locked:
+                    target_rm = self.rooms.get(door.target_room_name)
+                    if target_rm:
+                        for d in target_rm.doors:
+                            if d.target_room_name in (rname, room.display_name):
+                                d.is_locked = True
+                                if door.required_key and not d.required_key:
+                                    d.required_key = door.required_key
 
     def _build_default_cabin(self) -> None:
         """Builds the fully procedural fallback house from room_defs.DEFAULT_CABIN_ROOMS."""

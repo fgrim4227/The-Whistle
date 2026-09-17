@@ -19,11 +19,15 @@ _SPRITESHEET_SURFACE: Optional[pygame.Surface] = None
 _SPRITE_BATTERY: Optional[pygame.Surface] = None
 _SPRITE_FUSE_KEY: Optional[pygame.Surface] = None
 _SPRITE_CABINET: Optional[pygame.Surface] = None
+_SPRITE_OLD_KEY: Optional[pygame.Surface] = None
+_SPRITE_KEY: Optional[pygame.Surface] = None
+_SPRITE_LOCKPICK: Optional[pygame.Surface] = None
 
 
 def _get_item_sprites() -> None:
     global _SPRITESHEET_SURFACE, _SPRITE_BATTERY, _SPRITE_FUSE_KEY, _SPRITE_CABINET
-    if _SPRITE_BATTERY is None:
+    global _SPRITE_OLD_KEY, _SPRITE_KEY, _SPRITE_LOCKPICK
+    if _SPRITESHEET_SURFACE is None:
         sheet_path = os.path.join(settings.BASE_DIR, "assets", "graphics", "environment", "spritesheet.png")
         if os.path.exists(sheet_path):
             try:
@@ -31,6 +35,13 @@ def _get_item_sprites() -> None:
                 _SPRITE_BATTERY = _SPRITESHEET_SURFACE.subsurface(pygame.Rect(592, 48, 16, 16))
                 _SPRITE_FUSE_KEY = _SPRITESHEET_SURFACE.subsurface(pygame.Rect(592, 64, 16, 16))
                 _SPRITE_CABINET = _SPRITESHEET_SURFACE.subsurface(pygame.Rect(592, 80, 16, 16))
+                # New item sprites authored by Francisco in spritesheet:
+                # (592, 96): Master Bedroom key (Yellow)
+                # (608, 96): Forest key (Green)
+                # (624, 96): Lockpick / Ganzúa (Silver hook)
+                _SPRITE_OLD_KEY = _SPRITESHEET_SURFACE.subsurface(pygame.Rect(592, 96, 16, 16))
+                _SPRITE_KEY = _SPRITESHEET_SURFACE.subsurface(pygame.Rect(608, 96, 16, 16))
+                _SPRITE_LOCKPICK = _SPRITESHEET_SURFACE.subsurface(pygame.Rect(624, 96, 16, 16))
             except Exception as e:
                 print(f"Notice: Failed to load item sprites from {sheet_path}: {e}")
 
@@ -45,9 +56,18 @@ def _draw_battery(surface: pygame.Surface, rect: pygame.Rect) -> None:
 
 
 def _draw_key(surface: pygame.Surface, rect: pygame.Rect) -> None:
-    pygame.draw.circle(surface, (230, 190, 40), (rect.centerx, rect.top + 5), 4)
-    pygame.draw.line(surface, (230, 190, 40), (rect.centerx, rect.top + 5), (rect.centerx, rect.bottom - 2), 2)
-    pygame.draw.line(surface, (230, 190, 40), (rect.centerx, rect.bottom - 4), (rect.right - 2, rect.bottom - 4), 2)
+    """Draws Forest Key (Green Key from safe)."""
+    _get_item_sprites()
+    if _SPRITE_KEY is not None:
+        if rect.width != 16 or rect.height != 16:
+            scaled = pygame.transform.scale(_SPRITE_KEY, (rect.width, rect.height))
+            surface.blit(scaled, rect.topleft)
+        else:
+            surface.blit(_SPRITE_KEY, rect.topleft)
+    else:
+        pygame.draw.circle(surface, (20, 180, 50), (rect.centerx, rect.top + 5), 4)
+        pygame.draw.line(surface, (20, 180, 50), (rect.centerx, rect.top + 5), (rect.centerx, rect.bottom - 2), 2)
+        pygame.draw.line(surface, (20, 180, 50), (rect.centerx, rect.bottom - 4), (rect.right - 2, rect.bottom - 4), 2)
 
 
 def _draw_crowbar(surface: pygame.Surface, rect: pygame.Rect) -> None:
@@ -60,13 +80,31 @@ def _draw_throwable(surface: pygame.Surface, rect: pygame.Rect) -> None:
 
 
 def _draw_lockpick(surface: pygame.Surface, rect: pygame.Rect) -> None:
-    pygame.draw.line(surface, (200, 200, 210), (rect.left + 2, rect.bottom - 2), (rect.right - 2, rect.top + 2), 2)
-    pygame.draw.circle(surface, (200, 200, 210), (rect.right - 3, rect.top + 3), 2)
+    """Draws Lockpick / Ganzúa."""
+    _get_item_sprites()
+    if _SPRITE_LOCKPICK is not None:
+        if rect.width != 16 or rect.height != 16:
+            scaled = pygame.transform.scale(_SPRITE_LOCKPICK, (rect.width, rect.height))
+            surface.blit(scaled, rect.topleft)
+        else:
+            surface.blit(_SPRITE_LOCKPICK, rect.topleft)
+    else:
+        pygame.draw.line(surface, (200, 200, 210), (rect.left + 2, rect.bottom - 2), (rect.right - 2, rect.top + 2), 2)
+        pygame.draw.circle(surface, (200, 200, 210), (rect.right - 3, rect.top + 3), 2)
 
 
 def _draw_old_key(surface: pygame.Surface, rect: pygame.Rect) -> None:
-    pygame.draw.circle(surface, (170, 140, 90), (rect.centerx, rect.top + 5), 4, width=2)
-    pygame.draw.line(surface, (170, 140, 90), (rect.centerx, rect.top + 5), (rect.centerx, rect.bottom - 2), 2)
+    """Draws Master Bedroom Key (Yellow/Gold key from dining cabinet)."""
+    _get_item_sprites()
+    if _SPRITE_OLD_KEY is not None:
+        if rect.width != 16 or rect.height != 16:
+            scaled = pygame.transform.scale(_SPRITE_OLD_KEY, (rect.width, rect.height))
+            surface.blit(scaled, rect.topleft)
+        else:
+            surface.blit(_SPRITE_OLD_KEY, rect.topleft)
+    else:
+        pygame.draw.circle(surface, (230, 190, 40), (rect.centerx, rect.top + 5), 4, width=2)
+        pygame.draw.line(surface, (230, 190, 40), (rect.centerx, rect.top + 5), (rect.centerx, rect.bottom - 2), 2)
 
 
 def _draw_cabinet(surface: pygame.Surface, rect: pygame.Rect) -> None:

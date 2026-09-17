@@ -24,9 +24,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
 
         # HUD and Status
         "hud_battery": "Batería",
-        "hud_equipped": "Objeto",
         "hud_none": "Ninguno",
-        "hud_silbon_near": "[ ¡EL SILBIDO SE ESCUCHA LEJOS... ESTÁ AQUÍ! ]",
         
         # Items
         "item_battery": "Batería",
@@ -46,7 +44,6 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_hide": "Presiona E para esconderte",
         "prompt_exit_hide": "Presiona E para salir del escondite",
         "prompt_open_door": "Presiona E para abrir",
-        "prompt_open_door_danger": "Presiona E para abrir (¡Se escucha respiración pesada al otro lado!)",
         "prompt_use_stairs": "Presiona E para usar las escaleras",
         "prompt_door_locked": "La puerta está cerrada con llave.",
         "prompt_door_barred": "La puerta está bloqueada con tablones clavados.",
@@ -61,9 +58,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_fuse_box": "Presiona E para inspeccionar la caja de fusibles",
         "prompt_fuse_box_locked": "La caja de fusibles está cerrada con llave.",
         "prompt_open_fuse_box": "Presiona E para abrir con la llave de fusibles",
-        "prompt_door_banging": "¡ALGO ESTÁ GOLPEANDO LA PUERTA VIOLENTAMENTE! ¡ESCÓNDETE!",
+        "prompt_keypad": "Presiona E para introducir el código del pasadizo",
         "prompt_exit_sensor_active": "El sensor de seguridad bloquea la puerta de salida.",
-        "prompt_talk_npc": "Presiona E para hablar con {name}",
         "prompt_pickup": "Presiona E para recoger",
         "prompt_search": "Presiona E para revisar",
 
@@ -82,13 +78,12 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "note_fuse_warning_body": "El sistema de seguridad de la puerta de escape está energizado. Para desconectarlo, hay que subir al cuarto del generador en el piso superior y restaurar los fusibles con la llave de circuitos.",
         "note_master_safe_title": "Pista: La Caja Fuerte",
         "note_master_safe_body": "La combinación de la caja fuerte es difícil, pero el mecanismo hace un chasquido metálico especial cuando la perilla alcanza el número correcto. Escucha con atención cada rotación.",
-
-        # NPC Elena Story Dialogues
-        "elena_dialogue_intro": "¡Andreas! Menos mal... El Silbón trancó la salida con tablones. Toma esta ganzúa, la escondí en mi delantal... busca en el comedor contiguo.",
-        "elena_dialogue_dining": "Revisa la vitrina del comedor con la ganzúa. Allí guardaban las llaves viejas de la cabaña.",
-        "elena_dialogue_bedroom": "Esa llave antigua abre el cuarto principal de arriba... cuidado, El Silbón merodea por las escaleras.",
-        "elena_dialogue_crowbar": "Busca la palanca en el almacén para quitar los tablones de la sala.",
-        "elena_dialogue_escape": "¡La salida está libre! ¡Abre la puerta del bosque y salgamos de aquí!",
+        "note_study_title": "Documento del Arquitecto: Pasaje de Emergencia",
+        "note_study_body": "El túnel de servicio entre el dormitorio principal y la bodega permite trasladar provisiones en secreto. El cerrojo de combinación está configurado con el año de construcción de la finca: 1973. Si esa bestia acecha el pasillo central, este túnel es el único atajo seguro.",
+        "note_bathroom_title": "Nota Manchada: Ruidos en las Cañerías",
+        "note_bathroom_body": "Los silbidos retumban a través de las tuberías del baño... parece que la criatura puede sentir el temblor de cada pisada. Dejé una batería de repuesto sobre el estante antes de intentar huir a la planta baja.",
+        "note_secret_passage_title": "Inscripción en la Viga del Túnel",
+        "note_secret_passage_body": "La oscuridad aquí dentro es absoluta. Camina despacio y no enciendas la linterna más de lo necesario. Si escuchas pasos sobre las tablas del techo, quédate completamente inmóvil.",
 
         # Monologues / Thoughts
         "thought_got_lockpick": "Jose gregorio me dejo una Ganzúa...",
@@ -104,13 +99,13 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_got_fuse_key": "¡Encontré la llave de la caja de fusibles! Tendré que volver al cuarto de arriba con cuidado...",
         "thought_exit_no_power": "La puerta de salida tiene un sensor de seguridad activo. Debo reactivar la energía en la caja de fusibles arriba.",
         "thought_exit_locked_chains": "Las cadenas están aseguradas con un candado. Necesito la llave del bosque de la caja fuerte.",
+        "thought_passage_unlocked": "¡El cerrojo electrónico se abrió! El pasadizo secreto ahora está desbloqueado desde ambos lados.",
         
         # Instructions Modal
         "inst_move": "WASD / Flechas : Moverse",
         "inst_flashlight": "F : Encender / Apagar Linterna",
         "inst_interact": "E : Interactuar / Esconderse / Abrir",
         "inst_throw": "Q / Espacio : Lanzar objeto en mano (75% Stun, 25% Furia)",
-        "inst_inventory": "1-5 / C : Seleccionar / Ciclar objeto en inventario",
         "inst_objectives": "TAB : Libreta de Objetivos",
         "inst_pause": "P / ESC : Pausa",
         "inst_fullscreen": "F11 / Alt+Enter : Pantalla Completa",
@@ -141,10 +136,10 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "obj_close": "Presiona TAB o ESC para cerrar la libreta.",
         
         # Minigames
-        "minigame_crowbar_title": "Retirando tablones",
-        "minigame_crowbar_hint": "Presiona ESPACIO en el momento exacto para hacer palanca",
-        "minigame_safe_title": "Descifrando la caja fuerte",
-        "minigame_safe_hint": "Gira el dial con A/D hasta escuchar el clic mecánico",
+        "minigame_keypad_title": "CERRADURA DE SEGURIDAD",
+        "minigame_keypad_hint": "Introduce la clave de 4 dígitos y presiona ENTER",
+        "keypad_success": "¡CÓDIGO CORRECTO! ATENDIDO",
+        "keypad_error": "¡CÓDIGO ERRÓNEO!",
         
         # Game Over / Victory
         "gameover_title": "TE HA ATRAPADO",
@@ -172,9 +167,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
 
         # HUD and Status
         "hud_battery": "Battery",
-        "hud_equipped": "Item",
         "hud_none": "None",
-        "hud_silbon_near": "[ THE WHISTLE SOUNDS FAR... HE IS HERE! ]",
         
         # Items
         "item_battery": "Battery",
@@ -194,7 +187,6 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_hide": "Press E to hide",
         "prompt_exit_hide": "Press E to exit hiding spot",
         "prompt_open_door": "Press E to open",
-        "prompt_open_door_danger": "Press E to open (Heavy breathing audible on the other side!)",
         "prompt_use_stairs": "Press E to use the stairs",
         "prompt_door_locked": "The door is locked tight.",
         "prompt_door_barred": "The door is blocked with nailed planks.",
@@ -209,9 +201,8 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "prompt_fuse_box": "Press E to inspect fuse box",
         "prompt_fuse_box_locked": "The fuse box is locked tight.",
         "prompt_open_fuse_box": "Press E to unlock fuse box with key",
-        "prompt_door_banging": "SOMETHING IS VIOLENTLY BANGING ON THE DOOR! HIDE!",
+        "prompt_keypad": "Press E to enter the passage passcode",
         "prompt_exit_sensor_active": "The security sensor blocks the exit door.",
-        "prompt_talk_npc": "Press E to talk to {name}",
         "prompt_pickup": "Press E to pick up",
         "prompt_search": "Press E to search",
 
@@ -230,13 +221,12 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "note_fuse_warning_body": "The exit door security lock is energized. To disconnect it, head upstairs to the generator room and restore the fuse box with the circuit key.",
         "note_master_safe_title": "Clue: The Safe",
         "note_master_safe_body": "The safe combination is difficult, but the internal gear produces a distinctive metallic click when the dial aligns. Listen carefully with each rotation.",
-
-        # NPC Elena Story Dialogues
-        "elena_dialogue_intro": "Andreas! Thank goodness... The Whistler barred the exit. Take this lockpick from my apron... search the dining room next door.",
-        "elena_dialogue_dining": "Check the dining room cabinet with the lockpick. They kept old cabin keys in there.",
-        "elena_dialogue_bedroom": "That old key opens the master bedroom upstairs... be careful, The Whistler is lurking around the stairs.",
-        "elena_dialogue_crowbar": "Find the crowbar in the storage room to pry the planks off the living room door.",
-        "elena_dialogue_escape": "The exit is clear! Unlock the forest door and let's get out of here!",
+        "note_study_title": "Architect's Blueprint: Emergency Passage",
+        "note_study_body": "The service tunnel between the master bedroom and the storage room allows moving supplies covertly. The combination lock is set to the estate's construction year: 1973. If that beast lurks in the central hallway, this tunnel is the only safe shortcut.",
+        "note_bathroom_title": "Stained Note: Pipe Echoes",
+        "note_bathroom_body": "The whistles reverberate through the bathroom plumbing... it feels like the creature senses every footstep. I left a spare battery on the shelf before attempting to flee downstairs.",
+        "note_secret_passage_title": "Scratch Marks on the Tunnel Beam",
+        "note_secret_passage_body": "The darkness in here is suffocating. Walk slowly and avoid turning on the flashlight unless needed. If you hear footsteps on the ceiling planks above, remain completely still.",
 
         # Monologues / Thoughts
         "thought_got_lockpick": "Jose Gregorio left me a Lockpick...",
@@ -252,13 +242,13 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "thought_got_fuse_key": "Found the fuse box key! I'll have to head back to the upstairs room carefully...",
         "thought_exit_no_power": "The exit door has an active security sensor. I must restore power at the fuse box upstairs.",
         "thought_exit_locked_chains": "The chains are secured with a padlock. I need the forest key from the safe.",
+        "thought_passage_unlocked": "The electronic lock clicked open! The secret passage is now unlocked from both sides.",
 
         # Instructions Modal
         "inst_move": "WASD / Arrow Keys : Move Andreas",
         "inst_flashlight": "F : Toggle Flashlight",
         "inst_interact": "E : Interact / Hide / Open Door",
         "inst_throw": "Q / Space : Throw equipped item (75% Stun, 25% Enrage)",
-        "inst_inventory": "1-5 / C : Select / Cycle inventory item",
         "inst_objectives": "TAB : Objectives Log",
         "inst_pause": "P / ESC : Pause",
         "inst_fullscreen": "F11 / Alt+Enter : Toggle Fullscreen",
@@ -289,10 +279,10 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "obj_close": "Press TAB or ESC to close notebook.",
         
         # Minigames
-        "minigame_crowbar_title": "Prying Wooden Planks",
-        "minigame_crowbar_hint": "Press SPACE at the right moment to exert force",
-        "minigame_safe_title": "Cracking the Safe",
-        "minigame_safe_hint": "Rotate the dial with A/D until hearing the acoustic click",
+        "minigame_keypad_title": "SECURITY KEYPAD",
+        "minigame_keypad_hint": "Enter 4-digit code and press ENTER",
+        "keypad_success": "CORRECT CODE! UNLOCKED",
+        "keypad_error": "INCORRECT CODE!",
         
         # Game Over / Victory
         "gameover_title": "YOU HAVE BEEN CAUGHT",

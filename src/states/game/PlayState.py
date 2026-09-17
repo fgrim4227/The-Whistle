@@ -49,7 +49,7 @@ class PlayState(BaseState):
         self.player = Player(x=spawn_pos[0], y=spawn_pos[1])
 
         # El Silbón spawns stalking in UpperHallway (as requested by level design)
-        self.monster = Monster(x=380.0, y=116.0, start_room="UpperHallway")
+        self.monster = Monster(x=380.0, y=116.0, start_room="lower_hallway")
         
         self.lighting = LightingSystem()
         self.audio = AudioManager()
@@ -343,13 +343,6 @@ class PlayState(BaseState):
         if not room:
             self.prompt_text = ""
             return
-
-        current_state = self.monster.state_machine.current
-        if self.monster.ai_state == "knocking":
-            target_room = getattr(current_state, "target_room", "")
-            if target_room == room.name:
-                self.prompt_text = t("prompt_door_banging")
-                return
 
         if self.player.is_hidden:
             self.prompt_text = t("prompt_exit_hide")

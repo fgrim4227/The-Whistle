@@ -10,6 +10,7 @@ from src.minigames.LockpickMinigame import LockpickMinigame
 from src.minigames.SafeMinigame import SafeMinigame
 from src.minigames.CrowbarMinigame import CrowbarMinigame
 from src.minigames.FuseBoxMinigame import FuseBoxMinigame
+from src.minigames.KeypadMinigame import KeypadMinigame
 
 
 class MinigameFactory:
@@ -23,6 +24,7 @@ class MinigameFactory:
         "safe": SafeMinigame,
         "crowbar": CrowbarMinigame,
         "fuse_box": FuseBoxMinigame,
+        "keypad": KeypadMinigame,
     }
 
     @classmethod

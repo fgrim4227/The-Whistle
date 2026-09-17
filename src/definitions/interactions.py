@@ -5,8 +5,9 @@ Decouples PlayState from item-specific and door-specific interaction branching.
 """
 
 import math
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Set
 
+import settings
 from src.i18n import t
 from src.states.game.NoteState import NoteState
 from src.states.game.VictoryState import VictoryState
@@ -235,6 +236,52 @@ def is_reciprocal_door_barred(house: Any, current_room: Any, door: Any) -> bool:
     return False
 
 
+def is_passage_door(door: Any, room: Any) -> bool:
+    """Checks if a door belongs to the secret passage shortcut network."""
+    if getattr(door, "lock_type", None) == "keypad" or getattr(door, "is_passcode_locked", False):
+        return True
+    rname = getattr(room, "name", "").lower()
+    tname = getattr(door, "target_room_name", "").lower()
+    passage_rooms = {"storage_room", "master_bedroom", "secret_passage", "secretpassage"}
+    if rname in passage_rooms and tname in passage_rooms:
+        if "secret" in rname or "secret" in tname or "passage" in rname or "passage" in tname:
+            return True
+    return False
+
+
+def unlock_secret_passage_network(house: Any, start_door: Any, visited_doors: Optional[Set[Any]] = None) -> None:
+    """
+    Recursively unlocks all doors belonging to the secret passage shortcut network
+    across connected rooms (Master Bedroom, Secret Passage, Storage Room).
+    """
+    if visited_doors is None:
+        visited_doors = set()
+
+    if start_door in visited_doors:
+        return
+    visited_doors.add(start_door)
+
+    # Unlock this door
+    start_door.is_bolted = False
+    start_door.is_locked = False
+    start_door.is_barred = False
+    setattr(start_door, "unlocked", True)
+    setattr(start_door, "is_passcode_locked", False)
+
+    # Find the target room
+    target_rm = house.rooms.get(start_door.target_room_name)
+    if not target_rm:
+        return
+
+    passage_room_names = {"master_bedroom", "storage_room", "secret_passage", "secretpassage"}
+
+    # Recurse through all doors in target room connecting to passage rooms
+    for d in getattr(target_rm, "doors", []):
+        tname = getattr(d, "target_room_name", "").lower()
+        if tname in passage_room_names or getattr(d, "lock_type", None) == "keypad":
+            unlock_secret_passage_network(house, d, visited_doors)
+
+
 def handle_door_interaction(play_state: Any, door: Any) -> None:
     """Handles unlocking, unbolting, prying planks, and room navigation."""
     room = play_state.house.current_room
@@ -244,6 +291,22 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
     # Check if door is barred with planks on the opposite side
     if is_reciprocal_door_barred(play_state.house, room, door):
         play_state.player.set_thought("thought_door_barred_other_side", 4.0)
+        return
+
+    # 0. Secret Passage keypad / combination security door
+    if is_passage_door(door, room) and not getattr(door, "unlocked", False) and (door.is_bolted or getattr(door, "is_passcode_locked", False)):
+        def on_passcode_success():
+            unlock_secret_passage_network(play_state.house, door)
+            play_state.player.set_thought("thought_passage_unlocked", 4.5)
+            settings.play_sound("minigame_unlock_click", loops=0, volume=1.0, channel_name="sfx")
+
+        play_state.active_minigame = MinigameFactory.create(
+            "keypad",
+            play_state,
+            target_object=door,
+            passcode=getattr(door, "passcode", "1973"),
+            on_success=on_passcode_success,
+        )
         return
 
     # 1. Unboltable passage between LivingRoom and DiningRoom
@@ -315,14 +378,24 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
         return
 
     # 4. Standard locked door requiring key (e.g. Master Bedroom)
-    if door.is_locked:
-        if door.can_open(play_state.player):
+    reciprocal = get_reciprocal_door(play_state.house, room, door)
+    is_door_locked = door.is_locked or (reciprocal is not None and reciprocal.is_locked)
+    if is_door_locked:
+        req_key = door.required_key if door.is_locked else (reciprocal.required_key if reciprocal else "key")
+        can_open = False
+        if hasattr(play_state.player, "has_item"):
+            can_open = play_state.player.has_item(req_key)
+        else:
+            can_open = (play_state.player.equipped_item == req_key)
+
+        if can_open:
             door.unlock()
-            target_rm = play_state.house.rooms.get(door.target_room_name)
-            if target_rm:
-                for d in target_rm.doors:
-                    if d.target_room_name in (room.name, room.display_name):
-                        d.unlock()
+            if reciprocal:
+                reciprocal.unlock()
+            try:
+                settings.play_sound("minigame_unlock_click", loops=0, volume=0.8)
+            except Exception:
+                pass
         else:
             play_state.player.set_thought("prompt_door_locked", 3.0)
         return
@@ -340,16 +413,26 @@ def get_door_prompt(play_state: Any, door: Any) -> str:
         return t("prompt_door_barred")
     elif is_reciprocal_door_barred(play_state.house, room, door):
         return t("prompt_door_barred_other_side")
+    elif is_passage_door(door, room) and not getattr(door, "unlocked", False) and (door.is_bolted or getattr(door, "is_passcode_locked", False)):
+        return t("prompt_keypad")
     elif door.is_bolted:
         if room and room.name in ("living_room", "LivingRoom"):
             return t("prompt_unbolt_door")
         return t("prompt_door_bolted")
     elif door.is_exit_door and not getattr(play_state.house, "power_restored", False):
         return t("prompt_exit_sensor_active")
-    elif door.is_locked:
-        if door.can_open(play_state.player):
-            return t("prompt_open_door")
-        return t("prompt_door_locked")
-    elif getattr(door, "is_stairs", False):
+    else:
+        reciprocal = get_reciprocal_door(play_state.house, room, door)
+        if door.is_locked or (reciprocal is not None and reciprocal.is_locked):
+            req_key = door.required_key if door.is_locked else (reciprocal.required_key if reciprocal else "key")
+            can_open = False
+            if hasattr(play_state.player, "has_item"):
+                can_open = play_state.player.has_item(req_key)
+            else:
+                can_open = (play_state.player.equipped_item == req_key)
+            if can_open:
+                return t("prompt_open_door")
+            return t("prompt_door_locked")
+    if getattr(door, "is_stairs", False):
         return t("prompt_use_stairs")
     return t("prompt_open_door")

@@ -49,6 +49,9 @@ class Door:
         render_graphic: bool = True,
         is_stairs: bool = False,
         planks_remaining: int = 3,
+        lock_type: Optional[str] = None,
+        passcode: Optional[str] = None,
+        unlocked: bool = False,
     ) -> None:
         self.x = float(x)
         self.y = float(y)
@@ -65,6 +68,9 @@ class Door:
         self.render_graphic = render_graphic
         self.is_stairs = is_stairs
         self.planks_remaining = planks_remaining if is_barred else 0
+        self.lock_type = lock_type
+        self.passcode = passcode
+        self.unlocked = unlocked
 
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(int(self.x), int(self.y), self.width, self.height)
@@ -92,11 +98,8 @@ class Door:
         _load_door_sprites()
         rect = self.get_rect().move(-camera_offset[0], -camera_offset[1])
 
-        # 1. Master Bedroom vertical door (replace yellow overlay with real top-down door sprites)
-        is_mb_door = (
-            self.target_room_name.lower() in ("master_bedroom", "masterbedroom")
-            or (self.height >= 40 and self.width <= 32 and (self.is_locked or self.required_key == "old_key"))
-        )
+        # 1. Master Bedroom vertical door from Upper Hallway (replace yellow overlay with real top-down door sprites)
+        is_mb_door = self.target_room_name.lower() in ("master_bedroom", "masterbedroom")
         if is_mb_door and _SPRITE_DOOR_LOCKED is not None:
             if self.is_locked:
                 # Snap to tile grid (16x16) for seamless doorway alignment
