@@ -343,6 +343,9 @@ class IntroRoadState(BaseState):
         # 2. Roadside plants, scattered over the grass strip
         for plant in self.plants:
             plant.render(surface)
+        # 2. Road & Grass
+        road_y = 120
+        pygame.draw.rect(surface, (5, 55, 3), (0, road_y, settings.VIRTUAL_WIDTH, 110))
 
         # Seamless road tiling
         for tx in range(-64, settings.VIRTUAL_WIDTH + 64, 64):
