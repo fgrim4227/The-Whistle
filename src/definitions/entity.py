@@ -13,21 +13,20 @@ from gale.animation import Animation
 
 import settings
 
-PLAYER_SIZE = (16, 32)
-PLAYER_SPRITE_SIZE = (32, 48)
+PLAYER_SIZE = (20, 37)
+PLAYER_SPRITE_SIZE = (17, 37)
 PLAYER_SPRITE_BOTTOM_MARGIN = 0
 PLAYER_FALLBACK_COLOR = (40, 90, 160)
 
 PLAYER_ANIMATIONS: Dict[str, Dict[str, Any]] = {
-    "walk-down": {"texture": "player_walk_down", "frames": list(range(1, 8)), "interval": 0.12},
-    "walk-up": {"texture": "player_walk_up", "frames": list(range(1, 7)), "interval": 0.12},
-    "walk-left": {"texture": "player_walk_left", "frames": list(range(1, 8)), "interval": 0.12},
-    "walk-right": {"texture": "player_walk_right", "frames": list(range(1, 8)), "interval": 0.12},
-    "idle-down": {"texture": "player_idle", "frames": list(range(1, 5)), "interval": 0.25},
-    "idle-up": {"texture": "player_idle", "frames": list(range(1, 5)), "interval": 0.25},
-    "idle-left": {"texture": "player_idle", "frames": list(range(1, 5)), "interval": 0.25},
-    "idle-right": {"texture": "player_idle", "frames": list(range(1, 5)), "interval": 0.25},
-    "dying": {"texture": "player_dying", "frames": list(range(1, 7)), "interval": 0.18, "loops": 1},
+    "walk-up": {"texture": "player", "frames": list(range(2, 12)), "interval": 0.12},
+    "walk-left": {"texture": "player", "frames": list(range(13, 23)), "interval": 0.12},
+    "walk-down": {"texture": "player", "frames": list(range(24, 34)), "interval": 0.12},
+    "walk-right": {"texture": "player", "frames": list(range(35, 45)), "interval": 0.12},
+    "idle-up": {"texture": "player", "frames": [1], "interval": 0.25},
+    "idle-left": {"texture": "player", "frames": [12], "interval": 0.25},
+    "idle-down": {"texture": "player", "frames": [23], "interval": 0.25},
+    "idle-right": {"texture": "player", "frames": [34], "interval": 0.25},
 }
 
 MONSTER_SIZE = (24, 44)

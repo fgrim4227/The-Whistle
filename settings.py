@@ -188,23 +188,8 @@ def stop_all_audio():
 # Texture dictionary
 TEXTURES = {
     # Player sprites (Andreas)
-    "player_walk_down": pygame.image.load(
-        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "andreas walk down.png"
-    ),
-    "player_walk_up": pygame.image.load(
-        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "Andreas walk back.png"
-    ),
-    "player_walk_left": pygame.image.load(
-        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "andreas left walk.png"
-    ),
-    "player_walk_right": pygame.image.load(
-        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "andreas right side walk.png"
-    ),
-    "player_idle": pygame.image.load(
-        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "andreas idle animation.png"
-    ),
-    "player_dying": pygame.image.load(
-        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "Andreas" / "Andreas dying.png"
+    "player": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "player.png"
     ),
 
     # Monster sprites (El Silbón)
@@ -222,12 +207,7 @@ TEXTURES = {
 # Animation frame rects, sliced once per texture and indexed 1-based by
 # src.definitions.entity's animation specs via frame() below.
 FRAMES = {
-    "player_walk_down": frames.generate_frames(TEXTURES["player_walk_down"], 16, 32),
-    "player_walk_up": frames.generate_frames(TEXTURES["player_walk_up"], 16, 32),
-    "player_walk_left": frames.generate_frames(TEXTURES["player_walk_left"], 16, 32),
-    "player_walk_right": frames.generate_frames(TEXTURES["player_walk_right"], 16, 32),
-    "player_idle": frames.generate_frames(TEXTURES["player_idle"], 16, 32),
-    "player_dying": frames.generate_frames(TEXTURES["player_dying"], 16, 32),
+    "player": frames.generate_frames(TEXTURES["player"], 48, 48),
     "monster_idle": frames.generate_frames(TEXTURES["monster_idle"], 64, 64),
     "monster_walk": frames.generate_frames(TEXTURES["monster_walk"], 92, 92),
     "monster_running":frames.generate_frames(TEXTURES["monster_running"], 92, 92),
