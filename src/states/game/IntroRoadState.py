@@ -304,7 +304,7 @@ class IntroRoadState(BaseState):
 
         # 2. Road & Grass
         road_y = 120
-        pygame.draw.rect(surface, (160, 192, 112), (0, road_y - 30, settings.VIRTUAL_WIDTH, 110))
+        pygame.draw.rect(surface, (5, 55, 3), (0, road_y, settings.VIRTUAL_WIDTH, 110))
 
         # Seamless road tiling
         for tx in range(-64, settings.VIRTUAL_WIDTH + 64, 64):

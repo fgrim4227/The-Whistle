@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Intro Visual Atmosphere Calibration & Dependency Fix (`src/states/game/IntroRoadState.py`, `assets/graphics/intro/roads2W.png`, `requirements.txt`)**:
+  - **Nocturnal Grass Palette (`IntroRoadState.py`)**: Updated roadside ground color to deep nocturnal pine green `(5, 55, 3)` (from bright olive `(160, 192, 112)`), seamlessly blending the highway verge into the midnight mountain aesthetic.
+  - **Roadside Horizon Alignment (`IntroRoadState.py`)**: Re-anchored grass rectangle positioning to `road_y` (removing the `-30px` vertical overlap), creating clean visual layer separation between the highway asphalt and the distant mountain silhouettes.
+  - **Highway Asphalt Palette Tuning (`roads2W.png`)**: Calibrated road surface colors for cohesive night-time contrast with vehicle headlights and particle smoke.
+  - **Engine Dependency Specification (`requirements.txt`)**: Updated engine requirement to `gale-engine>=1.16.0` (official PyPI package by Prof. Alejandro Mujica), preventing build failures caused by the legacy abandoned `gale` package.
+
 - **Horror Atmosphere & Pacing Balancing (`src/systems/LightingSystem.py`, `AudioManager.py`, `DirectorAI.py`, `settings.py`, `Kitchen.json`)**:
   - **Shadowy El Silbón Silhouette**: Removed glowing eye points (`MONSTER_EYE_LIGHT_RADIUS = 0`), fully cloaking the monster in darkness as an unseen, terrifying presence.
   - **Denser Ambient Darkness**: Deepened base ambient darkness alpha to `252.0` (from `240.0`) and capture sequence alpha to `245.0` (from `200.0`) for intense claustrophobia and reliance on the flashlight.
