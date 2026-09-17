@@ -187,9 +187,12 @@ def stop_all_audio():
 
 # Texture dictionary
 TEXTURES = {
-    # Player sprites (Andreas)
+    # Player sprites
     "player": pygame.image.load(
         BASE_DIR / "assets" / "graphics" / "characters" / "player" / "player.png"
+    ),
+    "player_flashlight": pygame.image.load(
+        BASE_DIR / "assets" / "graphics" / "characters" / "player" / "player_flashlight.png"
     ),
 
     # Monster sprites (El Silbón)
@@ -202,12 +205,24 @@ TEXTURES = {
     "silbon_attack": pygame.image.load(BASE_DIR / "assets" / "graphics" / "jumpscare" / "silbon_attack.png"),
     "silbon_sad": pygame.image.load(BASE_DIR / "assets" / "graphics" / "jumpscare" / "silbon_sad.png"),
     "silbon_red": pygame.image.load(BASE_DIR / "assets" / "graphics" / "jumpscare" / "silbon_red.png"),
+
+    # Intro road cutscene parallax layers, back to front
+    "forest_parallax_bg": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Paralax" / "parallax-demon-woods-bg.png"),
+    "forest_parallax_far_trees": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Paralax" / "parallax-demon-woods-far-trees.png"),
+    "forest_parallax_mid_trees": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Paralax" / "parallax-demon-woods-mid-trees.png"),
+    "forest_parallax_close_trees": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Paralax" / "parallax-demon-woods-close-trees.png"),
+    "intro_road": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Road" / "Road.png"),
+    "intro_plant_1": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Plants" / "Plant1.png"),
+    "intro_plant_2": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Plants" / "Plant2.png"),
+    "intro_plant_3": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Plants" / "Plant3.png"),
 }
 
 # Animation frame rects, sliced once per texture and indexed 1-based by
 # src.definitions.entity's animation specs via frame() below.
 FRAMES = {
     "player": frames.generate_frames(TEXTURES["player"], 48, 48),
+    "player_flashlight": frames.generate_frames(TEXTURES["player_flashlight"], 48, 48),
+
     "monster_idle": frames.generate_frames(TEXTURES["monster_idle"], 64, 64),
     "monster_walk": frames.generate_frames(TEXTURES["monster_walk"], 92, 92),
     "monster_running":frames.generate_frames(TEXTURES["monster_running"], 92, 92),

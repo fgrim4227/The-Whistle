@@ -26,7 +26,16 @@ PLAYER_ANIMATIONS: Dict[str, Dict[str, Any]] = {
     "idle-up": {"texture": "player", "frames": [1], "interval": 0.25},
     "idle-left": {"texture": "player", "frames": [12], "interval": 0.25},
     "idle-down": {"texture": "player", "frames": [23], "interval": 0.25},
-    "idle-right": {"texture": "player", "frames": [34], "interval": 0.25},
+    "idle-right": {"texture": "player", "frames": [34], "interval": 0.25},  
+
+    "walk-up-flashlight": {"texture": "player_flashlight", "frames": list(range(2, 12)), "interval": 0.12},
+    "walk-left-flashlight": {"texture": "player_flashlight", "frames": list(range(13, 23)), "interval": 0.12},
+    "walk-down-flashlight": {"texture": "player_flashlight", "frames": list(range(24, 34)), "interval": 0.12},
+    "walk-right-flashlight": {"texture": "player_flashlight", "frames": list(range(35, 45)), "interval": 0.12},
+    "idle-up-flashlight": {"texture": "player_flashlight", "frames": [1], "interval": 0.25},
+    "idle-left-flashlight": {"texture": "player_flashlight", "frames": [12], "interval": 0.25},
+    "idle-down-flashlight": {"texture": "player_flashlight", "frames": [23], "interval": 0.25},
+    "idle-right-flashlight": {"texture": "player_flashlight", "frames": [34], "interval": 0.25},
 }
 
 MONSTER_SIZE = (24, 44)

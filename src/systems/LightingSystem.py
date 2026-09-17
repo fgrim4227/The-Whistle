@@ -29,7 +29,7 @@ class LightingSystem:
         self.light_mask = pygame.Surface(size, pygame.SRCALPHA)
 
         # Base ambient darkness alpha: faint silhouettes of nearby walls/floors still visible
-        self.base_ambient_alpha: float = 252.0
+        self.base_ambient_alpha: float = 253.0
         # Monster ambient darkness alpha: suffocating 100% pitch-black darkness when El Silbón is in room
         self.monster_ambient_alpha: float = 255.0
         # Ambient darkness alpha while the "catching" capture animation
@@ -42,22 +42,36 @@ class LightingSystem:
 
         # Multi-layer flashlight cone configuration: (length_px, spread_deg, subtract_alpha, arc_steps)
         # Tightly-spaced diffusion surfaces preserving the exact original cone width (68 deg to 20 deg)
+        self.lenght_cone = 10
         self.cone_layers = [
-            (165.0, 68.0, 35, 14),
-            (157.0, 62.0, 55, 14),
-            (149.0, 56.0, 80, 12),
-            (141.0, 50.0, 105, 12),
-            (133.0, 44.0, 130, 10),
-            (125.0, 39.0, 155, 10),
-            (117.0, 34.0, 180, 8),
-            (108.0, 29.0, 205, 8),
-            (99.0,  24.0, 230, 6),
-            (90.0,  20.0, 255, 6),
+            (233.0, 70.0, 130, 10),
+            (195.0, 54.0, 155, 10),
+            (187.0, 48.0, 180, 8),
+            (178.0, 32.0, 205, 8),
+            (169.0,  26.0, 230, 6),
+            (160.0,  20.0, 255, 6),
         ]
 
+        self.flashlight_inner_radius: Dict[str, float] = {
+            "up": 20.0,
+            "down": 0.0,
+            "left": 0.0,
+            "right": 0.0,
+        }
+
+
+
         # Single simple faint circular glow for the player (no multi-layer rings or stepped diffusion)
-        self.player_ambient_radius: int = 18
-        self.player_ambient_alpha: int = 70
+        self.player_ambient_radius: int = 23
+        self.player_ambient_alpha: int = 25
+
+        self.flashlight_origin_offset: Dict[str, Tuple[int, int]] = {
+            "up": (0, 0),
+            "down": (-9, 6),
+            "left": (-10, 5),
+            "right": (0, 6),
+        }
+
 
     def update(self, dt: float) -> None:
         """Updates internal timers for sine wave light modulations."""
@@ -100,7 +114,8 @@ class LightingSystem:
             if player and not getattr(player, "is_hidden", False):
                 px, py = player.get_center()
                 spx = px - ox
-                spy = py - oy
+                spy = py - oy 
+                
 
                 # Single simple faint circular glow around player (no multi-layer rings or stepped diffusion)
                 pygame.draw.circle(
@@ -113,9 +128,10 @@ class LightingSystem:
                 is_flashlight_on = getattr(player, "flashlight_on", False) and getattr(player, "battery", 0) > 0
 
                 if is_flashlight_on:
-                    # Directional cone facing player.direction
                     direction = getattr(player, "direction", "right")
-                    self._carve_flashlight_cone(spx, spy, direction)
+                    ox_dir, oy_dir = self.flashlight_origin_offset.get(direction, (0, 0))
+                    self._carve_flashlight_cone(spx + ox_dir, spy + oy_dir, direction)
+
 
         self.darkness_surface.blit(self.light_mask, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
         target_surface.blit(self.darkness_surface, (0, 0))
@@ -129,12 +145,19 @@ class LightingSystem:
             "up": 270.0,
         }
         base_angle = math.radians(dir_angles.get(direction, 0.0))
+        inner_radius = self.flashlight_inner_radius.get(direction, 0.0)
 
         for length, spread_deg, alpha, steps in self.cone_layers:
             half = math.radians(spread_deg / 2.0)
-            pts = [(spx, spy)]
-            for i in range(steps + 1):
-                a = base_angle - half + i * (2.0 * half / steps)
-                pts.append((spx + length * math.cos(a), spy + length * math.sin(a)))
+            angles = [base_angle - half + i * (2.0 * half / steps) for i in range(steps + 1)]
+            near = [
+                (spx + inner_radius * math.cos(a), spy + inner_radius * math.sin(a))
+                for a in angles
+            ]
+            far = [(spx + length * math.cos(a), spy + length * math.sin(a)) for a in angles]
+            pts = near + far[::-1]
             pygame.draw.polygon(self.light_mask, (0, 0, 0, alpha), pts)
+
+
+
 

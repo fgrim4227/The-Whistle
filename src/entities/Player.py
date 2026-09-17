@@ -165,10 +165,15 @@ class Player(BaseEntity):
         )
 
     def change_animation(self, anim_name: str) -> None:
+        if self.flashlight_on and f"{anim_name}-flashlight" in self.animations:
+            anim_name = f"{anim_name}-flashlight"
         if anim_name in self.animations and self.current_animation != self.animations[anim_name]:
             self.current_animation = self.animations[anim_name]
             self.current_animation.reset()
             self.current_texture = self._animation_textures.get(anim_name)
+
+
+            
 
     def change_state(self, state_name: str, *args, **kwargs) -> None:
         if state_name == self.state_name:
@@ -185,6 +190,9 @@ class Player(BaseEntity):
             self.flashlight_on = not self.flashlight_on
         else:
             self.flashlight_on = False
+        base = "walk" if self.is_moving else "idle"
+        self.change_animation(f"{base}-{self.direction}")
+
 
     def recharge_battery(self, amount: float = settings.BATTERY_RECHARGE_AMOUNT) -> None:
         self.battery = min(100.0, self.battery + amount)
@@ -320,8 +328,6 @@ class Player(BaseEntity):
             return  # Hidden inside wardrobe/table
 
         ox, oy = camera_offset
-        draw_x = int(self.x - ox)
-        draw_y = int(self.y - oy)
 
         frame = self.current_animation.get_current_frame() if self.current_animation else None
         frame_size = None
@@ -341,16 +347,6 @@ class Player(BaseEntity):
             else:
                 surface.blit(frame, (sprite_x, sprite_y))
 
-        # 2. Flashlight origin indicator light if active
-        if self.flashlight_on and self.battery > 0:
-            beam_offsets = {
-                "down": (draw_x + 8, draw_y + 20),
-                "up": (draw_x + 8, draw_y + 10),
-                "left": (draw_x + 2, draw_y + 18),
-                "right": (draw_x + 14, draw_y + 18),
-            }
-            bx, by = beam_offsets.get(self.direction, (draw_x + 8, draw_y + 20))
-            pygame.draw.circle(surface, (255, 250, 200), (int(bx), int(by)), 2)
 
     def render_thought(self, surface: pygame.Surface, prompt_active: bool = False) -> None:
         """Renders character thoughts and dialogue banners in screen space on top of lighting."""

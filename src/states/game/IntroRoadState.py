@@ -1,13 +1,13 @@
 """
 Intro cutscene state (IntroRoadState).
 Procedurally animated parallax drive along Carretera Trasandina (Mérida - Barinas),
-featuring Gale ParticleSystem smoke, engine failure, Andreas exit, and El Silbón ambush.
+featuring Gale ParticleSystem smoke, engine failure, player exit, and El Silbón ambush.
 """
 
 import math
 import os
 import random
-from typing import List, Optional, Tuple
+from typing import List
 import pygame
 from gale.animation import Animation
 from gale.input_handler import InputData
@@ -21,6 +21,8 @@ from src.i18n import t
 
 
 class RoadsidePlant:
+    """A small bush/tree scrolling across the grass strip at ground speed."""
+
     def __init__(self, x: float, y: float, surf: pygame.Surface) -> None:
         self.x = x
         self.y = y
@@ -38,32 +40,47 @@ class IntroRoadState(BaseState):
         super().__init__(state_machine)
         self.time: float = 0.0
         self.speed: float = 145.0
-        self.phase: str = "driving"  # driving -> failing -> stopped -> player_exit -> ambush -> black
+        self.phase: str = "driving"  # driving -> failing -> stopped -> player_exit -> entering_forest -> ambush -> black
         self.skipped: bool = False
+
+        # Ground layout, shared between render() and the plant seeding below
+        self.road_y: float = 170.0
+        self.grass_strip_height: float = 45.0
 
         # Parallax tracking
         self.road_x: float = 0.0
         self.bg_far_x: float = 0.0
         self.bg_mid_x: float = 0.0
-        self.plant_spawn_timer: float = 0.0
-        self.plants: List[RoadsidePlant] = []
+        self.bg_close_x: float = 0.0
 
         # Assets (loaded first to calibrate dimensions)
         self._load_intro_assets()
+
+        # Roadside plants scattered over the grass strip, thickening the
+        # feel of the forest right from the drive-in
+        self.plants: List[RoadsidePlant] = [
+            RoadsidePlant(
+                random.uniform(0, settings.VIRTUAL_WIDTH),
+                self.road_y - random.uniform(10, self.grass_strip_height),
+                random.choice(self.plant_surfs),
+            )
+            for _ in range(10)
+        ]
 
         # Vehicle
         car_w = self.car_surf.get_width()
         car_h = self.car_surf.get_height()
         self.car_x: float = 110.0
-        self.car_y: float = 120.0 + (48.0 - car_h) / 2.0
+        self.car_y: float = 180.0 + (48.0 - car_h) / 2.0
         self.car_target_y: float = self.car_y
         self.car_shake: float = 0.0
 
-        # Player (Andreas)
-        self.andreas_x: float = 0.0
-        self.andreas_y: float = 0.0
-        self.andreas_active: bool = False
-        self.andreas_walking: bool = False
+        # Player
+        self.player_x: float = 0.0
+        self.player_y: float = 0.0
+        self.player_active: bool = False
+        self.player_walking: bool = False
+        self.player_scale: float = 1.0
 
         # Subtitles & narrative cues
         self.sub_text: str = ""
@@ -84,18 +101,9 @@ class IntroRoadState(BaseState):
 
     def _load_intro_assets(self) -> None:
         intro_dir = os.path.join(settings.BASE_DIR, "assets", "graphics", "intro")
-        road_path = os.path.join(intro_dir, "roads2W.png")
         car_path = os.path.join(intro_dir, "car_082.png")
         if not os.path.exists(car_path):
             car_path = os.path.join(intro_dir, "car.png")
-
-        # Road tile
-        if os.path.exists(road_path):
-            sheet = pygame.image.load(road_path)
-            self.road_tile = sheet.subsurface(pygame.Rect(128, 0, 64, 48))
-        else:
-            self.road_tile = pygame.Surface((64, 48))
-            self.road_tile.fill((60, 60, 65))
 
         # Car sprite
         if os.path.exists(car_path):
@@ -109,25 +117,27 @@ class IntroRoadState(BaseState):
             self.car_surf = pygame.Surface((95, 43))
             self.car_surf.fill((140, 30, 30))
 
-        # Plants
-        self.plant_surfs = []
-        for i in range(1, 6):
-            p_path = os.path.join(intro_dir, f"Plant{i}.png")
-            if os.path.exists(p_path):
-                self.plant_surfs.append(pygame.image.load(p_path))
-
-        # Initial seed of roadside plants
-        if self.plant_surfs:
-            for x in [30, 110, 200, 290, 370, 460]:
-                self.plants.append(RoadsidePlant(x, 62, random.choice(self.plant_surfs)))
-                self.plants.append(RoadsidePlant(x + 40, 160, random.choice(self.plant_surfs)))
+        # Parallax layers and road, back to front. The backdrop is a flat
+        # color, so it's stretched to the screen once instead of tiled.
+        self.bg_layer = pygame.transform.scale(
+            settings.TEXTURES["forest_parallax_bg"], (settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        )
+        self.far_trees_layer = settings.TEXTURES["forest_parallax_far_trees"]
+        self.mid_trees_layer = settings.TEXTURES["forest_parallax_mid_trees"]
+        self.close_trees_layer = settings.TEXTURES["forest_parallax_close_trees"]
+        self.road_tile = settings.TEXTURES["intro_road"]
+        self.plant_surfs = [
+            settings.TEXTURES["intro_plant_1"],
+            settings.TEXTURES["intro_plant_2"],
+            settings.TEXTURES["intro_plant_3"],
+        ]
 
         # Player walk animations
         self.player_animations, self.player_textures = entity_defs.build_animations(
             entity_defs.PLAYER_ANIMATIONS, entity_defs.PLAYER_FALLBACK_COLOR, entity_defs.PLAYER_SIZE
         )
         self.current_anim = self.player_animations.get("walk-right")
-        self.current_anim_key = "player_walk_right"
+        self.current_anim_key = self.player_textures.get("walk-right")
 
     def enter(self, *args, **kwargs) -> None:
         self.time = 0.0
@@ -209,30 +219,57 @@ class IntroRoadState(BaseState):
             self.car_shake = 0.0
             if self.time - getattr(self, "time_stopped", self.time) >= 1.2:
                 self.phase = "player_exit"
-                # Stop car sounds: Andreas turns off the vehicle before stepping out
+                # Stop car sounds: the player turns off the vehicle before stepping out
                 settings.stop_channel("vehicle")
-                self.andreas_active = True
-                self.andreas_x = self.car_x + 35
-                self.andreas_y = self.car_y + self.car_surf.get_height() - 4
-                self.andreas_walking = True
+                self.player_active = True
+                self.player_x = self.car_x + 37
+                self.player_y = self.car_y - self.car_surf.get_height() - 10
+                self.player_walking = True
                 self.sub_text = "Maldición... el radiador hirvió. No hay señal aquí." if not settings.IS_ENGLISH else "Damn it... radiator boiled over. No phone signal out here."
 
         elif self.phase == "player_exit":
-            if self.andreas_walking:
-                self.andreas_x += 16.0 * dt
-                if self.andreas_x >= self.car_x + self.car_surf.get_width() + 14:
-                    self.andreas_walking = False
+            if self.player_walking:
+                self.player_x += 16.0 * dt
+                self.player_y -= 4.0 * dt
+                if self.player_x >= self.car_x + self.car_surf.get_width() + 14:
+                    self.player_walking = False
                     self.current_anim = self.player_animations.get("idle-right")
-                    self.current_anim_key = "player_idle"
+                    self.current_anim_key = self.player_textures.get("idle-right")
                     self.time_ambush_wait = self.time
-                    # Andreas pauses in the dark silence by the roadside
-                    self.sub_text = "¿Quién anda ahí...? ¿Hay alguien?" if not settings.IS_ENGLISH else "Who's out there...? Anyone around?"
+                    # Player pauses in the dark silence by the roadside
+                    def _start_whistle() -> None:
+                        channel = settings.play_sound("whistle", volume=0.05, channel_name="silbon_whistle")
+
+                        def _end_whistle() -> None:
+                            if channel:
+                                channel.stop()
+                            self.sub_text = "¿Quién anda ahí...? ¿Hay alguien?" if not settings.IS_ENGLISH else "Who's out there...? Anyone around?"
+
+                        Timer.after(5.5, _end_whistle)
+
+                    Timer.after(0.5, _start_whistle)
 
             elif hasattr(self, "time_ambush_wait") and (self.time - self.time_ambush_wait >= 2.5):
+                self.phase = "entering_forest"
+                self.time_entering_forest = self.time
+                self.player_walking = True
+                self.current_anim = self.player_animations.get("walk-up")
+                self.current_anim_key = self.player_textures.get("walk-up")
+
+        elif self.phase == "entering_forest":
+            # Walks north into the tree line, shrinking as it goes to read
+            # as moving away into the distance rather than just upward.
+            entering_duration = 2.2
+            t = min((self.time - self.time_entering_forest) / entering_duration, 1.0)
+            self.player_y -= 16.0 * dt
+            self.player_scale = 1.0 - 0.8 * t
+
+            if t >= 1.0:
+                self.player_walking = False
                 self.phase = "ambush"
                 self.time_ambush = self.time
                 # Jumpscare attack
-                settings.play_sound("jumpscare1", volume=0.85, channel_name="jumpscare1")
+                #settings.play_sound("jumpscare1", volume=0.85, channel_name="jumpscare1")
                 settings.play_sound("knock_door", volume=0.95, channel_name="sfx")
 
         elif self.phase == "ambush":
@@ -246,29 +283,23 @@ class IntroRoadState(BaseState):
             if elapsed >= 3.5:
                 self._skip_to_game()
 
-        # Update Andreas animation
-        if self.andreas_active and self.current_anim:
+        # Update player animation
+        if self.player_active and self.current_anim:
             self.current_anim.update(dt)
 
         # Update Parallax scrolling (only when speed > 0)
         if self.speed > 0.0:
             self.road_x = (self.road_x - self.speed * dt) % 64
-            self.bg_far_x = (self.bg_far_x - self.speed * 0.12 * dt) % 512
-            self.bg_mid_x = (self.bg_mid_x - self.speed * 0.28 * dt) % 512
+            self.bg_far_x = (self.bg_far_x - self.speed * 0.12 * dt) % 592
+            self.bg_mid_x = (self.bg_mid_x - self.speed * 0.28 * dt) % 592
+            self.bg_close_x = (self.bg_close_x - self.speed * 0.5 * dt) % 592
 
             for plant in self.plants:
                 plant.update(dt, self.speed)
-            self.plants = [p for p in self.plants if p.x > -70]
-
-            # Procedural plant spawner
-            self.plant_spawn_timer += dt
-            if self.plant_spawn_timer >= random.uniform(0.55, 1.15):
-                self.plant_spawn_timer = 0.0
-                if self.plant_surfs:
-                    p_img = random.choice(self.plant_surfs)
-                    # Alternate between top and bottom roadside
-                    py = 62 if random.random() < 0.5 else 160
-                    self.plants.append(RoadsidePlant(520, py, p_img))
+                if plant.x < -plant.surf.get_width():
+                    plant.x = settings.VIRTUAL_WIDTH + random.uniform(0, 40)
+                    plant.y = self.road_y - random.uniform(10, self.grass_strip_height) + 100
+                    plant.surf = random.choice(self.plant_surfs)
 
     def render(self, surface: pygame.Surface) -> None:
         if self.phase == "black":
@@ -293,29 +324,31 @@ class IntroRoadState(BaseState):
             surface.blit(skip_hint, (settings.VIRTUAL_WIDTH - skip_hint.get_width() - 15, settings.VIRTUAL_HEIGHT - 22))
             return
 
-        # 1. Midnight sky & mountains
-        surface.fill((6, 10, 18))
-        for x in range(-70, 580, 70):
-            mx = x + round(self.bg_far_x % 70)
-            pygame.draw.polygon(surface, (12, 18, 28), [(mx, 100), (mx + 45, 45), (mx + 90, 100)])
-        for x in range(-50, 560, 50):
-            mx = x + round(self.bg_mid_x % 50)
-            pygame.draw.polygon(surface, (18, 24, 35), [(mx, 110), (mx + 35, 65), (mx + 70, 110)])
+        # 1. Forest backdrop, back to front. Each tree layer is taller than
+        # the strip of sky above the road, so it's anchored by its own
+        # bottom edge to that strip instead of by its top -- otherwise
+        # only the sparse upper fringe of the canopy would ever show, with
+        # the dense treeline hidden below the road.
+        road_y = self.road_y
+        surface.blit(self.bg_layer, (0, 0))
+        for tx in range(-592, settings.VIRTUAL_WIDTH + 592, 592):
+            surface.blit(self.far_trees_layer, (tx + round(self.bg_far_x), road_y - self.far_trees_layer.get_height()))
+        for tx in range(-592, settings.VIRTUAL_WIDTH + 592, 592):
+            surface.blit(self.mid_trees_layer, (tx + round(self.bg_mid_x), road_y - self.mid_trees_layer.get_height()))
+        for tx in range(-592, settings.VIRTUAL_WIDTH + 592, 592):
+            surface.blit(self.close_trees_layer, (tx + round(self.bg_close_x), road_y - self.close_trees_layer.get_height()))
 
-        # 2. Road & Grass
-        road_y = 120
-        pygame.draw.rect(surface, (160, 192, 112), (0, road_y - 30, settings.VIRTUAL_WIDTH, 110))
+        pygame.draw.rect(surface, (18, 36, 20), (0, road_y - self.grass_strip_height, settings.VIRTUAL_WIDTH, self.grass_strip_height))
+
+        # 2. Roadside plants, scattered over the grass strip
+        for plant in self.plants:
+            plant.render(surface)
 
         # Seamless road tiling
         for tx in range(-64, settings.VIRTUAL_WIDTH + 64, 64):
             surface.blit(self.road_tile, (tx + round(self.road_x), road_y))
 
-        # 3. Top roadside plants (behind car)
-        for plant in self.plants:
-            if plant.y < road_y:
-                plant.render(surface)
-
-        # 4. Headlights beam (projecting forward onto dark road)
+        # 3. Headlights beam (projecting forward onto dark road)
         if self.speed > 0.0 or self.phase in ("driving", "failing", "stopped", "player_exit"):
             light_beam = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
             car_w = self.car_surf.get_width()
@@ -333,29 +366,33 @@ class IntroRoadState(BaseState):
             )
             surface.blit(light_beam, (0, 0))
 
-        # 5. Car vehicle
+        # 4. Car vehicle
         surface.blit(self.car_surf, (round(self.car_x), round(self.car_y + self.car_shake)))
 
-        # 6. Andreas player sprite (if stepped out)
-        if self.andreas_active and self.current_anim:
+        # 5. Player sprite (if stepped out)
+        if self.player_active and self.current_anim:
             frame = self.current_anim.get_current_frame()
             tex = settings.TEXTURES.get(self.current_anim_key)
             if tex and isinstance(frame, pygame.Rect):
-                surface.blit(tex, (round(self.andreas_x), round(self.andreas_y)), frame)
+                if self.player_scale == 1.0:
+                    surface.blit(tex, (round(self.player_x), round(self.player_y)), frame)
+                else:
+                    fw, fh = frame.width, frame.height
+                    scaled_size = (max(1, round(fw * self.player_scale)), max(1, round(fh * self.player_scale)))
+                    sprite = pygame.transform.scale(tex.subsurface(frame), scaled_size)
+                    sw, sh = sprite.get_size()
+                    # Anchored by the feet, so shrinking reads as walking
+                    # away instead of the sprite drifting off its own spot.
+                    surface.blit(sprite, (round(self.player_x + fw / 2 - sw / 2), round(self.player_y + fh - sh)))
             elif isinstance(frame, pygame.Surface):
-                surface.blit(frame, (round(self.andreas_x), round(self.andreas_y)))
+                surface.blit(frame, (round(self.player_x), round(self.player_y)))
             else:
-                pygame.draw.rect(surface, entity_defs.PLAYER_FALLBACK_COLOR, (round(self.andreas_x), round(self.andreas_y), 16, 32))
+                pygame.draw.rect(surface, entity_defs.PLAYER_FALLBACK_COLOR, (round(self.player_x), round(self.player_y), 16, 32))
 
-        # 7. Smoke particles (from engine hood)
+        # 6. Smoke particles (from engine hood)
         self.smoke_particles.render(surface)
 
-        # 8. Bottom roadside plants (in front of car/road)
-        for plant in self.plants:
-            if plant.y >= road_y:
-                plant.render(surface)
-
-        # 9. Ambient night darkness vignette
+        # 7. Ambient night darkness vignette
         darkness = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
         darkness.fill((6, 8, 14, 130))
         surface.blit(darkness, (0, 0))
@@ -366,7 +403,7 @@ class IntroRoadState(BaseState):
             flash.fill((180, 0, 0, 190))
             surface.blit(flash, (0, 0))
 
-        # 10. Subtitles & HUD skip prompt
+        # 8. Subtitles & HUD skip prompt
         if self.sub_text:
             font = settings.FONTS.get("dialogue", settings.FONTS["small"])
             sub_surf = font.render(self.sub_text, True, (240, 235, 220))
