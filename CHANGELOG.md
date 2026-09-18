@@ -259,6 +259,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Level layouts now rely exclusively on environmental parchment notes (`note_kitchen`, `note_hallway`) and Tiled object layers for storytelling and item yields.
 
 ### Changed
+-Changed asset name so it doesn't give an execution error
 - Added sprites in the tileset
 -Linked the monster running animation
 -`i18n.py`: Modified elena's name
