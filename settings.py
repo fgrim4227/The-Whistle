@@ -232,6 +232,11 @@ TEXTURES = {
     "intro_plant_2": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Plants" / "Plant2.png"),
     "intro_plant_3": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Plants" / "Plant3.png"),
     "intro_forest_bg": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "forest.png"),
+
+    # Content warning screen icons
+    "warning_circle": pygame.image.load(BASE_DIR / "assets" / "graphics" / "warning" / "circle.png"),
+    "warning_icon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "warning" / "warning.png"),
+    "warning_headphones": pygame.image.load(BASE_DIR / "assets" / "graphics" / "warning" / "headphones.png"),
 }
 
 # Animation frame rects, sliced once per texture and indexed 1-based by

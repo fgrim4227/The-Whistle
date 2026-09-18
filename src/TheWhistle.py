@@ -10,6 +10,7 @@ from gale.timer import Timer
 
 import settings
 from src.states.game.StartState import StartState
+from src.states.game.WarningIntro import WarningIntro
 
 
 class TheWhistle(Game):
@@ -30,8 +31,9 @@ class TheWhistle(Game):
                 print(f"Warning: Could not set window icon: {e}")
 
         self.state_stack = StateStack()
-        # Game initializes into the StartState title screen
-        self.state_stack.push(StartState(self.state_stack))
+        # Game initializes into the content warning screen, which hands
+        # off to the StartState title screen once it finishes
+        self.state_stack.push(WarningIntro(self.state_stack))
 
     def update(self, dt: float) -> None:
         self.state_stack.update(dt)

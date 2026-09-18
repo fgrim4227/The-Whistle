@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Content Warning Boot Sequence (`src/states/game/WarningIntro.py`, `src/TheWhistle.py`, `settings.py`, `assets/graphics/warning/*`)**:
+  - The game now boots into a new `WarningIntro` state instead of straight into `StartState`, handing off to the title screen once it finishes.
+  - Plays three beats in sequence -- a "use headphones" notice, a flashing-lights/loud-noises/jumpscare content notice, and a "WhiteCircle presents..." studio card -- each icon and its caption fading in, holding, and fading out together (`Timer.tween`) before the next one begins.
+  - Pressing Enter/Space/E at any point cancels the current fade and jumps straight to the next beat (or into `StartState`, if already on the last one), instead of waiting out the full timing.
+
 - **A\* Navigation Reliability Audit (`src/systems/Pathfinding.py`, `src/entities/Monster.py`, `src/states/entity/monster/MonsterMovingToDoorState.py`, `src/states/entity/monster/MonsterKnockingState.py`, `src/states/entity/monster/MonsterCatchingState.py`, `src/systems/DirectorAI.py`)**:
   - **Unreachable-Goal Waypoints (`Pathfinding.find_path`)**: The final waypoint no longer gets overwritten with the raw, unreachable goal when that goal sits inside furniture's safety margin -- it stays at the nearest cell a body can actually stand on, so the caller's arrival check can succeed instead of the monster shoving against the obstacle forever. This was the root cause of El Silbón appearing to walk endlessly at a player's hiding spot without ever settling.
   - **Stuck-In-Obstacle Recovery (`Monster.move_towards`)**: A body that already overlaps something solid (e.g. an authored door spawn point landing inside a wall) now ignores collision blocking until it clears the overlap, instead of every direction -- including the way back out -- reading as blocked forever.
