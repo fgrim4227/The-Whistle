@@ -234,7 +234,7 @@ TEXTURES = {
     "intro_forest_bg": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "forest.png"),
 
     # Content warning screen icons
-    "warning_circle": pygame.image.load(BASE_DIR / "assets" / "graphics" / "warning" / "circle.png"),
+    "warning_circle": pygame.image.load(BASE_DIR / "assets" / "graphics" / "warning" / "logo.png"),
     "warning_icon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "warning" / "warning.png"),
     "warning_headphones": pygame.image.load(BASE_DIR / "assets" / "graphics" / "warning" / "headphones.png"),
 }
