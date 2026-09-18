@@ -400,7 +400,9 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
             play_state.player.set_thought("prompt_door_locked", 3.0)
         return
 
-    # 5. Walk through door into target room
+    # 5. Walk through door into target room (clearing any in-flight projectiles from the previous room)
+    if hasattr(play_state, "projectiles"):
+        play_state.projectiles.clear()
     play_state.house.change_room(door.target_room_name, door.target_spawn_x, door.target_spawn_y, play_state.player)
     play_state.objectives_progress["explore"] = True
 

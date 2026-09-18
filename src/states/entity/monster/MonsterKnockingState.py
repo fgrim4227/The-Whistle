@@ -14,7 +14,7 @@ class MonsterKnockingState(MonsterBaseState):
     def enter(self, door, target_room: str, *args, **kwargs) -> None:
         self.door = door
         self.target_room = target_room
-        self.timer = random.randint(2, 3)
+        self.timer = random.uniform(3.0, 4.0)
         self.monster.vx = 0.0
         self.monster.vy = 0.0
         self.monster.is_moving = False

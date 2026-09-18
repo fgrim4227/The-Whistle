@@ -21,9 +21,42 @@ class MonsterInvestigateState(MonsterBaseState):
         self.monster.change_animation(f"walk-{self.monster.direction}")
 
     def process_ai(self, house, player, dt: float) -> None:
-        player_room_name = house.current_room.name if house.current_room else "bedroom"
+        player_room_name = house.current_room.name if house.current_room else "FirstRoom"
         if self.monster.current_room_name != player_room_name:
-            #I think we should cheat a little and teleport him to the player's room or get him closer
+            # Alien: Isolation style - When a disturbance is heard in another room (e.g. failed minigame),
+            # El Silbón stalks directly to the door outside the player's room and knocks loudly,
+            # giving the player 3-4 seconds of pure panic to hide before bursting in.
+            target_room = house.rooms.get(player_room_name)
+            candidate_doors = []
+            if target_room:
+                for d in getattr(target_room, "doors", []):
+                    outside_room_name = d.target_room_name
+                    outside_room = house.rooms.get(outside_room_name)
+                    if not outside_room:
+                        continue
+                    for rd in getattr(outside_room, "doors", []):
+                        if rd.target_room_name in (player_room_name, getattr(target_room, "display_name", "")):
+                            if rd.is_exit_door or rd.is_barred or rd.is_locked or getattr(rd, "is_bolted", False):
+                                continue
+                            if getattr(rd, "planks_remaining", 0) > 0:
+                                continue
+                            candidate_doors.append((outside_room_name, rd))
+                            break
+
+            if candidate_doors:
+                # Prefer a door in the monster's current room if directly adjacent
+                matching = [c for c in candidate_doors if c[0] == self.monster.current_room_name]
+                chosen_room_name, chosen_door = matching[0] if matching else candidate_doors[0]
+
+                self.monster.current_room_name = chosen_room_name
+                self.monster.x = float(chosen_door.x)
+                self.monster.y = float(chosen_door.y)
+                self.monster.vx = 0.0
+                self.monster.vy = 0.0
+                self.monster.is_moving = False
+                self.monster.change_state("knocking", door=chosen_door, target_room=player_room_name)
+                return
+
             PATROL(self.monster)
             return
 

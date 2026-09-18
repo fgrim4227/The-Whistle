@@ -74,6 +74,7 @@ class PlayState(BaseState):
         self._monster_was_in_room: bool = False
         self._was_catching: bool = False
         self._darkness_tween = None
+        self._current_room_name: Optional[str] = None
 
     def enter(self, *args, **kwargs) -> None:
         self.player.clear_held()
@@ -81,6 +82,7 @@ class PlayState(BaseState):
         self._was_catching = False
         self.lighting.darkness_alpha = self.lighting.base_ambient_alpha
         self._darkness_tween = None
+        self._current_room_name = self.house.current_room.name if self.house.current_room else None
         # Start atmospheric cabin ambient background music
         self.audio.start_ambient()
 
@@ -95,7 +97,10 @@ class PlayState(BaseState):
             return
 
         if input_data.pressed:
-            if input_id == "pause":
+            if input_id == "quit":
+                pygame.event.post(pygame.event.Event(pygame.QUIT))
+                return
+            elif input_id == "pause":
                 self.player.clear_movement()
                 self.state_machine.push(PauseState(self.state_machine, on_close=self.player.sync_movement_keys))
                 return
@@ -179,6 +184,10 @@ class PlayState(BaseState):
         room = self.house.current_room
         if not room:
             return
+
+        if self._current_room_name is not None and self._current_room_name != room.name:
+            self.projectiles.clear()
+        self._current_room_name = room.name
 
         obstacles = room.get_obstacles()
 
