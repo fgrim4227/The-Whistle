@@ -59,6 +59,10 @@ MONSTER_ANIMATIONS: Dict[str, Dict[str, Any]] = {
     "walk-right": {"texture": "monster_walk", "frames": list(range(25, 33)), "interval": 0.10},
     "idle": {"texture": "monster_idle", "frames": list(range(1, 5)), "interval": 0.20},
     "catching": {"texture": "monster_catching", "frames": list(range(1, 10)), "interval": 0.7, "loops": 1},
+    "run-down":{"texture": "monster_running", "frames": list(range(1, 9)), "interval": 0.10},
+    "run-left": {"texture": "monster_running", "frames": list(range(9, 17)), "interval": 0.10},
+    "run-up": {"texture": "monster_running", "frames": list(range(17, 25)), "interval": 0.10},
+    "run-right": {"texture": "monster_running", "frames": list(range(25, 33)), "interval": 0.10},
 }
 
 

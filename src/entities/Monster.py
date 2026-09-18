@@ -265,7 +265,8 @@ class Monster(BaseEntity):
         else:
             self.direction = "down" if ny > 0 else "up"
 
-        self.change_animation(f"walk-{self.direction}")
+        action_prefix = "run" if self.ai_state in ("chase", "berserk") else "walk"
+        self.change_animation(f"{action_prefix}-{self.direction}")
 
         # A body that already overlaps something solid has every direction
         # blocked, including the way back out, so it would stand there

@@ -20,6 +20,15 @@ class TheWhistle(Game):
         self.is_fullscreen: bool = False
 
     def init(self) -> None:
+        # Set window titlebar and taskbar icon
+        icon_path = settings.BASE_DIR / "assets" / "graphics" / "icon.png"
+        if icon_path.exists():
+            try:
+                icon_surf = pygame.image.load(str(icon_path))
+                pygame.display.set_icon(icon_surf)
+            except Exception as e:
+                print(f"Warning: Could not set window icon: {e}")
+
         self.state_stack = StateStack()
         # Game initializes into the StartState title screen
         self.state_stack.push(StartState(self.state_stack))

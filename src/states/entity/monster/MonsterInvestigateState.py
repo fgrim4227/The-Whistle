@@ -18,7 +18,7 @@ class MonsterInvestigateState(MonsterBaseState):
         self.path = []
         self.path_index = 0
         self.path_computed = False
-
+        self.monster.change_animation(f"walk-{self.monster.direction}")
 
     def process_ai(self, house, player, dt: float) -> None:
         player_room_name = house.current_room.name if house.current_room else "bedroom"

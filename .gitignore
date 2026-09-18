@@ -11,3 +11,6 @@ venv_win/
 *.tiled-session
 graphify-out/
 .claude/
+build/
+dist/
+*.spec

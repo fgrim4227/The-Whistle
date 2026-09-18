@@ -255,6 +255,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Added sprites in the tileset
+-Linked the monster running animation
 -`i18n.py`: Modified elena's name
 -`settings.py`: Modified silbon's light radius (in the future it will be 0)
 -`Crowbarminigame.py`: Modified notification radius

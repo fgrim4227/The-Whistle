@@ -9,6 +9,7 @@ class MonsterBerserkState(MonsterBaseState):
     def enter(self, *args, **kwargs) -> None:
         self.timer = 6.0
         self.monster.speed = settings.MONSTER_BERSERK_SPEED
+        self.monster.change_animation(f"run-{self.monster.direction}")
 
     def process_ai(self, house, player, dt: float) -> None:
         self.timer -= dt

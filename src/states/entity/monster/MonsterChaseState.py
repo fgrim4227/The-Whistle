@@ -31,6 +31,7 @@ class MonsterChaseState(MonsterBaseState):
         self.path = []
         self.path_index = 0
         self.path_target_x = None
+        self.monster.change_animation(f"run-{self.monster.direction}")
         self.path_target_y = None
 
     def process_ai(self, house, player, dt: float) -> None:

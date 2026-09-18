@@ -4,6 +4,7 @@ Global configurations, constants, input mappings, audio channels, and resource p
 """
 
 import pathlib
+import sys
 import pygame
 
 from gale import frames
@@ -53,7 +54,17 @@ TITLE = "El Silbon"
 # Language configuration boolean: False = Spanish (default), True = English
 IS_ENGLISH: bool = False
 
-BASE_DIR = pathlib.Path(__file__).parent
+if getattr(sys, "frozen", False):
+    meipass = pathlib.Path(getattr(sys, "_MEIPASS", ""))
+    exe_dir = pathlib.Path(sys.executable).parent
+    if (meipass / "assets").exists():
+        BASE_DIR = meipass
+    elif (exe_dir / "assets").exists():
+        BASE_DIR = exe_dir
+    else:
+        BASE_DIR = meipass
+else:
+    BASE_DIR = pathlib.Path(__file__).parent
 
 # Virtual Resolution: Exact 16:9 ratio with 32x32 tiles (16 cols x 9 rows)
 VIRTUAL_WIDTH = 512
@@ -233,6 +244,7 @@ FRAMES = {
     "monster_walk": frames.generate_frames(TEXTURES["monster_walk"], 92, 92),
     "monster_running":frames.generate_frames(TEXTURES["monster_running"], 92, 92),
     "monster_catching": frames.generate_frames(TEXTURES["monster_catching"], 92, 92),
+    "monster_running": frames.generate_frames(TEXTURES["monster_running"], 92, 92)
 }
 
 
