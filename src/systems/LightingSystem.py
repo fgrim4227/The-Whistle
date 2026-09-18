@@ -29,8 +29,10 @@ class LightingSystem:
         self.light_mask = pygame.Surface(size, pygame.SRCALPHA)
 
         # Base ambient darkness alpha: faint silhouettes of nearby walls/floors still visible
-        self.base_ambient_alpha: float = 251.0
+        #self.base_ambient_alpha: float = 0.0
+        self.base_ambient_alpha: float = 253.0
         # Monster ambient darkness alpha: suffocating 100% pitch-black darkness when El Silbón is in room
+        #self.monster_ambient_alpha: float = 0.0
         self.monster_ambient_alpha: float = 255.0
         # Ambient darkness alpha while the "catching" capture animation
         # plays: clearer than normal so the animation itself is visible.
@@ -63,7 +65,7 @@ class LightingSystem:
 
         # Single simple faint circular glow for the player (no multi-layer rings or stepped diffusion)
         self.player_ambient_radius: int = 23
-        self.player_ambient_alpha: int = 25
+        self.player_ambient_alpha: int = 10
 
         self.flashlight_origin_offset: Dict[str, Tuple[int, int]] = {
             "up": (0, 0),

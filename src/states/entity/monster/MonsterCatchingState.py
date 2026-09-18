@@ -13,6 +13,10 @@ WAYPOINT_ARRIVAL_DIST = 10.0
 # "cornered at the wardrobe" once the reveal plays.
 APPROACH_MARGIN = 28.0
 
+# Longest the walk over to the hiding spot may take before the capture
+# resolves anyway.
+APPROACH_TIMEOUT = 6.0
+
 
 class MonsterCatchingState(MonsterBaseState):
     """
@@ -32,12 +36,21 @@ class MonsterCatchingState(MonsterBaseState):
         self.path_computed = False
         self.approach_x = None
         self.approach_y = None
+        self.approach_timer = APPROACH_TIMEOUT
         self.approaching = spot is not None
         if not self.approaching:
             self._start_reveal()
 
     def process_ai(self, house, player, dt: float) -> None:
         if not self.approaching:
+            return
+
+        # The player can't leave the hiding spot while this is playing out,
+        # so the walk over is never allowed to last forever: if the way
+        # there turns out to be blocked, the reveal happens regardless.
+        self.approach_timer -= dt
+        if self.approach_timer <= 0.0:
+            self._start_reveal()
             return
 
         current_room = house.rooms.get(self.monster.current_room_name)

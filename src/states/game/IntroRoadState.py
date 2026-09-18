@@ -19,6 +19,26 @@ import settings
 from src.definitions import entity as entity_defs
 from src.i18n import t
 
+# How often a new plant enters from the right, same role as Flappy
+# Bird's TIME_TO_SPAWN_LOGS -- this is the knob for how many end up on
+# screen at once (lower = more plants, higher = fewer).
+PLANT_SPAWN_INTERVAL = 0.2
+
+# How far apart, in pixels, two plants in the same row may land -- kept
+# small so a row still reads as one line instead of a scatter.
+PLANT_ROW_JITTER = 8.0
+
+# Half-width, in pixels, of the reserved opening around forest_entry_x --
+# no plant is ever created if it would end up resting inside this band.
+FOREST_GAP_HALF_WIDTH = 80.0
+
+# The "driving" phase's fixed length and the "failing" phase's speed
+# falloff, mirrored from the phase timeline below so a plant's eventual
+# resting spot (once everything has fully stopped) can be worked out at
+# the moment it's created.
+DRIVING_PHASE_DURATION = 4.0
+CAR_DECELERATION = 42.0
+
 
 class RoadsidePlant:
     """A small bush/tree scrolling across the grass strip at ground speed."""
@@ -31,6 +51,9 @@ class RoadsidePlant:
     def update(self, dt: float, speed: float) -> None:
         self.x -= speed * dt
 
+    def is_out_of_game(self) -> bool:
+        return self.x < -self.surf.get_width()
+
     def render(self, surface: pygame.Surface) -> None:
         surface.blit(self.surf, (round(self.x), round(self.y)))
 
@@ -40,12 +63,12 @@ class IntroRoadState(BaseState):
         super().__init__(state_machine)
         self.time: float = 0.0
         self.speed: float = 145.0
-        self.phase: str = "driving"  # driving -> failing -> stopped -> player_exit -> entering_forest -> ambush -> black
+        self.phase: str = "driving"  # driving -> failing -> stopped -> player_exit -> entering_forest -> ending
         self.skipped: bool = False
 
         # Ground layout, shared between render() and the plant seeding below
         self.road_y: float = 170.0
-        self.grass_strip_height: float = 45.0
+        self.grass_strip_height: float = 50.0
 
         # Parallax tracking
         self.road_x: float = 0.0
@@ -56,17 +79,6 @@ class IntroRoadState(BaseState):
         # Assets (loaded first to calibrate dimensions)
         self._load_intro_assets()
 
-        # Roadside plants scattered over the grass strip, thickening the
-        # feel of the forest right from the drive-in
-        self.plants: List[RoadsidePlant] = [
-            RoadsidePlant(
-                random.uniform(0, settings.VIRTUAL_WIDTH),
-                self.road_y - random.uniform(10, self.grass_strip_height),
-                random.choice(self.plant_surfs),
-            )
-            for _ in range(10)
-        ]
-
         # Vehicle
         car_w = self.car_surf.get_width()
         car_h = self.car_surf.get_height()
@@ -74,6 +86,35 @@ class IntroRoadState(BaseState):
         self.car_y: float = 180.0 + (48.0 - car_h) / 2.0
         self.car_target_y: float = self.car_y
         self.car_shake: float = 0.0
+
+        # The x where the player stops walking right and turns to face
+        # north (see the player_exit arrival check below) always the
+        # same number every playthrough, since neither car_x nor that
+        # walk distance ever changes.
+        self.forest_entry_x: float = self.car_x + car_w + 14.0
+
+        # Roadside plants scroll in from the right on their own clock
+        # same split Flappy Bird uses for its logs: a spawn timer decides
+        # when a new one enters, and update() alone decides when an
+        # existing one has scrolled off and gets dropped. Two rows, one
+        # near the tree line and one near the road, each a back or front
+        # layer of underbrush; PLANT_ROW_JITTER keeps every plant within
+        # the same row instead of scattered across the whole strip.
+        self.plant_row_y = [
+            self.road_y - self.grass_strip_height - 25,
+            self.road_y - 45.0,
+        ]
+        # A pre-seeded batch fills the screen right away with the same
+        # spacing the timer would build up on its own (speed * interval),
+        # so the drive-in doesn't open on an empty roadside while that
+        # timer is still counting up to its first spawn.
+        self.plants: List[RoadsidePlant] = []
+        seed_spacing = max(1.0, self.speed * PLANT_SPAWN_INTERVAL)
+        seed_x = 0.0
+        while seed_x < settings.VIRTUAL_WIDTH:
+            self._spawn_plant(seed_x)
+            seed_x += seed_spacing
+        self.plant_spawn_timer: float = 0.0
 
         # Player
         self.player_x: float = 0.0
@@ -126,6 +167,7 @@ class IntroRoadState(BaseState):
         self.mid_trees_layer = settings.TEXTURES["forest_parallax_mid_trees"]
         self.close_trees_layer = settings.TEXTURES["forest_parallax_close_trees"]
         self.road_tile = settings.TEXTURES["intro_road"]
+        self.grass_tile = settings.TEXTURES["intro_grass"]
         self.plant_surfs = [
             settings.TEXTURES["intro_plant_1"],
             settings.TEXTURES["intro_plant_2"],
@@ -138,6 +180,38 @@ class IntroRoadState(BaseState):
         )
         self.current_anim = self.player_animations.get("walk-right")
         self.current_anim_key = self.player_textures.get("walk-right")
+
+    def _remaining_scroll_distance(self) -> float:
+        """
+        How much further anything scrolling at ground speed still has to
+        travel, from right now, before the car finishes coming to a full
+        stop -- the "driving" phase runs at a constant speed for whatever
+        is left of its fixed length, then "failing" brakes at a fixed
+        rate down to 0. Both are deterministic, so this is exact, not a
+        guess: it's what lets a plant spawned now know where it will
+        actually end up once everything has settled.
+        """
+        if self.phase == "driving":
+            remaining_driving = (DRIVING_PHASE_DURATION - self.time) * self.speed
+            full_braking_distance = (self.speed ** 2) / (2.0 * CAR_DECELERATION)
+            return remaining_driving + full_braking_distance
+        if self.phase == "failing":
+            return (self.speed ** 2) / (2.0 * CAR_DECELERATION)
+        return 0.0
+
+    def _spawn_plant(self, x: float) -> None:
+        """
+        Adds a plant at `x`, unless it's due to end up resting inside the
+        reserved opening at forest_entry_x once the car finishes stopping
+        -- in which case it's skipped outright rather than created and
+        hidden later, so the gap is a real absence, not a render trick.
+        """
+        resting_x = x - self._remaining_scroll_distance()
+        if abs(resting_x - self.forest_entry_x) <= FOREST_GAP_HALF_WIDTH:
+            return
+
+        row_y = random.choice(self.plant_row_y) + random.uniform(0, PLANT_ROW_JITTER)
+        self.plants.append(RoadsidePlant(x, row_y, random.choice(self.plant_surfs)))
 
     def enter(self, *args, **kwargs) -> None:
         self.time = 0.0
@@ -167,9 +241,9 @@ class IntroRoadState(BaseState):
         self.skipped = True
         Timer.clear()
         settings.stop_all_audio()
-        from src.states.game.PlayState import PlayState
+        from src.states.game.IntroForestState import IntroForestState
         self.state_machine.pop()
-        self.state_machine.push(PlayState(self.state_machine))
+        self.state_machine.push(IntroForestState(self.state_machine))
 
     def update(self, dt: float) -> None:
         self.time += dt
@@ -189,7 +263,7 @@ class IntroRoadState(BaseState):
         # ---------------- Phase Timeline ----------------
         if self.phase == "driving":
             # Normal driving for first 4 seconds
-            if self.time >= 4.0:
+            if self.time >= DRIVING_PHASE_DURATION:
                 self.phase = "failing"
                 self.smoke_active = True
                 # Switch from car_running loop to car_break_and_stop
@@ -200,7 +274,7 @@ class IntroRoadState(BaseState):
         elif self.phase == "failing":
             # Sputter & gradual deceleration down to 0 over 3.5s
             self.car_shake = math.sin(self.time * 35.0) * 1.5
-            self.speed = max(0.0, self.speed - 42.0 * dt)
+            self.speed = max(0.0, self.speed - CAR_DECELERATION * dt)
             # Pull car over towards the bottom roadside shoulder
             if self.car_y < 134.0:
                 self.car_y += 3.0 * dt
@@ -263,22 +337,9 @@ class IntroRoadState(BaseState):
 
             if t >= 1.0:
                 self.player_walking = False
-                self.phase = "ambush"
-                self.time_ambush = self.time
-                # Jumpscare attack
-                #settings.play_sound("jumpscare1", volume=0.85, channel_name="jumpscare1")
-                settings.play_sound("knock_door", volume=0.95, channel_name="sfx")
+                self.phase = "ending"
+                Timer.after(1.0, self._skip_to_game)
 
-        elif self.phase == "ambush":
-            if self.time - getattr(self, "time_ambush", self.time) >= 0.25:
-                self.phase = "black"
-                self.time_black = self.time
-
-        elif self.phase == "black":
-            # Fade in blackout transition text
-            elapsed = self.time - getattr(self, "time_black", self.time)
-            if elapsed >= 3.5:
-                self._skip_to_game()
 
         # Update player animation
         if self.player_active and self.current_anim:
@@ -293,33 +354,27 @@ class IntroRoadState(BaseState):
 
             for plant in self.plants:
                 plant.update(dt, self.speed)
-                if plant.x < -plant.surf.get_width():
-                    plant.x = settings.VIRTUAL_WIDTH + random.uniform(0, 40)
-                    plant.y = self.road_y - random.uniform(10, self.grass_strip_height) + 100
-                    plant.surf = random.choice(self.plant_surfs)
+            self.plants = [p for p in self.plants if not p.is_out_of_game()]
+
+            self.plant_spawn_timer += dt
+            if self.plant_spawn_timer >= PLANT_SPAWN_INTERVAL:
+                self.plant_spawn_timer = 0.0
+                self._spawn_plant(settings.VIRTUAL_WIDTH)
+
+    def _headlight_cone_points(self, origin, length: float, spread_deg: float, steps: int = 12):
+        """
+        A fan of points around an arc instead of a flat triangle, so the
+        far edge of the beam reads as a curve like the flashlight's cone
+        does, rather than a straight cut.
+        """
+        half = math.radians(spread_deg / 2.0)
+        points = [origin]
+        for i in range(steps + 1):
+            angle = -half + i * (2.0 * half / steps)
+            points.append((origin[0] + length * math.cos(angle), origin[1] + length * math.sin(angle)))
+        return points
 
     def render(self, surface: pygame.Surface) -> None:
-        if self.phase == "black":
-            # Pitch black screen with story transition text
-            surface.fill((0, 0, 0))
-            elapsed = self.time - getattr(self, "time_black", self.time)
-            alpha = min(255, int(elapsed * 120))
-
-            t1 = "Horas más tarde..." if not settings.IS_ENGLISH else "Hours later..."
-            t2 = "Despiertas encerrado en una vieja cabaña." if not settings.IS_ENGLISH else "You wake up locked inside a secluded cabin."
-
-            f_large = settings.FONTS.get("large", settings.FONTS["medium"])
-            f_small = settings.FONTS.get("small", settings.FONTS["medium"])
-
-            s1 = f_large.render(t1, True, (220, 215, 200))
-            s2 = f_small.render(t2, True, (160, 40, 30))
-
-            surface.blit(s1, (settings.VIRTUAL_WIDTH // 2 - s1.get_width() // 2, settings.VIRTUAL_HEIGHT // 2 - 20))
-            surface.blit(s2, (settings.VIRTUAL_WIDTH // 2 - s2.get_width() // 2, settings.VIRTUAL_HEIGHT // 2 + 15))
-
-            skip_hint = f_small.render("[ENTER / ESPACIO]" if not settings.IS_ENGLISH else "[ENTER / SPACE]", True, (90, 85, 80))
-            surface.blit(skip_hint, (settings.VIRTUAL_WIDTH - skip_hint.get_width() - 15, settings.VIRTUAL_HEIGHT - 22))
-            return
 
         # 1. Forest backdrop, back to front. Each tree layer is taller than
         # the strip of sky above the road, so it's anchored by its own
@@ -335,12 +390,8 @@ class IntroRoadState(BaseState):
         for tx in range(-592, settings.VIRTUAL_WIDTH + 592, 592):
             surface.blit(self.close_trees_layer, (tx + round(self.bg_close_x), road_y - self.close_trees_layer.get_height()))
 
-        pygame.draw.rect(surface, (18, 36, 20), (0, road_y - self.grass_strip_height, settings.VIRTUAL_WIDTH, self.grass_strip_height))
-
-        # 2. Roadside plants, scattered over the grass strip
-        for plant in self.plants:
-            plant.render(surface)
-
+        for tx in range(-64, settings.VIRTUAL_WIDTH + 64, 64):
+            surface.blit(self.grass_tile, (tx + round(self.road_x), road_y - self.grass_strip_height))
 
         # Seamless road tiling
         for tx in range(-64, settings.VIRTUAL_WIDTH + 64, 64):
@@ -351,21 +402,41 @@ class IntroRoadState(BaseState):
             light_beam = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
             car_w = self.car_surf.get_width()
             car_h = self.car_surf.get_height()
-            p_front = (self.car_x + car_w - 4, self.car_y + car_h // 2 + self.car_shake)
+            p_front = (self.car_x + car_w - 4, self.car_y + car_h // 2 + self.car_shake - 8)
             pygame.draw.polygon(
                 light_beam,
                 (255, 245, 180, 45),
-                [p_front, (p_front[0] + 190, p_front[1] - 45), (p_front[0] + 190, p_front[1] + 45)],
+                self._headlight_cone_points(p_front, 190, 26.6),
             )
             pygame.draw.polygon(
                 light_beam,
                 (255, 245, 180, 100),
-                [p_front, (p_front[0] + 130, p_front[1] - 25), (p_front[0] + 130, p_front[1] + 25)],
+                self._headlight_cone_points(p_front, 130, 21.7),
             )
             surface.blit(light_beam, (0, 0))
 
+            light_beam2 = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
+            p_front2 = (self.car_x + car_w - 4, self.car_y + car_h // 2 + self.car_shake + 8)
+            pygame.draw.polygon(
+                light_beam2,
+                (255, 245, 180, 45),
+                self._headlight_cone_points(p_front2, 190, 26.6),
+            )
+            pygame.draw.polygon(
+                light_beam2,
+                (255, 245, 180, 100),
+                self._headlight_cone_points(p_front2, 130, 21.7),
+            )
+            surface.blit(light_beam2, (0, 0))
+
         # 4. Car vehicle
         surface.blit(self.car_surf, (round(self.car_x), round(self.car_y + self.car_shake)))
+
+        # 2. Roadside plants, scattered over the grass strip. Drawn back
+        # row first so the front row overlaps it, reading as depth
+        # instead of the two rows fighting for the same layer.
+        for plant in sorted(self.plants, key=lambda p: p.y):
+            plant.render(surface)
 
         # 5. Player sprite (if stepped out)
         if self.player_active and self.current_anim:
@@ -394,12 +465,6 @@ class IntroRoadState(BaseState):
         darkness = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
         darkness.fill((6, 8, 14, 130))
         surface.blit(darkness, (0, 0))
-
-        # Jumpscare flash during ambush
-        if self.phase == "ambush":
-            flash = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            flash.fill((180, 0, 0, 190))
-            surface.blit(flash, (0, 0))
 
         # 8. Subtitles & HUD skip prompt
         if self.sub_text:
