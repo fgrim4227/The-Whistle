@@ -138,6 +138,7 @@ SOUNDS = {
     "minigame_wood_break": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "minigames" / "wood_break.mp3"),
     "car_running": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "car_running.mp3"),
     "car_break_and_stop": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "car_break_and_stop.mp3"),
+    "object_hit": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "object_hit.mp3"),
 }
 # Dedicated Audio Channels (Ultimate Fantasy architecture pattern)
 AUDIO_CHANNELS = {
