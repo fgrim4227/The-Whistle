@@ -179,22 +179,16 @@
                  "y":8.64135021097047
                 }, 
                 {
-                 "height":56.1865632467244,
-                 "id":14,
+                 "height":15.0086608927382,
+                 "id":13,
                  "name":"",
                  "opacity":1,
-                 "properties":[
-                        {
-                         "name":"spot_type",
-                         "type":"string",
-                         "value":"wardrobe"
-                        }],
                  "rotation":0,
-                 "type":"wardrobe",
+                 "type":"",
                  "visible":true,
-                 "width":46.0990497890296,
-                 "x":447.449253697535,
-                 "y":10.5653903730846
+                 "width":82.7750388629802,
+                 "x":210.576060404175,
+                 "y":0
                 }, 
                 {
                  "height":29.1077059737953,
@@ -330,16 +324,22 @@
                  "y":10.9152787030868
                 }, 
                 {
-                 "height":15.0086608927382,
-                 "id":13,
+                 "height":56.1865632467244,
+                 "id":14,
                  "name":"",
                  "opacity":1,
+                 "properties":[
+                        {
+                         "name":"spot_type",
+                         "type":"string",
+                         "value":"wardrobe"
+                        }],
                  "rotation":0,
-                 "type":"",
+                 "type":"wardrobe",
                  "visible":true,
-                 "width":82.7750388629802,
-                 "x":210.576060404175,
-                 "y":0
+                 "width":46.0990497890296,
+                 "x":447.449253697535,
+                 "y":10.5653903730846
                 }, 
                 {
                  "height":32.4548079058406,

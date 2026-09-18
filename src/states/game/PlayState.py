@@ -279,7 +279,7 @@ class PlayState(BaseState):
                     self.player.set_thought("thought_monster_enraged", 3.0)
             elif impacted:
                 # Projectile crashed against a wall/obstacle or reached ground, generating noise distraction
-                settings.play_sound("knock_door", volume=0.55, channel_name="sfx")
+                settings.play_sound("object_hit", volume=0.55, channel_name="sfx")
                 self.monster.hear_noise(p.x, p.y, radius=320.0)
                 self.player.set_thought("thought_projectile_crash", 2.5)
 
