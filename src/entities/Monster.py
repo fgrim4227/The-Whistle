@@ -27,6 +27,7 @@ from src.states.entity.monster.MonsterMovingToDoorState import MonsterMovingToDo
 from src.states.entity.monster.MonsterPatrolState import MonsterPatrolState
 from src.states.entity.monster.MonsterStunnedState import MonsterStunnedState
 from src.states.entity.monster.MonsterStalkingState import MonsterStalkingState
+from src.systems import Pathfinding
 
 
 # How wide the monster's field of view is, in total degrees, and the
@@ -52,6 +53,11 @@ DIRECTION_VECTORS = {
 # suspicion at all, hiding stays completely safe.
 HIDE_DETECTION_RADIUS = 90.0
 HIDE_DETECTION_CHANCE = 0.3
+
+# How close a new noise has to be to the one the monster is already
+# walking toward for it to count as the same noise rather than a fresh
+# one worth reacting to.
+SAME_NOISE_RADIUS = 48.0
 
 class Monster(BaseEntity):
     def __init__(self, x: float, y: float, start_room: str = "hallway") -> None:
@@ -104,13 +110,28 @@ class Monster(BaseEntity):
             self.current_animation_name = anim_name
 
     def hear_noise(self, noise_x: float, noise_y: float, radius: float = 280.0) -> None:
-        """Alerts the monster of a sound if within audio radius."""
-        if self.ai_state in ("stunned", "berserk", "knocking"):
+        """
+        Alerts the monster of a sound if within audio radius. A noise is
+        the weakest thing it can act on, so any state already holding a
+        real lead on the player ignores it -- otherwise the player's own
+        footsteps, which happen several times a second, would keep
+        calling the monster off a chase it had already earned.
+        """
+        if self.ai_state in ("stunned", "berserk", "knocking", "chase", "stalking", "catching"):
             return
 
-        dist = math.hypot(noise_x - self.x, noise_y - self.y)
-        if dist <= radius:
-            self.change_state("investigate", target_x=noise_x, target_y=noise_y)
+        if math.hypot(noise_x - self.x, noise_y - self.y) > radius:
+            return
+
+        if self.ai_state == "investigate":
+            walking_to = self.state_machine.current
+            if math.hypot(noise_x - walking_to.target_x, noise_y - walking_to.target_y) <= SAME_NOISE_RADIUS:
+                # Same spot it's already on its way to, so there's nothing
+                # new to react to. Starting over would reset the walk and
+                # its animation every few frames and it would never arrive.
+                return
+
+        self.change_state("investigate", target_x=noise_x, target_y=noise_y)
 
     def receive_throw_hit(self) -> str:
         """Applies 75% Stun / 25% Berserk probability."""
@@ -246,15 +267,47 @@ class Monster(BaseEntity):
 
         self.change_animation(f"walk-{self.direction}")
 
+        # A body that already overlaps something solid has every direction
+        # blocked, including the way back out, so it would stand there
+        # walking in place forever. While it's in that spot the blocking is
+        # skipped and it simply walks free; the moment it's clear, the
+        # normal checks below take over again.
+        overlapping = any(self.get_collision_rect().colliderect(obs) for obs in obstacles)
+
         new_x = self.x + nx * self.speed * dt
         rect_x = self.get_collision_rect(x=new_x)
-        if not any(rect_x.colliderect(obs) for obs in obstacles):
+        if overlapping or not any(rect_x.colliderect(obs) for obs in obstacles):
             self.x = new_x
 
         new_y = self.y + ny * self.speed * dt
         rect_y = self.get_collision_rect(y=new_y)
-        if not any(rect_y.colliderect(obs) for obs in obstacles):
+        if overlapping or not any(rect_y.colliderect(obs) for obs in obstacles):
             self.y = new_y
+
+    def enter_room(self, room_name: str, x: float, y: float, room=None) -> None:
+        """
+        Moves the monster into another room, arriving at the spot the door
+        points to. A few of those arrival spots sit inside furniture, so
+        when `room` is given the landing is nudged to the closest place
+        the monster can actually stand.
+        """
+        self.current_room_name = room_name
+        self.x = x
+        self.y = y
+
+        if room is not None:
+            rect = self.get_collision_rect()
+            if any(rect.colliderect(obs) for obs in room.get_obstacles()):
+                free_x, free_y = Pathfinding.nearest_standable(
+                    room, (rect.centerx, rect.centery), max(rect.width, rect.height)
+                )
+                self.x += free_x - rect.centerx
+                self.y += free_y - rect.centery
+
+        self.current_wp_idx = 0
+        self.vx = 0.0
+        self.vy = 0.0
+        self.is_moving = False
 
     def approach_directly(
         self, target_x: float, target_y: float, obstacles: List[pygame.Rect], dt: float, arrival_dist: float = 10.0

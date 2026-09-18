@@ -201,10 +201,18 @@ def find_path(
     min_entity_width: Optional[float] = None,
 ) -> List[Tuple[float, float]]:
     """
-    A list of (x, y) points in world space traversed in order to 
-    get from the start to the destination while avoiding obstacles 
-    returned by `room.get_obstacles()` (the actual final position is
-      always the last element). Returns an empty list if no path exists
+    A list of (x, y) points in world space traversed in order to get
+    from the start to the destination while avoiding obstacles returned
+    by `room.get_obstacles()`.
+
+    The list is never empty. When the destination sits inside furniture
+    (or inside the safety margin around it), the route ends at the
+    closest spot a body that wide can actually stand on instead of at
+    the destination itself -- walking at a point no one could ever reach
+    means shoving against the furniture forever, since the caller's
+    "am I there yet" check can never come out true. When no route exists
+    at all, the answer is a single point: the destination, to be walked
+    at in a straight line for lack of anything better.
     """
     if min_entity_width is None:
         min_entity_width = entity_width
@@ -223,7 +231,8 @@ def find_path(
         start_cell = to_cell(start)
         goal_cell = to_cell(goal)
 
-        if not grid[goal_cell[1]][goal_cell[0]]:
+        goal_is_standable = grid[goal_cell[1]][goal_cell[0]]
+        if not goal_is_standable:
             nearest = _nearest_walkable_cell(grid, cols, rows, goal_cell)
             if nearest is None:
                 return [goal]
@@ -245,8 +254,25 @@ def find_path(
     waypoints = [
         (gx * CELL_SIZE + CELL_SIZE / 2.0, gy * CELL_SIZE + CELL_SIZE / 2.0) for gx, gy in cell_path
     ]
-    waypoints[-1] = goal
+    if goal_is_standable:
+        waypoints[-1] = goal
     return waypoints
+
+
+def nearest_standable(room, position: Tuple[float, float], entity_width: float = 24.0) -> Tuple[float, float]:
+    """
+    The closest point to `position` where a body that wide fits without
+    overlapping anything solid. Returns `position` untouched when the
+    whole area around it is blocked.
+    """
+    grid, cols, rows = _build_walkable_grid(room, entity_width)
+    cx = max(0, min(cols - 1, int(position[0] // CELL_SIZE)))
+    cy = max(0, min(rows - 1, int(position[1] // CELL_SIZE)))
+
+    cell = _nearest_walkable_cell(grid, cols, rows, (cx, cy))
+    if cell is None:
+        return position
+    return (cell[0] * CELL_SIZE + CELL_SIZE / 2.0, cell[1] * CELL_SIZE + CELL_SIZE / 2.0)
 
 
 def sample_walkable_points(

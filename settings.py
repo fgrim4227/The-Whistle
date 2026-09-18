@@ -138,7 +138,6 @@ SOUNDS = {
     "minigame_wood_break": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "minigames" / "wood_break.mp3"),
     "car_running": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "car_running.mp3"),
     "car_break_and_stop": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "car_break_and_stop.mp3"),
-    "object_hit": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "object_hit.mp3"),
 }
 # Dedicated Audio Channels (Ultimate Fantasy architecture pattern)
 AUDIO_CHANNELS = {
@@ -215,9 +214,11 @@ TEXTURES = {
     "forest_parallax_mid_trees": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Paralax" / "parallax-demon-woods-mid-trees.png"),
     "forest_parallax_close_trees": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Paralax" / "parallax-demon-woods-close-trees.png"),
     "intro_road": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Road" / "Road.png"),
+    "intro_grass": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Road" / "Grass.png"),
     "intro_plant_1": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Plants" / "Plant1.png"),
     "intro_plant_2": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Plants" / "Plant2.png"),
     "intro_plant_3": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "Plants" / "Plant3.png"),
+    "intro_forest_bg": pygame.image.load(BASE_DIR / "assets" / "graphics" / "intro" / "forest.png"),
 }
 
 # Animation frame rects, sliced once per texture and indexed 1-based by

@@ -52,6 +52,14 @@ class DirectorAI:
             self.cooldown_timer -= dt
             return
 
+        if player.is_hidden:
+            # Hiding is the one place the player gets to be genuinely out of
+            # reach, and someone holding still inside a wardrobe makes no
+            # sound for the monster to hear. Pointing it at them anyway
+            # would keep calling it back to the spot forever, so the
+            # pressure simply waits for them to come out.
+            return
+
         if monster.ai_state not in CALM_STATES:
             # Stalking, investigating, knocking: the monster's own senses
             # already have something to work with.

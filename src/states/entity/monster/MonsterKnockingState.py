@@ -32,10 +32,12 @@ class MonsterKnockingState(MonsterBaseState):
 
         self.timer -= dt
         if self.timer <= 0.0:
-            self.monster.current_room_name = self.target_room
-            self.monster.x = self.door.target_spawn_x
-            self.monster.y = self.door.target_spawn_y
-            self.monster.current_wp_idx = 0
+            self.monster.enter_room(
+                self.target_room,
+                self.door.target_spawn_x,
+                self.door.target_spawn_y,
+                house.rooms.get(self.target_room),
+            )
 
             if self.monster.current_room_name == player_room_name and self.monster.can_detect_player(player, house):
                 CHASE(self.monster)
