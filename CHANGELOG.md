@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0] 18/09/2026
 
 - **Content Warning Boot Sequence (`src/states/game/WarningIntro.py`, `src/TheWhistle.py`, `settings.py`, `assets/graphics/warning/*`)**:
   - The game now boots into a new `WarningIntro` state instead of straight into `StartState`, handing off to the title screen once it finishes.
@@ -259,6 +259,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Level layouts now rely exclusively on environmental parchment notes (`note_kitchen`, `note_hallway`) and Tiled object layers for storytelling and item yields.
 
 ### Changed
+-Some Notes Messages
 -Changed asset name so it doesn't give an execution error
 - Added sprites in the tileset
 -Linked the monster running animation

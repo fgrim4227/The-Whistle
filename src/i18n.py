@@ -80,10 +80,10 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "note_master_safe_body": "La combinación de la caja fuerte es difícil, pero el mecanismo hace un chasquido metálico especial cuando la perilla alcanza el número correcto. Escucha con atención cada rotación.",
         "note_study_title": "Documento del Arquitecto: Pasaje de Emergencia",
         "note_study_body": "El túnel de servicio entre el dormitorio principal y la bodega permite trasladar provisiones en secreto. El cerrojo de combinación está configurado con el año de construcción de la finca: 1973. Si esa bestia acecha el pasillo central, este túnel es el único atajo seguro.",
-        "note_bathroom_title": "Nota Manchada: Ruidos en las Cañerías",
-        "note_bathroom_body": "Los silbidos retumban a través de las tuberías del baño... parece que la criatura puede sentir el temblor de cada pisada. Dejé una batería de repuesto sobre el estante antes de intentar huir a la planta baja.",
-        "note_secret_passage_title": "Inscripción en la Viga del Túnel",
-        "note_secret_passage_body": "La oscuridad aquí dentro es absoluta. Camina despacio y no enciendas la linterna más de lo necesario. Si escuchas pasos sobre las tablas del techo, quédate completamente inmóvil.",
+        "note_bathroom_title": "Nota Manchada: Dolor",
+        "note_bathroom_body": "No aguanto mas, ayer vi como ese ser maligno le quebro todos los huesos a zadkiel... ya no aguanto los silbidos, este puede ser mi final",
+        "note_secret_passage_title": "Nota de zadkiel",
+        "note_secret_passage_body": "He logrado sobrevivir por los corredores del dormitorio y el cuarto de estudio, peo siento mucha hambre y manguangua... solo hay una cosa para comer",
 
         # Monologues / Thoughts
         "thought_got_lockpick": "Jose gregorio me dejo una Ganzúa...",
@@ -223,10 +223,10 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "note_master_safe_body": "The safe combination is difficult, but the internal gear produces a distinctive metallic click when the dial aligns. Listen carefully with each rotation.",
         "note_study_title": "Architect's Blueprint: Emergency Passage",
         "note_study_body": "The service tunnel between the master bedroom and the storage room allows moving supplies covertly. The combination lock is set to the estate's construction year: 1973. If that beast lurks in the central hallway, this tunnel is the only safe shortcut.",
-        "note_bathroom_title": "Stained Note: Pipe Echoes",
-        "note_bathroom_body": "The whistles reverberate through the bathroom plumbing... it feels like the creature senses every footstep. I left a spare battery on the shelf before attempting to flee downstairs.",
-        "note_secret_passage_title": "Scratch Marks on the Tunnel Beam",
-        "note_secret_passage_body": "The darkness in here is suffocating. Walk slowly and avoid turning on the flashlight unless needed. If you hear footsteps on the ceiling planks above, remain completely still.",
+        "note_bathroom_title": "Stained Note: Pain",
+        "note_bathroom_body": "I cannot take this anymore. Yesterday I saw how that thing broke all of zadkiel's bones, I can't handle the whistles anymore...",
+        "note_secret_passage_title": "Zadkiel's Note",
+        "note_secret_passage_body": "I have managed to survive thanks to the corridors from the bedroom and the studyroom, but i am manguanguing and hungry, there's only one thing to eat ",
 
         # Monologues / Thoughts
         "thought_got_lockpick": "Jose Gregorio left me a Lockpick...",
