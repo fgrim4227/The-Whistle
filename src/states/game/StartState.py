@@ -9,7 +9,8 @@ from gale.input_handler import InputData
 import settings
 from src.i18n import t, toggle_language, get_language
 from gale.state import BaseState
-
+from src.systems.AudioManager import AudioManager
+from src.systems.LightingSystem import LightingSystem
 
 class StartState(BaseState):
     def __init__(self, state_machine) -> None:
@@ -17,14 +18,13 @@ class StartState(BaseState):
         self.selected_index = 0
         self.show_instructions = False
         self.fog_timer = 0.0
+        self.audio = AudioManager()
+        self.lighting = LightingSystem()
 
     def enter(self, *args, **kwargs) -> None:
         self.selected_index = 0
         self.show_instructions = False
-        # Play ominous ambient cabin background music in the main menu
-        amb_channel = settings.AUDIO_CHANNELS.get("ambience")
-        if amb_channel and not amb_channel.get_busy():
-            settings.play_music("ambience1", loops=-1, volume=0.45, channel_name="ambience")
+        self.audio.start_title_audio()
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if not input_data.pressed:
@@ -63,15 +63,20 @@ class StartState(BaseState):
 
     def update(self, dt: float) -> None:
         self.fog_timer += dt
-        amb_channel = settings.AUDIO_CHANNELS.get("ambience")
-        if amb_channel and not amb_channel.get_busy():
-            settings.play_music("ambience1", loops=-1, volume=0.45, channel_name="ambience")
+        if self.audio.update_title_audio(dt):
+            self.lighting.trigger_thunder_flash()
 
     def render(self, surface: pygame.Surface) -> None:
-        # Atmospheric dark background
-        surface.fill(settings.COLOR_DARK_BLUE)
+        surface.fill((0,0,0))
+        bg = settings.TEXTURES.get("title_bg")
+        if bg:
+            bg = pygame.transform.scale(bg, (settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
+            surface.blit(bg, (0, 0))
+        else:
+            surface.fill(settings.COLOR_DARK_BLUE)
 
-        # Flickering title effect (horror pulsing)
+        self.lighting.render_title_screen(surface, 0.016)
+
         alpha_pulse = int(180 + 75 * math.sin(self.fog_timer * 3.0))
         title_color = (alpha_pulse, 20, 20)
 

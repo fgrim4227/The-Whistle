@@ -21,6 +21,11 @@ class AudioManager:
         
         # Cooldown timer for periodic whistling bursts (not continuous loops)
         self.whistle_cooldown = random.uniform(2.0, 6.0)
+        self.thunder_timer = random.uniform(3.0, 6.0)
+        self.bone_timer = random.uniform(1.0, 3.0)
+
+        self.game_over_rain_delay = 1.5
+        self.waiting_for_rain = False
 
     def start_ambient(self, track_name: Optional[str] = None) -> None:
         """Starts looping atmospheric cabin background music if not already playing."""
@@ -156,3 +161,61 @@ class AudioManager:
                 if ch_steps.get_busy():
                     settings.stop_channel("silbon_footsteps")
                 self.current_footstep_sound = None
+
+    def start_title_audio(self) -> None:
+        """Starts the title screen audio"""
+        settings.stop_all_audio()
+        amb_channel = settings.AUDIO_CHANNELS.get("ambience")
+        if amb_channel and not amb_channel.get_busy():
+            settings.play_music("ambience1", loops=-1, volume=0.2, channel_name="ambience")
+        settings.play_sound("rain", loops=-1, volume=0.45, channel_name="title_weather")
+
+    def update_title_audio(self, dt: float) -> bool:
+        """Updates the title screen audio"""
+        self.thunder_timer -= dt
+        thunder_struck = False
+        if self.thunder_timer <= 0:
+            thunder_sound = random.choice(["thunder_1", "thunder_2", "thunder_3"])
+            settings.play_sound(thunder_sound, volume=0.8, channel_name="thunder")
+            self.thunder_timer = random.uniform(4.0, 10.0)
+            thunder_struck = True
+        amb_channel = settings.AUDIO_CHANNELS.get("ambience")
+        if amb_channel and not amb_channel.get_busy():
+            settings.play_music("ambience1", loops=-1, volume=0.2, channel_name="ambience")
+            
+        weather_channel = settings.AUDIO_CHANNELS.get("title_weather")
+        if weather_channel and not weather_channel.get_busy():
+             settings.play_sound("rain", loops=-1, volume=0.45, channel_name="title_weather")
+        return thunder_struck
+
+    def start_game_over_audio(self) -> None:
+        """Starts the game over audio"""
+        settings.stop_channel("ambience")
+        settings.stop_channel("silbon_whistle")
+        settings.stop_channel("silbon_breath")
+        settings.stop_channel("silbon_footsteps")
+        settings.stop_channel("thunder")
+        
+        settings.play_sound("jumpscare1", loops=0, volume=1.0, channel_name="jumpscare1")
+        settings.play_sound("jumpscare2", loops=0, volume=1.0, channel_name="jumpscare2")
+        self.game_over_rain_delay = 2.0
+        self.waiting_for_rain = True
+
+    def update_game_over_audio(self, dt: float, is_jumpscare_active: bool) -> None:
+        """Updates the audio of the game over screen sounds"""
+        if self.waiting_for_rain:
+            self.game_over_rain_delay -= dt
+            if self.game_over_rain_delay <= 0:
+                self.waiting_for_rain = False
+                weather_channel = settings.AUDIO_CHANNELS.get("title_weather")
+                if weather_channel and not weather_channel.get_busy():
+                    settings.play_sound("rain", loops=-1, volume=0.3, channel_name="title_weather")
+                elif weather_channel:
+                    weather_channel.set_volume(0.3)
+                    
+        if not is_jumpscare_active:
+            self.bone_timer -= dt
+            if self.bone_timer <= 0:
+                bone_sfx = random.choice(["bone_snap_1", "bone_snap_2", "bone_snap_3", "bone_snap_4"])
+                settings.play_sound(bone_sfx, volume=0.8, channel_name="bones")
+                self.bone_timer = random.uniform(2.0, 4.0)

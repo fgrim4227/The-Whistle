@@ -11,7 +11,7 @@ from gale.input_handler import InputData
 import settings
 from src.i18n import t
 from gale.state import BaseState
-
+from src.systems.AudioManager import AudioManager
 
 class GameOverState(BaseState):
     def __init__(self, state_machine) -> None:
@@ -49,19 +49,11 @@ class GameOverState(BaseState):
         if not self.img_red:
             self.img_red = pygame.Surface((target_w, target_h))
             self.img_red.fill(settings.COLOR_SILBON_RED)
+        self.audio = AudioManager()
 
     def enter(self, *args, **kwargs) -> None:
         self.timer = 0.0
-        # Silence ambient music and whistling channels
-        settings.stop_channel("ambience")
-        settings.stop_channel("silbon_whistle")
-        settings.stop_channel("silbon_breath")
-        settings.stop_channel("silbon_footsteps")
-        settings.stop_channel("minigame")
-
-        # Trigger both jumpscare sounds concurrently at maximum volume
-        settings.play_sound("jumpscare1", loops=0, volume=1.0, channel_name="jumpscare1")
-        settings.play_sound("jumpscare2", loops=0, volume=1.0, channel_name="jumpscare2")
+        self.audio.start_game_over_audio()
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if not input_data.pressed:
             return
@@ -79,6 +71,8 @@ class GameOverState(BaseState):
 
     def update(self, dt: float) -> None:
         self.timer += dt
+        is_jumpscare_active = self.timer < self.jumpscare_duration
+        self.audio.update_game_over_audio(dt, is_jumpscare_active)
 
     def render(self, surface: pygame.Surface) -> None:
         if self.timer < self.jumpscare_duration:
