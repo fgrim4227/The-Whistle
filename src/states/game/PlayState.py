@@ -253,7 +253,7 @@ class PlayState(BaseState):
         # tween it back down afterward. Checked right after update_ai so
         # this reacts the same frame the animation switches over, not one
         # frame later.
-        if self.monster.current_animation_name == "catching" and not self._was_catching:
+        if self.monster.current_animation_name.startswith("catching") and not self._was_catching:
             self._was_catching = True
             if self.player.is_hidden:
                 # El Silbón reached the hiding spot -- drag the player back
@@ -323,7 +323,7 @@ class PlayState(BaseState):
                 self._trigger_game_over()
 
         # The capture animation resolves itself once its single playthrough finishes.
-        if self.monster.current_animation_name == "catching" and self.monster.current_animation.times_played >= 1:
+        if self.monster.current_animation_name.startswith("catching") and self.monster.current_animation.times_played >= 1:
             self._trigger_game_over()
 
     def _trigger_game_over(self) -> None:

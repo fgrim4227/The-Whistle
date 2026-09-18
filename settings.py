@@ -215,6 +215,7 @@ TEXTURES = {
     "monster_walk": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_walk.png"),
     "monster_running": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_running.png"),
     "monster_catching": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_catching.png"),
+    "monster_breathing": pygame.image.load(BASE_DIR / "assets" / "graphics" / "characters" / "monster" / "monster_breathing.png"),
 
     # Jumpscare textures
     "silbon_attack": pygame.image.load(BASE_DIR / "assets" / "graphics" / "jumpscare" / "silbon_attack.png"),
@@ -249,7 +250,7 @@ FRAMES = {
     "monster_walk": frames.generate_frames(TEXTURES["monster_walk"], 92, 92),
     "monster_running":frames.generate_frames(TEXTURES["monster_running"], 92, 92),
     "monster_catching": frames.generate_frames(TEXTURES["monster_catching"], 92, 92),
-    "monster_running": frames.generate_frames(TEXTURES["monster_running"], 92, 92)
+    "monster_breathing": frames.generate_frames(TEXTURES["monster_breathing"], 92, 92),
 }
 
 

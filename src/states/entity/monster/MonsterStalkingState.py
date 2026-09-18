@@ -28,7 +28,7 @@ class MonsterStalkingState(MonsterBaseState):
     """
     It knows roughly where the player was the last time
     it truly detected them, and walks slowly to that spot 
-    to check—but it only escalates to a full-blown chase 
+    to check but it only escalates to a full-blown chase 
     if the detection persists or the player does something
      to give themselves away (like running nearby)
     """
@@ -90,7 +90,7 @@ class MonsterStalkingState(MonsterBaseState):
 
         if not self.path:
             # An empty path means find_path() never found a route to the
-            # target at all -- not that we walked one and finished. Push
+            # target at all not that we walked one and finished. Push
             # straight toward the target instead of standing still.
             obstacles = current_room.get_obstacles()
             self.monster.move_towards(self.target_x, self.target_y, obstacles, dt)
@@ -101,7 +101,7 @@ class MonsterStalkingState(MonsterBaseState):
             self.monster.vx = 0.0
             self.monster.vy = 0.0
             self.monster.is_moving = False
-            self.monster.change_animation("idle")
+            self.monster.change_animation(f"idle-{self.monster.direction}")
 
             self.listen_timer += dt
             if self.listen_timer >= LISTEN_SOUND_INTERVAL:

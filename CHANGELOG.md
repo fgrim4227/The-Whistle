@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+- **Capture Sequence Walks to the Player (`src/states/entity/monster/MonsterCatchingState.py`)**:
+  - El Silbón now routes with A* straight to the player's actual position instead of to a fixed point near the hiding spot's furniture -- the old approach point was picked by proximity to the monster, not to the player, so it could land on the opposite side of the furniture from where the player was actually standing and the reveal would trigger yards away.
+  - The reveal now triggers by real proximity (`CATCH_DISTANCE`, center to center) rather than "the route ran out," and the monster turns to face the player (`_face`) right before it plays, so the directional `catching-*` animation points the right way instead of whichever way it last happened to be walking.
+  - The route's last short stretch (from the nearest standable cell to the player's exact spot, which usually sits inside the furniture's safety margin) is closed by walking straight at the player, the same fallback every other movement state already uses when a route can't reach the literal target.
+
+- **Monster Animation Naming Fixes (`src/entities/Monster.py`, `src/definitions/entity.py`, `settings.py`, `src/states/entity/monster/MonsterStunnedState.py`, `MonsterKnockingState.py`, `MonsterStalkingState.py`, `src/states/game/PlayState.py`)**:
+  - Directional idle animations (`idle-up`/`idle-down`/`idle-left`/`idle-right`) replaced the single non-directional `idle` key; `MonsterStunnedState`, `MonsterKnockingState`, and `MonsterStalkingState` were still requesting the now-missing plain `idle`, silently freezing on whatever walk/run frame was showing instead of actually going idle.
+  - The four directional `catching-*` animations were missing `loops: 1` (the old single `catching` entry had it) -- without it, `Animation.times_played` never increments, so `PlayState`'s "the capture animation finished, resolve the jumpscare" check could never come true. Added it back.
+  - `PlayState`'s two checks for the capture animation compared `current_animation_name` against the literal `"catching"`, which no longer matches now that the name is direction-suffixed (`"catching-down"`, etc.); switched both to `.startswith("catching")`.
+  - Fixed a duplicate `breathing-*` dict entry (a placeholder pointing at the idle spritesheet, silently shadowed by a second definition pointing at the real `monster_breathing` art) and a typo'd texture id (`monster_breating`) that kept the real breathing spritesheet from ever being found.
+
+- **New `breathing` State (`src/states/entity/monster/MonsterBreathing.py`, `src/entities/Monster.py`, `src/states/entity/monster/MonsterPatrolState.py`)**:
+  - Added `MonsterBreathingState`: stops completely, plays its directional breathing animation, and repeats the breathing sound every `BREATH_SOUND_INTERVAL` -- escalating to `chase` if the player becomes detectable, otherwise returning to `patrol` once its 2-3s timer runs out.
+  - `MonsterPatrolState` rolls a `BREATHING_CHANCE` (20%) each time it reaches a patrol waypoint to pause and breathe instead of immediately continuing to the next one. Not wired into `moving_to_door`/`investigate`/`knocking` yet, since `breathing` always resolves back to plain `patrol` and those states need to resolve to something else.
+
 ## [0.4.0] 18/09/2026
 
 - **Content Warning Boot Sequence (`src/states/game/WarningIntro.py`, `src/TheWhistle.py`, `settings.py`, `assets/graphics/warning/*`)**:

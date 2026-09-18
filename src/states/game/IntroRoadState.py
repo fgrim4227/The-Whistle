@@ -19,9 +19,6 @@ import settings
 from src.definitions import entity as entity_defs
 from src.i18n import t
 
-# How often a new plant enters from the right, same role as Flappy
-# Bird's TIME_TO_SPAWN_LOGS -- this is the knob for how many end up on
-# screen at once (lower = more plants, higher = fewer).
 PLANT_SPAWN_INTERVAL = 0.2
 
 # How far apart, in pixels, two plants in the same row may land -- kept
@@ -376,7 +373,7 @@ class IntroRoadState(BaseState):
 
     def render(self, surface: pygame.Surface) -> None:
 
-        # 1. Forest backdrop, back to front. Each tree layer is taller than
+        # Forest backdrop, back to front. Each tree layer is taller than
         # the strip of sky above the road, so it's anchored by its own
         # bottom edge to that strip instead of by its top -- otherwise
         # only the sparse upper fringe of the canopy would ever show, with
@@ -397,7 +394,7 @@ class IntroRoadState(BaseState):
         for tx in range(-64, settings.VIRTUAL_WIDTH + 64, 64):
             surface.blit(self.road_tile, (tx + round(self.road_x), road_y))
 
-        # 3. Headlights beam (projecting forward onto dark road)
+        # Headlights beam (projecting forward onto dark road)
         if self.speed > 0.0 or self.phase in ("driving", "failing", "stopped", "player_exit"):
             light_beam = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
             car_w = self.car_surf.get_width()
@@ -429,10 +426,10 @@ class IntroRoadState(BaseState):
             )
             surface.blit(light_beam2, (0, 0))
 
-        # 4. Car vehicle
+        # Car vehicle
         surface.blit(self.car_surf, (round(self.car_x), round(self.car_y + self.car_shake)))
 
-        # 2. Roadside plants, scattered over the grass strip. Drawn back
+        # Roadside plants, scattered over the grass strip. Drawn back
         # row first so the front row overlaps it, reading as depth
         # instead of the two rows fighting for the same layer.
         for plant in sorted(self.plants, key=lambda p: p.y):
@@ -458,15 +455,15 @@ class IntroRoadState(BaseState):
             else:
                 pygame.draw.rect(surface, entity_defs.PLAYER_FALLBACK_COLOR, (round(self.player_x), round(self.player_y), 16, 32))
 
-        # 6. Smoke particles (from engine hood)
+        # Smoke particles (from engine hood)
         self.smoke_particles.render(surface)
 
-        # 7. Ambient night darkness vignette
+        # Ambient night darkness vignette
         darkness = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
         darkness.fill((6, 8, 14, 130))
         surface.blit(darkness, (0, 0))
 
-        # 8. Subtitles & HUD skip prompt
+        # Subtitles & HUD skip prompt
         if self.sub_text:
             font = settings.FONTS.get("dialogue", settings.FONTS["small"])
             sub_surf = font.render(self.sub_text, True, (240, 235, 220))

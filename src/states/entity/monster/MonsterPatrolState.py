@@ -7,6 +7,9 @@ from src.commands import CHASE
 from src.systems import Pathfinding
 from src.states.entity.monster.MonsterBaseState import MonsterBaseState
 
+# Chance, each time it reaches a patrol waypoint, that it pauses to
+# breathe instead of moving straight on to the next one.
+BREATHING_CHANCE = 0.2
 
 
 class MonsterPatrolState(MonsterBaseState):
@@ -91,6 +94,8 @@ class MonsterPatrolState(MonsterBaseState):
 
         if self.path_index >= len(self.path):
             self.monster.current_wp_idx = (self.monster.current_wp_idx + 1) % len(current_room.patrol_waypoints)
+            if random.random() < BREATHING_CHANCE:
+                self.monster.change_state("breathing")
             return
 
         obstacles = current_room.get_obstacles()

@@ -19,6 +19,7 @@ from src.commands import BERSERK
 from src.definitions import entity as entity_defs
 from src.entities.BaseEntity import BaseEntity
 from src.states.entity.monster.MonsterBerserkState import MonsterBerserkState
+from src.states.entity.monster.MonsterBreathing import MonsterBreathingState
 from src.states.entity.monster.MonsterCatchingState import MonsterCatchingState
 from src.states.entity.monster.MonsterChaseState import MonsterChaseState
 from src.states.entity.monster.MonsterInvestigateState import MonsterInvestigateState
@@ -89,6 +90,7 @@ class Monster(BaseEntity):
             "berserk": lambda sm: MonsterBerserkState(self, sm),
             "stunned": lambda sm: MonsterStunnedState(self, sm),
             "stalking": lambda sm: MonsterStalkingState(self, sm),
+            "breathing": lambda sm: MonsterBreathingState(self, sm),
         })
         self.ai_state = "patrol"
         self.state_machine.change(self.ai_state)
@@ -113,7 +115,7 @@ class Monster(BaseEntity):
         """
         Alerts the monster of a sound if within audio radius. A noise is
         the weakest thing it can act on, so any state already holding a
-        real lead on the player ignores it -- otherwise the player's own
+        real lead on the player ignores it otherwise the player's own
         footsteps, which happen several times a second, would keep
         calling the monster off a chase it had already earned.
         """
@@ -198,7 +200,7 @@ class Monster(BaseEntity):
     def get_known_player_position(self) -> Optional[Tuple[float, float]]:
         """
         Wherever the monster currently believes the player to be, from its
-        own reactive state -- not the player's real position. `chase`
+        own reactive state not the player's real position. `chase`
         remembers the last spot it actually saw them; `stalking` remembers
         the spot it's walking toward to check. Any other state has no such
         belief at all.
@@ -214,7 +216,7 @@ class Monster(BaseEntity):
         """
         Whether hiding in `spot` right now gets the player caught anyway.
         Only a real chance when the monster already had a genuine lead
-        close to this exact spot -- hiding stays completely safe otherwise.
+        close to this exact spot hiding stays completely safe otherwise.
         """
         known = self.get_known_player_position()
         if known is None:
