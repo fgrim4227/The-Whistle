@@ -141,6 +141,12 @@ class IntroForestState(BaseState):
             self.done_timer += dt
             if self.done_timer >= BLACKOUT_DELAY:
                 self.phase = "blackout"
+                self.done_timer = 0.0
+
+        elif self.phase == "blackout":
+            self.done_timer += dt
+            if self.done_timer >= 4.0:
+                self._skip_to_game()
 
     def render(self, surface: pygame.Surface) -> None:
         if self.phase == "blackout":

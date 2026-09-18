@@ -13,6 +13,7 @@ from src.states.game.NoteState import NoteState
 from src.states.game.VictoryState import VictoryState
 from src.minigames.MinigameFactory import MinigameFactory
 from src.world.GameObject import GameObject
+from src.definitions.items import get_item_drop_sound
 
 
 # =========================================================================
@@ -132,6 +133,8 @@ def _collect_with_granny_swap(play_state: Any, item: Any, new_item_type: str) ->
             render_graphic=True,
         )
         room.items.append(dropped_obj)
+        drop_sfx = get_item_drop_sound(old_item)
+        settings.play_sound(drop_sfx, volume=0.45, channel_name="sfx")
 
     item.is_picked = True
     player.add_item(new_item_type)

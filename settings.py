@@ -151,6 +151,10 @@ SOUNDS = {
     "car_break_and_stop": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "car_break_and_stop.mp3"),
     "object_hit": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "object_hit.mp3"),
     "punch": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "punch.wav"),
+    "drop_forest_key": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "forest_key_drop.mp3"),
+    "drop_key": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "master_bedroom_key_drop.mp3"),
+    "drop_lockpick": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "lock_pick_drop.mp3"),
+    "drop_heavy": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "heavy_bar_drop.mp3"),
 }
 # Dedicated Audio Channels (Ultimate Fantasy architecture pattern)
 AUDIO_CHANNELS = {

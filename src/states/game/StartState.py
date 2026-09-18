@@ -63,6 +63,9 @@ class StartState(BaseState):
 
     def update(self, dt: float) -> None:
         self.fog_timer += dt
+        amb_channel = settings.AUDIO_CHANNELS.get("ambience")
+        if amb_channel and not amb_channel.get_busy():
+            settings.play_music("ambience1", loops=-1, volume=0.45, channel_name="ambience")
 
     def render(self, surface: pygame.Surface) -> None:
         # Atmospheric dark background

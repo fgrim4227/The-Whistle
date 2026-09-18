@@ -184,3 +184,20 @@ HIDING_SPOT_ARCHETYPES: Dict[str, Callable[[pygame.Surface, pygame.Rect], None]]
     "wardrobe": _draw_wardrobe,
     "table": _draw_table,
 }
+
+
+# Data-oriented sound mapping for dropping items on the floor (G key or Granny swap)
+ITEM_DROP_SOUNDS: Dict[str, str] = {
+    "key": "drop_forest_key",
+    "old_key": "drop_key",
+    "fuse_key": "drop_key",
+    "lockpick": "drop_lockpick",
+    "crowbar": "drop_heavy",
+    "throwable": "object_hit",
+    "battery": "drop_key",
+}
+
+
+def get_item_drop_sound(item_type: str) -> str:
+    """Returns the audio sound identifier associated with dropping this item on the floor."""
+    return ITEM_DROP_SOUNDS.get(item_type, "drop_key")

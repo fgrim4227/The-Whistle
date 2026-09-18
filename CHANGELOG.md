@@ -12,8 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - When a player triggers an acoustic disturbance in another room (e.g. failing the Lockpick minigame, buzzer alert on Keypad, or circuit short in Fuse Box), El Silbón does not drop the alert. Instead, he stalks to the exterior entrance door of the player's room and bangs loudly on the door (`MonsterKnockingState`).
   - Extended door knocking duration to 3.0–4.0 seconds, creating a heart-pounding window of pure panic for Andreas to scramble into a wardrobe or under a table before the door swings open and El Silbón enters to search.
   - Global acoustic alert threshold (`radius >= 1000.0` in `Monster.hear_noise`) allowing minigame penalties to reach the monster across cabin rooms regardless of local coordinate spaces.
+- **Data-Oriented Item Drop Sound Effects (`settings.py`, `src/definitions/items.py`, `src/definitions/interactions.py`, `src/states/game/PlayState.py`)**:
+  - Replaced the placeholder door-knocking sound effect previously reused during item drops with authentic, dedicated audio assets for each item archetype:
+    - Forest Exit Key (`key`): `forest_key_drop.mp3` (`drop_forest_key`).
+    - Master Bedroom Key (`old_key`) and Fuse Box Key (`fuse_key`): `master_bedroom_key_drop.mp3` (`drop_key`).
+    - Lockpick (`lockpick`): `lock_pick_drop.mp3` (`drop_lockpick`).
+    - Heavy Crowbar (`crowbar`): `heavy_bar_drop.mp3` (`drop_heavy`).
+    - Throwable stones (`throwable`): `object_hit.mp3` (`object_hit`).
+  - Implemented via data-oriented mapping `ITEM_DROP_SOUNDS` and accessor `get_item_drop_sound()`. Triggered consistently when dropping items intentionally via the `G` key as well as automatically during single-slot Granny item swaps.
+  - Confirmed and preserved inventory stealth: dropping items does not emit acoustic alerts to El Silbón.
 
 ### Fixed
+- **Title Menu & Ambient Audio Resumption After Death (`src/states/game/GameOverState.py`, `VictoryState.py`, `StartState.py`, `src/systems/AudioManager.py`)**:
+  - Fixed an issue where dying to El Silbón and returning to the title screen left the game in silence due to Gale's `StateStack.pop()` not invoking `enter()` on the root `StartState`. Explicitly invoked `StartState.enter()` upon popping back to the menu, ensured `VictoryState` does the same, and added a fallback in `StartState.update` to guarantee menu music loops continuously.
+  - Enhanced `AudioManager.update()` to automatically restart ambient cabin background tracks (`ambience1`) whenever the dedicated ambience channel goes silent during active exploration in `PlayState`.
+- **Prologue Blackout Cinematic Auto-Transition (`src/states/game/IntroForestState.py`)**:
+  - Fixed an issue where the cinematic intro forest sequence would hang indefinitely on the black transition screen after Andreas was attacked unless an input was pressed. Added an automatic 4-second timed transition into the cabin gameplay, giving players ample time to read the narrative text before waking up in the living room.
 - **Cross-Room In-Flight Projectile Culling (`src/definitions/interactions.py`, `src/states/game/PlayState.py`)**:
   - Resolved a bug where stones or tools thrown in long corridors (like `LowerHallway`) retained their world coordinates and flew through doors into adjoining rooms upon room transitions (`play_state.projectiles.clear()` in `handle_door_interaction` and room transition detection in `PlayState.update`).
 - **Seamless ESC Exit Handling (`src/states/game/PlayState.py`)**:

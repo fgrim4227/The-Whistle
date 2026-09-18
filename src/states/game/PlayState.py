@@ -34,6 +34,7 @@ from src.definitions.interactions import (
     handle_door_interaction,
     get_door_prompt,
 )
+from src.definitions.items import get_item_drop_sound
 
 
 class PlayState(BaseState):
@@ -139,7 +140,8 @@ class PlayState(BaseState):
                 render_graphic=True,
             )
             room.items.append(dropped_obj)
-            settings.play_sound("knock_door", volume=0.25, channel_name="sfx")
+            drop_sfx = get_item_drop_sound(item_dropped)
+            settings.play_sound(drop_sfx, volume=0.45, channel_name="sfx")
 
     def _handle_interaction(self) -> None:
         room = self.house.current_room

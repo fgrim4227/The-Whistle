@@ -74,6 +74,8 @@ class GameOverState(BaseState):
                 settings.stop_channel("jumpscare2")
                 while len(self.state_machine.states) > 1:
                     self.state_machine.pop()
+                if len(self.state_machine.states) == 1:
+                    self.state_machine.states[0].enter()
 
     def update(self, dt: float) -> None:
         self.timer += dt

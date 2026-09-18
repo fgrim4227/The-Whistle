@@ -104,8 +104,10 @@ class AudioManager:
 
         # Ambient music volume ducking when listening closely at a door
         ch_amb = settings.AUDIO_CHANNELS.get("ambience")
-        if ch_amb and ch_amb.get_busy():
-            if door_listening_proximity > 0.1:
+        if ch_amb:
+            if not ch_amb.get_busy():
+                self.start_ambient()
+            elif door_listening_proximity > 0.1:
                 # Duck ambient volume from 0.45 down towards 0.15 for acoustic clarity
                 ducked_vol = max(0.12, 0.45 * (1.0 - door_listening_proximity * 0.70))
                 ch_amb.set_volume(ducked_vol)
