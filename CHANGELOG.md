@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### [Unreleased]
 ### Added
 -***Visual cue and ambientation for StartState and GameOverState***
+### Changed
+-***Constants, collisions***
 ## [1.1.0] - 2026-09-18
 
 ### Added

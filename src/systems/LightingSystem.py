@@ -175,7 +175,7 @@ class LightingSystem:
             return
         if self.title_flash_timer > 0:
             self.title_flash_timer -= dt
-            alpha_val = 150
+            alpha_val = 170
         else:
             alpha_val = 250
 
