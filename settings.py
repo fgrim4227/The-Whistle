@@ -109,7 +109,7 @@ COLOR_MONSTER_EYES = (255, 25, 20)
 FLASHLIGHT_LIGHT_RADIUS = 92.0
 MONSTER_EYE_LIGHT_RADIUS = 0
 
-# Default fonts using SysFont fallback
+
 pygame.font.init()
 FONTS = {
     "small": pygame.font.SysFont("arial", 13, bold=True),
