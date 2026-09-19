@@ -109,6 +109,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "inst_objectives": "TAB : Libreta de Objetivos",
         "inst_pause": "P / ESC : Pausa",
         "inst_fullscreen": "F11 / Alt+Enter : Pantalla Completa",
+        "inst_exit": "ESC cuando estas en el juego y aceptas la confirmacion",
         "inst_warning": "Atención: Cuando escuches el silbido lejano, ¡está muy cerca!",
         "inst_back": "Presiona ENTER para regresar",
 
@@ -257,6 +258,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "inst_objectives": "TAB : Objectives Log",
         "inst_pause": "P / ESC : Pause",
         "inst_fullscreen": "F11 / Alt+Enter : Toggle Fullscreen",
+        "inst_exit": "ESC when you're in the game, then you confirm with yes",
         "inst_warning": "Warning: When the whistle sounds far away, HE IS NEAR!",
         "inst_back": "Press ENTER to return",
         # Confirmation Menu

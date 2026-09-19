@@ -140,6 +140,7 @@ class StartState(BaseState):
             t("inst_objectives"),
             t("inst_pause"),
             t("inst_fullscreen"),
+            t("inst_exit"),
             "",
             t("inst_warning"),
             t("inst_back"),
