@@ -1,0 +1,24 @@
+========================================
+  THE WHISTLE (EL SILBÓN) - CREDITS
+========================================
+
+DEVELOPERS
+----------------------------------------
+Francisco Grimaldo & Isaac Montes
+
+
+ASSETS & RESOURCES
+-----------------------------------------
+-Demon Woods Parallax Background by Aethrall: 
+https://aethrall.itch.io/demon-woods-parallax-background
+-FREE Modern House Tile Set - With a horror twist by Manic Pixel Dream Girl:
+https://manicpixeldreamgirl.itch.io/. 
+-32x32 (and 16x16) RPG Tiles--Forest and some Interior Tiles by Stephen Challener: 
+https://opengameart.org/content/32x32-and-16x16-rpg-tiles-forest-and-some-interior-tiles
+-Free Pixel Art Plants (Trees, Bushes, Grass) by Shaade: 
+https://shaade.itch.io/free-pixel-art
+
+
+ENGINE & LIBRARIES
+----------------------------------------
+Built with Python 3.12, Pygame 2.6, and Gale Engine.

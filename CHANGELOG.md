@@ -4,9 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-### [Unreleased]
+### [1.1.1]
 ### Added
 -***Visual cue and ambientation for StartState and GameOverState***
+-***Confirmation State to avoid closing the game on accident***
+-***Credits***: Credit.txt and a display in the title screen of the credits for all the free assets used throughout the game
 ### Changed
 -***Constants, collisions***
 ## [1.1.0] - 2026-09-18

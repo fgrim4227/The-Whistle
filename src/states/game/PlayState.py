@@ -16,6 +16,7 @@ from gale.state import BaseState
 from src.states.game.PauseState import PauseState
 from src.states.game.ObjectiveState import ObjectiveState
 from src.states.game.GameOverState import GameOverState
+from src.states.game.ConfirmationState import ConfirmationState
 from gale.timer import Timer
 from src.world.House import House
 from src.entities.Player import Player
@@ -99,7 +100,8 @@ class PlayState(BaseState):
 
         if input_data.pressed:
             if input_id == "quit":
-                pygame.event.post(pygame.event.Event(pygame.QUIT))
+                self.player.clear_movement()
+                self.state_machine.push(ConfirmationState(self.state_machine, on_close=self.player.sync_movement_keys))
                 return
             elif input_id == "pause":
                 self.player.clear_movement()
