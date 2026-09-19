@@ -151,6 +151,18 @@ SOUNDS = {
     "car_break_and_stop": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "car_break_and_stop.mp3"),
     "object_hit": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "object_hit.mp3"),
     "punch": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "punch.wav"),
+    "drop_forest_key": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "forest_key_drop.mp3"),
+    "drop_key": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "master_bedroom_key_drop.mp3"),
+    "drop_lockpick": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "lock_pick_drop.mp3"),
+    "drop_heavy": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "heavy_bar_drop.mp3"),
+    "rain": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "title" / "rain.mp3"),
+    "thunder_1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "title" / "thunder_1.mp3"),
+    "thunder_2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "title" / "thunder_2.mp3"),
+    "thunder_3": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "title" / "thunder_3.mp3"),
+    "bone_snap_1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "game_over_screen" / "bone_crack_1.mp3"),
+    "bone_snap_2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "game_over_screen" / "bone_crack_2.mp3"),
+    "bone_snap_3": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "game_over_screen" / "bone_crack_3.mp3"),
+    "bone_snap_4": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "game_over_screen" / "bone_crack_3.mp3"),
 }
 # Dedicated Audio Channels (Ultimate Fantasy architecture pattern)
 AUDIO_CHANNELS = {
@@ -164,6 +176,9 @@ AUDIO_CHANNELS = {
     "silbon_footsteps": pygame.mixer.Channel(7) if pygame.mixer.get_init() else None,
     "minigame": pygame.mixer.Channel(8) if pygame.mixer.get_init() else None,
     "vehicle": pygame.mixer.Channel(9) if pygame.mixer.get_init() else None,
+    "title_weather": pygame.mixer.Channel(10) if pygame.mixer.get_init() else None,
+    "thunder": pygame.mixer.Channel(11) if pygame.mixer.get_init() else None,
+    "bones": pygame.mixer.Channel(12) if pygame.mixer.get_init() else None,
 }
 
 def play_sound(name: str, loops: int = 0, volume: float = 1.0, channel_name: str = None):
@@ -238,6 +253,9 @@ TEXTURES = {
     "warning_circle": pygame.image.load(BASE_DIR / "assets" / "graphics" / "warning" / "logo.png"),
     "warning_icon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "warning" / "warning.png"),
     "warning_headphones": pygame.image.load(BASE_DIR / "assets" / "graphics" / "warning" / "headphones.png"),
+
+    #TitleScreen
+    "title_bg": pygame.image.load(BASE_DIR / "assets" / "graphics" / "title" / "titlescreen.png"),
 }
 
 # Animation frame rects, sliced once per texture and indexed 1-based by

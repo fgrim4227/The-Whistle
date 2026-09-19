@@ -122,7 +122,7 @@ class Monster(BaseEntity):
         if self.ai_state in ("stunned", "berserk", "knocking", "chase", "stalking", "catching"):
             return
 
-        if math.hypot(noise_x - self.x, noise_y - self.y) > radius:
+        if radius < 1000.0 and math.hypot(noise_x - self.x, noise_y - self.y) > radius:
             return
 
         if self.ai_state == "investigate":

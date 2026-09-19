@@ -13,6 +13,7 @@ from src.states.game.NoteState import NoteState
 from src.states.game.VictoryState import VictoryState
 from src.minigames.MinigameFactory import MinigameFactory
 from src.world.GameObject import GameObject
+from src.definitions.items import get_item_drop_sound
 
 
 # =========================================================================
@@ -132,6 +133,8 @@ def _collect_with_granny_swap(play_state: Any, item: Any, new_item_type: str) ->
             render_graphic=True,
         )
         room.items.append(dropped_obj)
+        drop_sfx = get_item_drop_sound(old_item)
+        settings.play_sound(drop_sfx, volume=0.45, channel_name="sfx")
 
     item.is_picked = True
     player.add_item(new_item_type)
@@ -400,7 +403,9 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
             play_state.player.set_thought("prompt_door_locked", 3.0)
         return
 
-    # 5. Walk through door into target room
+    # 5. Walk through door into target room (clearing any in-flight projectiles from the previous room)
+    if hasattr(play_state, "projectiles"):
+        play_state.projectiles.clear()
     play_state.house.change_room(door.target_room_name, door.target_spawn_x, door.target_spawn_y, play_state.player)
     play_state.objectives_progress["explore"] = True
 

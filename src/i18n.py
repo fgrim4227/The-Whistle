@@ -109,8 +109,14 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "inst_objectives": "TAB : Libreta de Objetivos",
         "inst_pause": "P / ESC : Pausa",
         "inst_fullscreen": "F11 / Alt+Enter : Pantalla Completa",
+        "inst_exit": "ESC cuando estas en el juego y aceptas la confirmacion",
         "inst_warning": "Atención: Cuando escuches el silbido lejano, ¡está muy cerca!",
         "inst_back": "Presiona ENTER para regresar",
+
+        # Confirmation Menu
+        "confirm_quit_title": "¿SEGURO QUE DESEAS SALIR?",
+        "menu_yes": "Sí",
+        "menu_no": "No",
 
         # Internal Monologues (Paramedic)
         "thought_intro": "Mi cabeza... ¿dónde diablos estoy? Debo encontrar mi linterna y salir de aquí.",
@@ -271,9 +277,13 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "inst_objectives": "TAB : Objectives Log",
         "inst_pause": "P / ESC : Pause",
         "inst_fullscreen": "F11 / Alt+Enter : Toggle Fullscreen",
+        "inst_exit": "ESC when you're in the game, then you confirm with yes",
         "inst_warning": "Warning: When the whistle sounds far away, HE IS NEAR!",
         "inst_back": "Press ENTER to return",
-
+        # Confirmation Menu
+        "confirm_quit_title": "ARE YOU SURE YOU WANT TO QUIT?",
+        "menu_yes": "Yes",
+        "menu_no": "No",    
         # Internal Thoughts (Paramedic)
         "thought_intro": "My head... where on earth am I? I need to find my flashlight and get out.",
         "thought_dark": "It's pitch black. I can't afford to waste flashlight battery.",

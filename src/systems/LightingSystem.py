@@ -73,7 +73,8 @@ class LightingSystem:
             "left": (-10, 5),
             "right": (0, 6),
         }
-
+        self.title_flash_timer: float = 0.0
+        self.title_white_flash_timer: float = 0.0
 
     def update(self, dt: float) -> None:
         """Updates internal timers for sine wave light modulations."""
@@ -159,7 +160,28 @@ class LightingSystem:
             far = [(spx + length * math.cos(a), spy + length * math.sin(a)) for a in angles]
             pts = near + far[::-1]
             pygame.draw.polygon(self.light_mask, (0, 0, 0, alpha), pts)
+    def trigger_thunder_flash(self) -> None:
+        """The time for the clearer alpha surface"""
+        self.title_white_flash_timer = 0.05
+        self.title_flash_timer = 0.15
 
+    def render_title_screen(self, target_surface: pygame.Surface, dt: float) -> None:
+        """Decides if the darkness of the title screen should be rendered higher or lower"""
+        if self.title_white_flash_timer > 0:
+            self.title_white_flash_timer -= dt
+            white_surface = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
+            white_surface.fill(settings.COLOR_WHITE)
+            target_surface.blit(white_surface, (0, 0))
+            return
+        if self.title_flash_timer > 0:
+            self.title_flash_timer -= dt
+            alpha_val = 170
+        else:
+            alpha_val = 250
+
+        alpha_surface = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
+        alpha_surface.fill((0, 0, 0, alpha_val))
+        target_surface.blit(alpha_surface, (0, 0))
 
 
 

@@ -167,16 +167,16 @@
                  "y":0
                 }, 
                 {
-                 "height":126,
+                 "height":251.5,
                  "id":8,
                  "name":"",
                  "opacity":1,
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":16,
-                 "x":1008,
-                 "y":162
+                 "width":13.5,
+                 "x":1010.5,
+                 "y":36.5
                 }, 
                 {
                  "height":15,
@@ -386,18 +386,6 @@
                  "width":0,
                  "x":916,
                  "y":122
-                }, 
-                {
-                 "height":237,
-                 "id":3,
-                 "name":"",
-                 "opacity":1,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":41.5,
-                 "x":1010,
-                 "y":-10.5
                 }],
          "opacity":1,
          "type":"objectgroup",

@@ -16,6 +16,7 @@ from gale.state import BaseState
 from src.states.game.PauseState import PauseState
 from src.states.game.ObjectiveState import ObjectiveState
 from src.states.game.GameOverState import GameOverState
+from src.states.game.ConfirmationState import ConfirmationState
 from gale.timer import Timer
 from src.world.House import House
 from src.entities.Player import Player
@@ -34,6 +35,7 @@ from src.definitions.interactions import (
     handle_door_interaction,
     get_door_prompt,
 )
+from src.definitions.items import get_item_drop_sound
 
 
 class PlayState(BaseState):
@@ -74,6 +76,7 @@ class PlayState(BaseState):
         self._monster_was_in_room: bool = False
         self._was_catching: bool = False
         self._darkness_tween = None
+        self._current_room_name: Optional[str] = None
 
     def enter(self, *args, **kwargs) -> None:
         self.player.clear_held()
@@ -81,6 +84,7 @@ class PlayState(BaseState):
         self._was_catching = False
         self.lighting.darkness_alpha = self.lighting.base_ambient_alpha
         self._darkness_tween = None
+        self._current_room_name = self.house.current_room.name if self.house.current_room else None
         # Start atmospheric cabin ambient background music
         self.audio.start_ambient()
 
@@ -95,7 +99,11 @@ class PlayState(BaseState):
             return
 
         if input_data.pressed:
-            if input_id == "pause":
+            if input_id == "quit":
+                self.player.clear_movement()
+                self.state_machine.push(ConfirmationState(self.state_machine, on_close=self.player.sync_movement_keys))
+                return
+            elif input_id == "pause":
                 self.player.clear_movement()
                 self.state_machine.push(PauseState(self.state_machine, on_close=self.player.sync_movement_keys))
                 return
@@ -134,7 +142,8 @@ class PlayState(BaseState):
                 render_graphic=True,
             )
             room.items.append(dropped_obj)
-            settings.play_sound("knock_door", volume=0.25, channel_name="sfx")
+            drop_sfx = get_item_drop_sound(item_dropped)
+            settings.play_sound(drop_sfx, volume=0.45, channel_name="sfx")
 
     def _handle_interaction(self) -> None:
         room = self.house.current_room
@@ -179,6 +188,10 @@ class PlayState(BaseState):
         room = self.house.current_room
         if not room:
             return
+
+        if self._current_room_name is not None and self._current_room_name != room.name:
+            self.projectiles.clear()
+        self._current_room_name = room.name
 
         obstacles = room.get_obstacles()
 
