@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, List, Optional
 import pygame
 
 import settings
+from src.i18n import t
 from src.minigames.BaseMinigame import BaseMinigame
 
 
@@ -137,7 +138,7 @@ class FuseBoxMinigame(BaseMinigame):
             # Correct connection!
             self.connections[left_idx] = right_idx
             settings.play_sound("minigame_unlock_click", loops=0, volume=0.9, channel_name="minigame")
-            self.feedback_message = "¡Circuito cerrado!"
+            self.feedback_message = t("minigame_fuse_connected")
             self.feedback_color = (60, 230, 60)
             self.feedback_timer = 1.5
 
@@ -160,7 +161,7 @@ class FuseBoxMinigame(BaseMinigame):
         else:
             # Electrical short-circuit failure!
             self.spark_timer = 0.4
-            self.feedback_message = "¡¡CORTOCIRCUITO!! ¡Chispazo ruidoso!"
+            self.feedback_message = t("minigame_fuse_shortcircuit")
             self.feedback_color = (255, 60, 60)
             self.feedback_timer = 2.5
             self.alert_monster(radius=1000, sound_name="minigame_lock_forced", volume=1.0)
@@ -191,7 +192,7 @@ class FuseBoxMinigame(BaseMinigame):
 
         # Header Title & Main Power Indicator
         title_font = settings.FONTS.get("medium", settings.FONTS["small"])
-        title_surf = title_font.render("CAJA DE FUSIBLES - ENERGÍA", True, (200, 220, 240))
+        title_surf = title_font.render(t("minigame_fuse_title"), True, (200, 220, 240))
         surface.blit(title_surf, (center_x - title_surf.get_width() // 2, panel_rect.top + 8))
 
         # Power Status LED in top right corner
@@ -270,9 +271,9 @@ class FuseBoxMinigame(BaseMinigame):
             fb_surf = small_font.render(self.feedback_message, True, self.feedback_color)
             surface.blit(fb_surf, (center_x - fb_surf.get_width() // 2, panel_rect.bottom - 28))
         else:
-            hint_surf = small_font.render("Conecta los terminales del mismo color", True, (160, 175, 190))
+            hint_surf = small_font.render(t("minigame_fuse_hint"), True, (160, 175, 190))
             surface.blit(hint_surf, (center_x - hint_surf.get_width() // 2, panel_rect.bottom - 28))
 
         # Controls Hint
-        ctrl_surf = small_font.render("[W/S/Flechas] Navegar  |  [ESPACIO] Conectar  |  [ESC] Salir", True, (190, 200, 210))
+        ctrl_surf = small_font.render(t("minigame_fuse_controls"), True, (190, 200, 210))
         surface.blit(ctrl_surf, (center_x - ctrl_surf.get_width() // 2, panel_rect.bottom - 14))

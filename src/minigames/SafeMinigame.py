@@ -72,7 +72,7 @@ class SafeMinigame(BaseMinigame):
             self.unlocked_numbers.add(current_num)
             self.targets.remove(current_num)
             settings.play_sound("minigame_unlock_click", loops=0, volume=1.0, channel_name="minigame")
-            self.feedback_message = f"¡Pestillo {len(self.unlocked_numbers)} fijado!"
+            self.feedback_message = t("minigame_safe_latch", count=len(self.unlocked_numbers))
             self.feedback_color = (80, 230, 80)
             self.feedback_timer = 2.0
 
@@ -84,7 +84,7 @@ class SafeMinigame(BaseMinigame):
                 self.close()
         else:
             # Wrong number! Safe jams and creates loud metallic disturbance
-            self.feedback_message = "¡Mecanismo trabado! ¡Ruido metálico!"
+            self.feedback_message = t("minigame_safe_jam")
             self.feedback_color = (255, 60, 60)
             self.feedback_timer = 2.5
             self.alert_monster(radius=1000, sound_name="minigame_lock_forced", volume=1.0)
@@ -139,7 +139,7 @@ class SafeMinigame(BaseMinigame):
 
         # Header Title
         title_font = settings.FONTS.get("medium", settings.FONTS["small"])
-        title_surf = title_font.render("CAJA FUERTE - COMBINACIÓN", True, (230, 210, 160))
+        title_surf = title_font.render(t("minigame_safe_title"), True, (230, 210, 160))
         surface.blit(title_surf, (center_x - title_surf.get_width() // 2, panel_rect.top + 8))
 
         # 3. Dial Center
@@ -205,9 +205,9 @@ class SafeMinigame(BaseMinigame):
             fb_surf = small_font.render(self.feedback_message, True, self.feedback_color)
             surface.blit(fb_surf, (center_x - fb_surf.get_width() // 2, center_y + dial_radius + 8))
         else:
-            hint_surf = small_font.render("Escucha el clic acústico al girar...", True, (160, 160, 150))
+            hint_surf = small_font.render(t("minigame_safe_hint"), True, (160, 160, 150))
             surface.blit(hint_surf, (center_x - hint_surf.get_width() // 2, center_y + dial_radius + 8))
 
         # Bottom Controls Hint
-        ctrl_surf = small_font.render("[A/D] Girar  |  [ESPACIO] Fijar número  |  [ESC] Salir", True, (210, 200, 170))
+        ctrl_surf = small_font.render(t("minigame_safe_controls"), True, (210, 200, 170))
         surface.blit(ctrl_surf, (center_x - ctrl_surf.get_width() // 2, panel_rect.bottom - 16))

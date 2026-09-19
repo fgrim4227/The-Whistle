@@ -267,5 +267,5 @@ class KeypadMinigame(BaseMinigame):
                 surface.blit(btn_surf, (btn_rect.centerx - btn_surf.get_width() // 2, btn_rect.centery - btn_surf.get_height() // 2))
 
         # 5. Bottom Instructions Hint
-        hint_surf = small_font.render("[0-9] Teclado  |  [ENTER] Confirmar  |  [ESC] Salir", True, (160, 155, 140))
+        hint_surf = small_font.render(t("minigame_keypad_controls"), True, (160, 155, 140))
         surface.blit(hint_surf, (box_rect.centerx - hint_surf.get_width() // 2, box_rect.bottom - 16))

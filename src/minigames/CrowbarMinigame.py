@@ -9,6 +9,7 @@ from typing import Any, Callable, Optional
 import pygame
 
 import settings
+from src.i18n import t
 from src.minigames.BaseMinigame import BaseMinigame
 
 
@@ -125,13 +126,13 @@ class CrowbarMinigame(BaseMinigame):
 
         # Header Title
         title_font = settings.FONTS.get("medium", settings.FONTS["small"])
-        title_surf = title_font.render("RETIRAR TABLÓN - PALANCA", True, (245, 220, 160))
+        title_surf = title_font.render(t("minigame_crowbar_title"), True, (245, 220, 160))
         surface.blit(title_surf, (center_x - title_surf.get_width() // 2, panel_rect.top + 8))
 
         # Remaining Planks Indicator
         planks_left = getattr(self.target_object, "planks_remaining", 1) if self.target_object else 1
         small_font = settings.FONTS.get("small", settings.FONTS["small"])
-        plank_info_surf = small_font.render(f"Tablones restantes: {planks_left}", True, (200, 180, 150))
+        plank_info_surf = small_font.render(t("minigame_crowbar_planks_left", count=planks_left), True, (200, 180, 150))
         surface.blit(plank_info_surf, (center_x - plank_info_surf.get_width() // 2, panel_rect.top + 28))
 
         # 3. Wooden Plank & Crowbar Illustration
@@ -146,7 +147,7 @@ class CrowbarMinigame(BaseMinigame):
             pygame.draw.rect(surface, (140, 95, 55), right_half, border_radius=3)
             # Break notice
             break_font = settings.FONTS.get("dialogue", settings.FONTS["small"])
-            break_surf = break_font.render("¡¡CRACK!! ¡TABLÓN ARRANCADO!", True, (255, 60, 60))
+            break_surf = break_font.render(t("minigame_crowbar_break"), True, (255, 60, 60))
             surface.blit(break_surf, (center_x - break_surf.get_width() // 2, wood_y + 36))
         else:
             # Solid plank under strain
@@ -184,10 +185,10 @@ class CrowbarMinigame(BaseMinigame):
             pygame.draw.rect(surface, (100, 90, 80), (meter_x, meter_y, meter_w, meter_h), width=1, border_radius=4)
 
             # Mash Action Callout
-            action_text = "¡¡PRESIONA [ESPACIO] RÁPIDAMENTE!!"
+            action_text = t("minigame_crowbar_action")
             action_surf = small_font.render(action_text, True, (255, 230, 80))
             surface.blit(action_surf, (center_x - action_surf.get_width() // 2, meter_y + 18))
 
         # Bottom Controls Hint
-        ctrl_surf = small_font.render("[ESPACIO / E] Hacer palanca  |  [ESC] Soltar y huir", True, (210, 200, 170))
+        ctrl_surf = small_font.render(t("minigame_crowbar_controls"), True, (210, 200, 170))
         surface.blit(ctrl_surf, (center_x - ctrl_surf.get_width() // 2, panel_rect.bottom - 16))

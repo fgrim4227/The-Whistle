@@ -10,6 +10,7 @@ from typing import Any, Callable, Optional
 import pygame
 
 import settings
+from src.i18n import t
 from src.minigames.BaseMinigame import BaseMinigame
 
 
@@ -105,7 +106,7 @@ class LockpickMinigame(BaseMinigame):
                     # If forced too long under strain: snap back and alert El Silbón!
                     if self.strain_timer > 1.2:
                         self.alert_monster(radius=1000, sound_name="minigame_lock_forced", volume=1.0)
-                        self.feedback_message = "¡La ganzúa resbaló con fuerza! ¡Alerta!"
+                        self.feedback_message = t("minigame_lockpick_slip")
                         self.feedback_color = (255, 60, 60)
                         self.feedback_timer = 2.5
                         self.cylinder_rotation = 0.0
@@ -194,8 +195,8 @@ class LockpickMinigame(BaseMinigame):
             fb_surf = small_font.render(self.feedback_message, True, self.feedback_color)
             surface.blit(fb_surf, (center_x - fb_surf.get_width() // 2, center_y + plate_radius + 8))
         else:
-            hint_surf = small_font.render("Busca el ángulo sin forzar...", True, (190, 180, 160))
+            hint_surf = small_font.render(t("minigame_lockpick_hint"), True, (190, 180, 160))
             surface.blit(hint_surf, (center_x - hint_surf.get_width() // 2, center_y + plate_radius + 8))
 
-        ctrl_surf = small_font.render("[A/D] Ángulo  |  [W / ESPACIO] Girar  |  [ESC] Salir", True, (210, 200, 170))
+        ctrl_surf = small_font.render(t("minigame_lockpick_controls"), True, (210, 200, 170))
         surface.blit(ctrl_surf, (center_x - ctrl_surf.get_width() // 2, panel_rect.bottom - 16))
