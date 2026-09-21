@@ -8,6 +8,7 @@ import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union
 import pygame
+from gale.timer import Timer
 
 import settings
 
@@ -73,6 +74,21 @@ class LightingSystem:
             "left": (-10, 5),
             "right": (0, 6),
         }
+
+        self.direction_angles: Dict[str, float] = {
+            "right": 0.0,
+            "down": 90.0,
+            "left": 180.0,
+            "up": 270.0,
+        }
+        self.beam_turn_time: float = 0.12
+        self.beam_angle: float = 0.0
+        self.beam_offset_x: float = 0.0
+        self.beam_offset_y: float = 0.0
+        self.beam_inner_radius: float = 0.0
+        self._beam_direction: Optional[str] = None
+        self._beam_tween = None
+
         self.title_flash_timer: float = 0.0
         self.title_white_flash_timer: float = 0.0
 
@@ -130,25 +146,55 @@ class LightingSystem:
 
                 is_flashlight_on = getattr(player, "flashlight_on", False) and getattr(player, "battery", 0) > 0
 
+                direction = getattr(player, "direction", "right")
+                self._steer_beam(direction, animate=is_flashlight_on)
+
                 if is_flashlight_on:
-                    direction = getattr(player, "direction", "right")
-                    ox_dir, oy_dir = self.flashlight_origin_offset.get(direction, (0, 0))
-                    self._carve_flashlight_cone(spx + ox_dir, spy + oy_dir, direction)
+                    self._carve_flashlight_cone(spx + self.beam_offset_x, spy + self.beam_offset_y)
 
 
         self.darkness_surface.blit(self.light_mask, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
         target_surface.blit(self.darkness_surface, (0, 0))
 
-    def _carve_flashlight_cone(self, spx: float, spy: float, direction: str) -> None:
-        """Carves a smooth, multi-layer arched cone in the direction of the player."""
-        dir_angles = {
-            "right": 0.0,
-            "down": 90.0,
-            "left": 180.0,
-            "up": 270.0,
-        }
-        base_angle = math.radians(dir_angles.get(direction, 0.0))
-        inner_radius = self.flashlight_inner_radius.get(direction, 0.0)
+    def _steer_beam(self, direction: str, animate: bool) -> None:
+        """Swings the cone around the player toward the way they now face."""
+        if direction == self._beam_direction:
+            return
+
+        first_time = self._beam_direction is None
+        self._beam_direction = direction
+
+        target_angle = self.direction_angles.get(direction, 0.0)
+        target_offset = self.flashlight_origin_offset.get(direction, (0, 0))
+        target_inner = self.flashlight_inner_radius.get(direction, 0.0)
+
+        if self._beam_tween and not self._beam_tween.to_remove:
+            self._beam_tween.remove()
+        self._beam_tween = None
+
+        if first_time or not animate:
+            self.beam_angle = target_angle
+            self.beam_offset_x, self.beam_offset_y = float(target_offset[0]), float(target_offset[1])
+            self.beam_inner_radius = target_inner
+            return
+
+        # Always the shorter way around, so turning from up to right doesn't spin three quarters of a circle.
+        turn = (target_angle - self.beam_angle + 180.0) % 360.0 - 180.0
+        self._beam_tween = Timer.tween(
+            self.beam_turn_time,
+            [(self, {
+                "beam_angle": self.beam_angle + turn,
+                "beam_offset_x": float(target_offset[0]),
+                "beam_offset_y": float(target_offset[1]),
+                "beam_inner_radius": target_inner,
+            })],
+            ease_function_name="out_quad",
+        )
+
+    def _carve_flashlight_cone(self, spx: float, spy: float) -> None:
+        """Carves a smooth, multi-layer arched cone at the current beam angle."""
+        base_angle = math.radians(self.beam_angle)
+        inner_radius = self.beam_inner_radius
 
         for length, spread_deg, alpha, steps in self.cone_layers:
             half = math.radians(spread_deg / 2.0)
