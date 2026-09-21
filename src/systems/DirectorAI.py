@@ -27,7 +27,7 @@ NOISE_JITTER_MAX = 100.0
 
 # Radius handed to hear_noise. Generous on purpose -- the jitter above is
 # what keeps the cue fair, so the cue itself may as well land.
-NOISE_RADIUS = 300.0
+NOISE_RADIUS = 30000.0
 
 # States where nothing is really going on, so pressure is free to build.
 # "moving_to_door" belongs here: patrol hands off to it every few seconds
