@@ -1,26 +1,15 @@
 """
 2D Atmospheric Lighting and Darkness System (LightingSystem).
 Generates dynamic darkness and realistic directional flashlight cones with multi-layer
-alpha diffusion, ambient personal glow, and eerie sine-wave pulsating monster eyes.
+alpha diffusion and ambient personal glow.
 """
 
 import math
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple
 import pygame
 from gale.timer import Timer
 
 import settings
-
-
-@dataclass
-class Light:
-    x: float
-    y: float
-    radius: float
-    color: Tuple[int, int, int]
-    intensity: float = 0.4
-    reveal: float = 1.0
 
 
 class LightingSystem:
@@ -99,14 +88,13 @@ class LightingSystem:
     def render(
         self,
         target_surface: pygame.Surface,
-        player_or_lights: Union[Any, List[Light]],
+        player: Optional[Any],
         monster: Optional[Any] = None,
         camera_offset: Tuple[int, int] = (0, 0),
         dt: float = 0.0,
     ) -> None:
         """
-        Renders the darkness layer, carving out the player's flashlight cone / ambient halo
-        and pulsating the eerie glowing eyes of El Silbón.
+        Renders the darkness layer, carving out the player's flashlight cone / ambient halo.
         """
         if dt > 0.0:
             self.flicker_timer += dt
@@ -118,40 +106,26 @@ class LightingSystem:
         self.darkness_surface.fill((8, 8, 14, alpha_val))
         self.light_mask.fill((0, 0, 0, 0))
 
-        # 2. Support both modern Entity-based rendering and legacy Light-list rendering
-        if isinstance(player_or_lights, list):
-            for light in player_or_lights:
-                radius = int(light.radius)
-                if radius <= 0:
-                    continue
-                lx = int(light.x - ox)
-                ly = int(light.y - oy)
-                alpha_cut = int(255 * light.reveal)
-                pygame.draw.circle(self.light_mask, (0, 0, 0, alpha_cut), (lx, ly), radius)
-        else:
-            player = player_or_lights
-            if player and not getattr(player, "is_hidden", False):
-                px, py = player.get_center()
-                spx = px - ox
-                spy = py - oy 
-                
+        if player and not getattr(player, "is_hidden", False):
+            px, py = player.get_center()
+            spx = px - ox
+            spy = py - oy
 
-                # Single simple faint circular glow around player (no multi-layer rings or stepped diffusion)
-                pygame.draw.circle(
-                    self.light_mask,
-                    (0, 0, 0, self.player_ambient_alpha),
-                    (int(spx), int(spy)),
-                    self.player_ambient_radius,
-                )
+            # Single simple faint circular glow around player (no multi-layer rings or stepped diffusion)
+            pygame.draw.circle(
+                self.light_mask,
+                (0, 0, 0, self.player_ambient_alpha),
+                (int(spx), int(spy)),
+                self.player_ambient_radius,
+            )
 
-                is_flashlight_on = getattr(player, "flashlight_on", False) and getattr(player, "battery", 0) > 0
+            is_flashlight_on = getattr(player, "flashlight_on", False) and getattr(player, "battery", 0) > 0
 
-                direction = getattr(player, "direction", "right")
-                self._steer_beam(direction, animate=is_flashlight_on)
+            direction = getattr(player, "direction", "right")
+            self._steer_beam(direction, animate=is_flashlight_on)
 
-                if is_flashlight_on:
-                    self._carve_flashlight_cone(spx + self.beam_offset_x, spy + self.beam_offset_y)
-
+            if is_flashlight_on:
+                self._carve_flashlight_cone(spx + self.beam_offset_x, spy + self.beam_offset_y)
 
         self.darkness_surface.blit(self.light_mask, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
         target_surface.blit(self.darkness_surface, (0, 0))

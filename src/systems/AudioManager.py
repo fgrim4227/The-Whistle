@@ -1,7 +1,7 @@
 """
 Dynamic Audio System for 'El Silbón'.
 Controls dedicated audio channels: continuous ambient background music,
-periodic folklore whistling, panicked breathing, door knock warnings, and composite dual jumpscares.
+periodic folklore whistling, panicked breathing, and composite dual jumpscares.
 """
 
 import math
@@ -37,28 +37,6 @@ class AudioManager:
     def play_silbon_whistle(self, volume: float = 0.5) -> None:
         """Plays a single burst of the folklore whistle on its dedicated channel."""
         settings.play_sound("whistle", loops=0, volume=volume, channel_name="silbon_whistle")
-
-    def stop_silbon_whistle(self) -> None:
-        """Stops whistling playback."""
-        settings.stop_channel("silbon_whistle")
-
-    def play_knock_door(self) -> None:
-        """Plays the door knock sound effect before the monster bursts in."""
-        settings.play_sound("knock_door", loops=0, volume=1.0, channel_name="knock")
-
-    def play_composite_jumpscare(self) -> None:
-        """
-        Plays both jumpscare effects (jumpscare1 and jumpscare2) simultaneously
-        while silencing other background channels for maximum terror impact.
-        """
-        settings.stop_channel("ambience")
-        settings.stop_channel("silbon_whistle")
-        settings.stop_channel("silbon_breath")
-        settings.stop_channel("silbon_footsteps")
-        self.current_footstep_sound = None
-        
-        settings.play_sound("jumpscare1", loops=0, volume=1.0, channel_name="jumpscare1")
-        settings.play_sound("jumpscare2", loops=0, volume=1.0, channel_name="jumpscare2")
 
     def update(
         self,

@@ -22,7 +22,7 @@ from src.world.House import House
 from src.entities.Player import Player
 from src.entities.Monster import Monster
 from src.world.GameObject import GameObject, ThrowableProjectile
-from src.systems.LightingSystem import Light, LightingSystem
+from src.systems.LightingSystem import LightingSystem
 from src.systems.AudioManager import AudioManager
 from src.systems.DirectorAI import DirectorAI
 from src.ui.HUD import HUD

@@ -348,10 +348,6 @@ def get_language() -> str:
     return "en" if settings.IS_ENGLISH else "es"
 
 
-def set_language(lang: str) -> None:
-    settings.IS_ENGLISH = (lang == "en")
-
-
 def toggle_language() -> str:
     settings.IS_ENGLISH = not settings.IS_ENGLISH
     return get_language()
