@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+### Unreleased
+### Added
+### Removed
+### Changed
+-***Delegated language management back to the dictionaries***: In the introductory states, NoteState and in the HUD the language was being managed with a boolean variable rather than delegating this behaviour to the dictionaries
 ### [1.1.1]
 ### Added
 -***Visual cue and ambientation for StartState and GameOverState***

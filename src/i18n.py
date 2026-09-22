@@ -174,6 +174,25 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "victory_title": "¡LOGRASTE ESCAPAR!",
         "victory_quote": "Corriste a través de la densa niebla del bosque hasta el amanecer.",
         "victory_restart": "Presiona ENTER para volver al menú principal",
+
+        #HUD
+        "hand_equipped": "Mano: ",
+        "drop_item": "(G: Soltar Objeto)",
+        "hand_empty": "Mano: Vacia ",
+        #INtroforest
+        "intro_forest_entering": "Qué raro, creí oír a alguien por aquí...", 
+        "intro_forest_line1": "Intentaré hacer una llamada...",
+        "intro_forest_blackout_t1": "Algo te ha intentado matar pero lograste sobrevivir.",
+        "intro_forest_blackout_t2": "Despiertas en otro lugar...",
+        "intro_forest_skip": "[ENTER: Omitir]",
+        #IntroroadState
+        "intro_road_state_enter": "Carretera Trasandina, Mérida - Barinas (2:14 AM)",
+        "intro_road_state_failing": "¡El motor comenzó a fallar...!",
+        "intro_road_state_stopped": "Maldición... el radiador hirvió. No hay señal aquí.",
+        "intro_road_state_ask_who": "¿Quién anda ahí...? ¿Hay alguien?",
+        
+        #NoteState
+        "note_with_object": "[+] Adjunto en la hoja:", 
     },
     "en": {
         # Main Menu
@@ -340,6 +359,24 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "victory_title": "YOU ESCAPED!",
         "victory_quote": "You dashed through the thick misty forest until dawn broke.",
         "victory_restart": "Press ENTER to return to Main Menu",
+
+        #HUD
+        "hand_equipped": "Hand: ",
+        "drop_item": "(G: Drop item)",
+        "hand_empty": "Hand: Empty",
+        #INtroforest
+        "intro_forest_entering": "Strange, I thought I heard someone around here....",
+        "intro_forest_line1": "I'll try to make a call...", 
+        "intro_forest_blackout_t1": "Something tried to kill you, but you managed to survive.", 
+        "intro_forest_blackout_t2": "You wake up somewhere else...",
+        "intro_forest_skip": "[ENTER: Skip]", 
+        #IntroroadState
+        "intro_road_state_enter": "Trasandina Highway, Mérida - Barinas (2:14 AM)",
+        "intro_road_state_failing": "The engine started sputtering...!", 
+        "intro_road_state_stopped": "Damn it... radiator boiled over. No phone signal out here.", 
+        "intro_road_state_ask_who": "Who's out there...? Anyone around?",  
+        #NoteState
+        "note_with_object": "[+] Taped to page:", 
     },
 }
 

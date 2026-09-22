@@ -215,7 +215,7 @@ class IntroRoadState(BaseState):
         self.speed = 145.0
         self.phase = "driving"
         self.skipped = False
-        self.sub_text = "Carretera Trasandina, Mérida - Barinas (2:14 AM)" if not settings.IS_ENGLISH else "Trasandina Highway, Mérida - Barinas (2:14 AM)"
+        self.sub_text = t("intro_road_state_enter")
         settings.stop_all_audio()
         # Start continuous car driving engine audio
         settings.play_sound("car_running", loops=-1, volume=0.5, channel_name="vehicle")
@@ -259,15 +259,13 @@ class IntroRoadState(BaseState):
 
         # ---------------- Phase Timeline ----------------
         if self.phase == "driving":
-            # Normal driving for first 4 seconds
             if self.time >= DRIVING_PHASE_DURATION:
                 self.phase = "failing"
                 self.smoke_active = True
-                # Switch from car_running loop to car_break_and_stop
                 settings.stop_channel("vehicle")
                 settings.play_sound("car_break_and_stop", loops=0, volume=0.65, channel_name="vehicle")
-                self.sub_text = "¡El motor comenzó a fallar...!" if not settings.IS_ENGLISH else "The engine started sputtering...!"
-
+                self.sub_text = t("intro_road_state_failing")
+                
         elif self.phase == "failing":
             # Sputter & gradual deceleration down to 0 over 3.5s
             self.car_shake = math.sin(self.time * 35.0) * 1.5
@@ -285,13 +283,12 @@ class IntroRoadState(BaseState):
             self.car_shake = 0.0
             if self.time - getattr(self, "time_stopped", self.time) >= 1.2:
                 self.phase = "player_exit"
-                # Stop car sounds: the player turns off the vehicle before stepping out
                 settings.stop_channel("vehicle")
                 self.player_active = True
                 self.player_x = self.car_x + 37
                 self.player_y = self.car_y - self.car_surf.get_height() - 10
                 self.player_walking = True
-                self.sub_text = "Maldición... el radiador hirvió. No hay señal aquí." if not settings.IS_ENGLISH else "Damn it... radiator boiled over. No phone signal out here."
+                self.sub_text = t("intro_road_state_stopped")
 
         elif self.phase == "player_exit":
             if self.player_walking:
@@ -311,7 +308,7 @@ class IntroRoadState(BaseState):
                     def _ask_who() -> None:
                         if self.skipped or self.phase != "player_exit":
                             return
-                        self.sub_text = "¿Quién anda ahí...? ¿Hay alguien?" if not settings.IS_ENGLISH else "Who's out there...? Anyone around?"
+                        self.sub_text = t("intro_road_state_ask_who")
 
                     Timer.after(0.5, _start_whistle)
                     Timer.after(1.6, _ask_who)
@@ -328,11 +325,11 @@ class IntroRoadState(BaseState):
             # Walks north into the tree line, shrinking as it goes to read
             # as moving away into the distance rather than just upward.
             entering_duration = 2.2
-            t = min((self.time - self.time_entering_forest) / entering_duration, 1.0)
+            lerp_t = min((self.time - self.time_entering_forest) / entering_duration, 1.0)
             self.player_y -= 16.0 * dt
-            self.player_scale = 1.0 - 0.8 * t
+            self.player_scale = 1.0 - 0.8 * lerp_t
 
-            if t >= 1.0:
+            if lerp_t >= 1.0:
                 self.player_walking = False
                 self.phase = "ending"
                 Timer.after(1.0, self._skip_to_game)
@@ -475,6 +472,6 @@ class IntroRoadState(BaseState):
 
         # Skip indicator in top-right
         skip_f = settings.FONTS.get("hud", settings.FONTS["small"])
-        skip_text = "[ENTER: Omitir]" if not settings.IS_ENGLISH else "[ENTER: Skip]"
+        skip_text = t("intro_forest_skip")
         skip_surf = skip_f.render(skip_text, True, (160, 155, 140))
         surface.blit(skip_surf, (settings.VIRTUAL_WIDTH - skip_surf.get_width() - 10, 8))
