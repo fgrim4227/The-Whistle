@@ -14,6 +14,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "menu_start": "Comenzar Pesadilla",
         "menu_language": "Idioma: Español (Presiona L para cambiar)",
         "menu_instructions": "Controles e Instrucciones",
+        "menu_credits": "Créditos",
         "menu_quit": "Salir",
         "menu_select": "Usa las flechas / W-S y ENTER para seleccionar",
         
@@ -201,6 +202,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "menu_start": "Begin Nightmare",
         "menu_language": "Language: English (Press L to toggle)",
         "menu_instructions": "Controls & Instructions",
+        "menu_credits": "Credits",
         "menu_quit": "Quit",
         "menu_select": "Use Arrows / W-S and ENTER to select",
         

@@ -4,7 +4,6 @@ to their respective interaction action handlers and HUD prompt getters.
 Decouples PlayState from item-specific and door-specific interaction branching.
 """
 
-import math
 from typing import Any, Callable, Dict, Optional, Set
 
 import settings
@@ -296,7 +295,7 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
         play_state.player.set_thought("thought_door_barred_other_side", 4.0)
         return
 
-    # 0. Secret Passage keypad / combination security door
+    # 1. Secret Passage keypad / combination security door
     if is_passage_door(door, room) and not getattr(door, "unlocked", False) and (door.is_bolted or getattr(door, "is_passcode_locked", False)):
         def on_passcode_success():
             unlock_secret_passage_network(play_state.house, door)
@@ -312,7 +311,7 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
         )
         return
 
-    # 1. Unboltable passage between LivingRoom and DiningRoom
+    # 2. Unboltable passage between LivingRoom and DiningRoom
     if door.is_bolted:
         if room.name in ("living_room", "LivingRoom"):
             door.unbolt()
@@ -327,7 +326,7 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
             play_state.player.set_thought("prompt_door_bolted", 3.5)
         return
 
-    # 2. Barred door requiring crowbar minigame
+    # 3. Barred door requiring crowbar minigame
     if door.is_barred:
         if play_state.player.has_item("crowbar"):
             def on_plank_pried():
@@ -357,7 +356,7 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
             play_state.player.set_thought("prompt_door_barred", 3.5)
         return
 
-    # 3. Exit door: sequential security validation (Power/Sensor -> Key/Padlock -> Victory)
+    # 4. Exit door: sequential security validation (Power/Sensor -> Key/Padlock -> Victory)
     if door.is_exit_door:
         # Step 1: Electronic security sensor MUST be deactivated by restoring power first
         if not getattr(play_state.house, "power_restored", False):
@@ -380,7 +379,7 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
         play_state.state_machine.push(VictoryState(play_state.state_machine))
         return
 
-    # 4. Standard locked door requiring key (e.g. Master Bedroom)
+    # 5. Standard locked door requiring key (e.g. Master Bedroom)
     reciprocal = get_reciprocal_door(play_state.house, room, door)
     is_door_locked = door.is_locked or (reciprocal is not None and reciprocal.is_locked)
     if is_door_locked:
@@ -403,7 +402,7 @@ def handle_door_interaction(play_state: Any, door: Any) -> None:
             play_state.player.set_thought("prompt_door_locked", 3.0)
         return
 
-    # 5. Walk through door into target room (clearing any in-flight projectiles from the previous room)
+    # 6. Walk through door into target room (clearing any in-flight projectiles from the previous room)
     if hasattr(play_state, "projectiles"):
         play_state.projectiles.clear()
     play_state.house.change_room(door.target_room_name, door.target_spawn_x, door.target_spawn_y, play_state.player)

@@ -7,14 +7,13 @@ periodic folklore whistling, panicked breathing, and composite dual jumpscares.
 import math
 import random
 from typing import Optional
-import pygame
 
 import settings
 
 
 class AudioManager:
     def __init__(self) -> None:
-        self.ambient_tracks = ["ambience1", "ambience2", "ambience3"]
+        self.ambient_tracks = ["ambience1", "ambience2"]
         self.current_ambient_idx = 0
         self.is_near_alert = False
         self.current_footstep_sound: Optional[str] = None

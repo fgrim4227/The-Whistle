@@ -12,7 +12,7 @@ src.world.Door.Door / HidingSpot.HidingSpot / GameObject.GameObject --
 House builds the actual objects from them, this module only holds data.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import settings
 

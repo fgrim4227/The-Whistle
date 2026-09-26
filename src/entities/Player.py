@@ -50,11 +50,10 @@ class Player(BaseEntity):
         self.is_hidden = False
         self.current_hiding_spot = None
 
-        # Multi-slot inventory system (stores collected tools & keys)
+        # Inventory storage (stores active tool or key held in hand)
         self.inventory: List[str] = []
         self.selected_item_index: int = 0
 
-        self.panic_meter = 0.0
         self.is_running = False
         self.step_timer = 0.0
         self.footstep_taken = False

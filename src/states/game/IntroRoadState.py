@@ -9,7 +9,6 @@ import os
 import random
 from typing import List
 import pygame
-from gale.animation import Animation
 from gale.input_handler import InputData
 from gale.particle_system import ParticleSystem
 from gale.state import BaseState
@@ -432,7 +431,7 @@ class IntroRoadState(BaseState):
         for plant in sorted(self.plants, key=lambda p: p.y):
             plant.render(surface)
 
-        # 5. Player sprite (if stepped out)
+        # Player sprite (if stepped out)
         if self.player_active and self.current_anim:
             frame = self.current_anim.get_current_frame()
             tex = settings.TEXTURES.get(self.current_anim_key)

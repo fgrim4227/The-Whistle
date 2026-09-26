@@ -43,8 +43,6 @@ class Room:
         if build_walls:
             self._build_perimeter_walls()
 
-        self.boss = None
-
     def _build_perimeter_walls(self) -> None:
         """Generates outer boundary walls with openings for doorways."""
         ts = self.tile_size

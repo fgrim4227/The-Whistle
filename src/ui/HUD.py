@@ -76,7 +76,7 @@ class HUD:
             pygame.draw.rect(surface, (70, 70, 70), bg_box, width=1, border_radius=4)
             surface.blit(empty_surf, (bg_box.centerx - empty_surf.get_width() // 2, box_y + 3))
 
-        # 4. Contextual interaction prompt at bottom center
+        # 3. Contextual interaction prompt at bottom center
         if prompt_text:
             p_surf = settings.FONTS["small"].render(prompt_text, True, settings.COLOR_WHITE)
             bg_rect = p_surf.get_rect(center=(settings.VIRTUAL_WIDTH // 2, settings.VIRTUAL_HEIGHT - 18))
@@ -85,6 +85,6 @@ class HUD:
             pygame.draw.rect(surface, (150, 130, 75), padded_rect, width=1, border_radius=4)
             surface.blit(p_surf, bg_rect)
 
-        # 6. Character thoughts & NPC dialogue banner (rendered on top of lighting)
+        # 4. Character thoughts & NPC dialogue banner (rendered on top of lighting)
         player.render_thought(surface, prompt_active=bool(prompt_text))
 

@@ -5,8 +5,7 @@ A mismatch triggers an electrical short-circuit that alerts El Silbón!
 Connecting all wires restores electricity to the cabin, unlocking the final exit sensor.
 """
 
-import random
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 import pygame
 
 import settings

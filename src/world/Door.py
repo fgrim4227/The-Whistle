@@ -142,7 +142,7 @@ class Door:
         if not self.render_graphic:
             return
 
-        # Fallback procedural door
+        # 4. Fallback procedural door
         pygame.draw.rect(surface, (55, 40, 30), rect)
         door_inner = rect.inflate(-6, -4)
         pygame.draw.rect(surface, (90, 60, 40), door_inner)

@@ -332,8 +332,15 @@ class PlayState(BaseState):
         # Game Over Condition: caught by El Silbón in the same room while unhidden
         is_safe_state = self.monster.ai_state in ("stunned", "catching")
         if monster_in_same_room and not self.player.is_hidden and not is_safe_state:
-            if self.player.get_rect().colliderect(self.monster.get_rect()):
-                self._trigger_game_over()
+            catch_rect = self.monster.get_catch_rect()
+            if self.player.get_rect().colliderect(catch_rect):
+                room = self.house.current_room
+                obstacles = room.get_obstacles() if room else []
+                px, py = self.player.get_center()
+                mx, my = self.monster.get_collision_center()
+                # Ensure the catch isn't through a solid partition or wall
+                if not any(obs.clipline(mx, my, px, py) for obs in obstacles):
+                    self._trigger_game_over()
 
         # The capture animation resolves itself once its single playthrough finishes.
         if self.monster.current_animation_name.startswith("catching") and self.monster.current_animation.times_played >= 1:

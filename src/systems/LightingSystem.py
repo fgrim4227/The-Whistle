@@ -19,10 +19,8 @@ class LightingSystem:
         self.light_mask = pygame.Surface(size, pygame.SRCALPHA)
 
         # Base ambient darkness alpha: faint silhouettes of nearby walls/floors still visible
-        #self.base_ambient_alpha: float = 0.0
         self.base_ambient_alpha: float = 253.0
         # Monster ambient darkness alpha: suffocating 100% pitch-black darkness when El Silbón is in room
-        #self.monster_ambient_alpha: float = 0.0
         self.monster_ambient_alpha: float = 255.0
         # Ambient darkness alpha while the "catching" capture animation
         # plays: clearer than normal so the animation itself is visible.
@@ -34,7 +32,6 @@ class LightingSystem:
 
         # Multi-layer flashlight cone configuration: (length_px, spread_deg, subtract_alpha, arc_steps)
         # Tightly-spaced diffusion surfaces preserving the exact original cone width (68 deg to 20 deg)
-        self.lenght_cone = 10
         self.cone_layers = [
             (233.0, 70.0, 130, 10),
             (195.0, 54.0, 155, 10),
@@ -106,6 +103,7 @@ class LightingSystem:
         self.darkness_surface.fill((8, 8, 14, alpha_val))
         self.light_mask.fill((0, 0, 0, 0))
 
+        # 2. Carve player ambient halo and directional flashlight cone
         if player and not getattr(player, "is_hidden", False):
             px, py = player.get_center()
             spx = px - ox
@@ -127,6 +125,7 @@ class LightingSystem:
             if is_flashlight_on:
                 self._carve_flashlight_cone(spx + self.beam_offset_x, spy + self.beam_offset_y)
 
+        # 3. Subtract light mask and composite onto target surface
         self.darkness_surface.blit(self.light_mask, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
         target_surface.blit(self.darkness_surface, (0, 0))
 
@@ -195,9 +194,9 @@ class LightingSystem:
             return
         if self.title_flash_timer > 0:
             self.title_flash_timer -= dt
-            alpha_val = 170
+            alpha_val = 130
         else:
-            alpha_val = 250
+            alpha_val = 230
 
         alpha_surface = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
         alpha_surface.fill((0, 0, 0, alpha_val))

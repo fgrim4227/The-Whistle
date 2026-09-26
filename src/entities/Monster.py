@@ -316,7 +316,20 @@ class Monster(BaseEntity):
     def get_collision_rect(self, x: float = None, y: float = None) -> pygame.Rect:
         rx = self.x if x is None else x
         ry = self.y if y is None else y
-        return pygame.Rect(int(rx), int(ry + 16), self.width, self.height - 16)
+        # Feet collision box for overhead top-down perspective, preventing
+        # snagging against table edges, furniture corners, and narrow doorways.
+        return pygame.Rect(int(rx + 2), int(ry + 20), self.width - 4, self.height - 20)
+
+    def get_catch_rect(self) -> pygame.Rect:
+        """
+        Returns the reach/grab hitbox for catching the player and triggering jumpscare.
+        In aggressive pursuit states (chase, berserk), El Silbón lunges forward with his
+        long arms, inflating the reach box to ensure fair and responsive catches around tight furniture.
+        """
+        base = self.get_rect()
+        if self.ai_state in ("chase", "berserk"):
+            return base.inflate(20, 20)
+        return base.inflate(8, 8)
 
     def get_collision_center(self) -> Tuple[float, float]:
         rect = self.get_collision_rect()

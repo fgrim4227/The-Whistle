@@ -18,8 +18,6 @@ class House:
     def __init__(self) -> None:
         self.rooms: Dict[str, Room] = {}
         self.current_room: Optional[Room] = None
-        self.is_shifting = False
-        self.shift_timer = 0.0
         self.power_restored: bool = False
 
         # Attempt to load newly authored Tiled levels, fallback to default procedural cabin

@@ -1,12 +1,11 @@
 """
-Main game class ElSilbonGame based on gale.game.Game and gale.state.StateStack.
+Main game class TheWhistle based on gale.game.Game and gale.state.StateStack.
 """
 
 import pygame
 from gale.game import Game
 from gale.input_handler import InputData
 from gale.state import StateStack
-from gale.timer import Timer
 
 import settings
 from src.states.game.StartState import StartState

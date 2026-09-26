@@ -2,7 +2,7 @@
 BaseEntity class for all movable entities (Player, Monster).
 """
 
-from typing import Optional, Tuple
+from typing import Tuple
 import pygame
 
 

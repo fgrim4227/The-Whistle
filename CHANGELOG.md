@@ -6,10 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Unreleased
+
 ### Added
-### Removed
+- **Title Screen Atmospheric Twitching & Jitter Effect (`src/ui/TitleWhistlerEffect.py`, `src/states/game/StartState.py`, `settings.py`)**:
+  - Implemented dynamic FNaF-style jitter animation for El Silbón on the main menu, shifting across 8 directional offset frames (`Sprite-0005`..`Sprite-0008`, `up`, `down`, `left`, `right`, and idle base frames).
+  - Features two distinct behavioral states: an eerie, subtle ambient twitch in the shadows during IDLE mode, and intense, violent twitching during lightning strikes and thunderclaps.
+  - All animation frames are pre-loaded, smoothed, and scaled $2\times$ during initial boot to ensure zero runtime transformation allocations and maintain a locked 60 FPS.
+  - Finely tuned darkness alpha overlay (value of 230) for a tense, atmospheric aesthetic that leaves El Silbón's glowing eyes and silhouette menacingly visible.
+- **Dynamic Catch & Reach Hitbox (`src/entities/Monster.py`, `src/states/game/PlayState.py`)**:
+  - Added `Monster.get_catch_rect()`, dynamically inflating El Silbón's grab range by `(20, 20)` during aggressive states (`chase` and `berserk`) and `(8, 8)` during normal pursuit to reflect his long arms and 92×92 sprite presence.
+  - Added line-of-sight raycasting (`clipline`) against room obstacles in `PlayState` to guarantee that inflated grabs never penetrate through solid walls or closed partitions.
+
 ### Changed
--***Delegated language management back to the dictionaries***: In the introductory states, NoteState and in the HUD the language was being managed with a boolean variable rather than delegating this behaviour to the dictionaries
+- **Top-Down Feet-Based Collision Box (`src/entities/Monster.py`)**:
+  - Calibrated `Monster.get_collision_rect()` to `(rx + 2, ry + 20, width - 4, height - 20)`, aligning physical collision strictly to the entity's feet footprint. This prevents El Silbón from snagging his shoulders/torso on furniture edges, beds, safe corners, or doorways.
+- **Continuous Flashlight Directional Tweening (`src/entities/Player.py`, `src/systems/LightingSystem.py`)**:
+  - Replaced discrete, 90-degree snap rotations of the flashlight beam with smooth angular tweening when Andreas turns, enhancing visual immersion and control responsiveness.
+- **Centralized Internationalization Architecture (`src/i18n.py`, `src/states/game/IntroRoadState.py`, `src/ui/HUD.py`, `src/states/game/NoteState.py`)**:
+  - Consolidated language management across intro states, NoteState, and HUD directly into the dictionary-based `TEXT_DEFINITIONS` system, eliminating ad-hoc boolean language variables and ensuring synchronized bilingual switching (English / Spanish).
+- **Code Cleanliness & Documentation Audit (`src/world/House.py`, `src/world/Room.py`, `src/states/game/PlayState.py`, `settings.py`)**:
+  - Removed obsolete comments, dead imports, and disjointed numerical list comments from prior development iterations, bringing clean consistency across core world and state systems.
+
+### Fixed
+- **Safe Corner & Furniture Pathfinding Stalling (`src/systems/Pathfinding.py`, `src/states/entity/monster/MonsterChaseState.py`)**:
+  - Resolved an issue in `MasterBedroom` where El Silbón would freeze running upward in place next to the player near the safe/desk obstacle:
+    - `Pathfinding.find_path()` now pops the initial start waypoint if the monster is already within 10px of it (`while waypoints and math.hypot(...) < 10.0: waypoints.pop(0)`), preventing entities from cycling in place.
+    - Added a repath cooldown timer (`self.repath_timer = 0.4s`) in `MonsterChaseState` to eliminate per-frame A* oscillation when corners are rounded, smoothly defaulting to direct pursuit (`move_towards`) when the path is exhausted or the target is in direct reach.
+    - Validated through automated headless simulation across all 56 valid player standing positions around the safe and desk (56/56 catches, 0 stuck).
+
 ### [1.1.1]
 ### Added
 -***Visual cue and ambientation for StartState and GameOverState***
