@@ -2,6 +2,8 @@
 House class managing all cabin rooms, door interconnections, and Tiled JSON level loading.
 """
 
+import heapq
+import math
 import os
 from typing import Dict, Optional, Tuple
 import pygame
@@ -138,3 +140,61 @@ class House:
     def render(self, surface: pygame.Surface, camera_offset: Tuple[int, int] = (0, 0)) -> None:
         if self.current_room:
             self.current_room.render(surface, camera_offset)
+
+    def get_real_distance(
+        self,
+        r1_name: str,
+        p1: Tuple[float, float],
+        r2_name: str,
+        p2: Tuple[float, float],
+    ) -> float:
+        """
+        Computes the physically accurate acoustic/walking distance in pixels between
+        two entities across the cabin, whether they reside in the same room or separate rooms.
+        When entities are in different rooms, calculates the shortest path through the interconnecting
+        door network via Dijkstra search, summing intra-room paths and door spans for mathematically
+        continuous spatial audio.
+        """
+        r1 = self.rooms.get(r1_name)
+        r2 = self.rooms.get(r2_name)
+        if not r1 or not r2:
+            return 1600.0
+
+        if r1 is r2 or r1_name == r2_name:
+            return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
+
+        # Dijkstra search across the room door graph
+        heap = [(0.0, r1.name, p1)]
+        dist_map = {r1.name: 0.0}
+        min_dist = float("inf")
+
+        while heap:
+            d, rname, curr_pt = heapq.heappop(heap)
+            if d > min_dist:
+                continue
+            room = self.rooms.get(rname)
+            if not room:
+                continue
+
+            # If we reached the target room, add the final walk to p2
+            if room is r2 or rname == r2.name:
+                final_d = d + math.hypot(curr_pt[0] - p2[0], curr_pt[1] - p2[1])
+                if final_d < min_dist:
+                    min_dist = final_d
+                continue
+
+            for door in room.doors:
+                target_rm = self.rooms.get(door.target_room_name)
+                if not target_rm:
+                    continue
+                door_pt = (door.x + door.width / 2.0, door.y + door.height / 2.0)
+                walk_to_door = math.hypot(curr_pt[0] - door_pt[0], curr_pt[1] - door_pt[1])
+                spawn_pt = (door.target_spawn_x, door.target_spawn_y)
+                new_d = d + walk_to_door
+
+                target_key = target_rm.name
+                if target_key not in dist_map or new_d < dist_map[target_key]:
+                    dist_map[target_key] = new_d
+                    heapq.heappush(heap, (new_d, target_key, spawn_pt))
+
+        return min_dist if min_dist != float("inf") else 1600.0

@@ -115,7 +115,7 @@ class PlayState(BaseState):
         self.player.command_bindings.dispatch(self.player, input_id, input_data)
 
     def _handle_throw(self) -> None:
-        if self.player.equipped_item in ("throwable", "crowbar"):
+        if self.player.equipped_item in ("throwable"):
             item_thrown = self.player.equipped_item
             px, py = self.player.get_center()
             self.projectiles.append(ThrowableProjectile(px, py, self.player.direction))
@@ -313,6 +313,15 @@ class PlayState(BaseState):
                     door_listening_proximity = max(door_listening_proximity, prox)
 
         # Update dynamic audio system and proximity cues
+        player_room_name = self.house.current_room.name if self.house.current_room else "living_room"
+        monster_room_name = self.monster.current_room_name
+        real_dist = self.house.get_real_distance(
+            player_room_name,
+            self.player.get_center(),
+            monster_room_name,
+            self.monster.get_center(),
+        )
+
         self.audio.update(
             self.player.get_center(),
             self.monster.get_center(),
@@ -322,6 +331,7 @@ class PlayState(BaseState):
             dt=dt,
             monster_is_moving=self.monster.is_moving,
             monster_ai_state=self.monster.ai_state,
+            real_distance=real_dist,
         )
 
         # Update HUD and contextual action prompts

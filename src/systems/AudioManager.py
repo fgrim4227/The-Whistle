@@ -18,6 +18,7 @@ class AudioManager:
         self.current_ambient_idx = 0
         self.is_near_alert = False
         self.current_footstep_sound: Optional[str] = None
+        self.current_whistle_vol: float = 0.5
         
         # Cooldown timer for periodic whistling bursts (not continuous loops)
         self.whistle_cooldown = random.uniform(2.0, 6.0)
@@ -70,6 +71,7 @@ class AudioManager:
         dt: float = 0.016,
         monster_is_moving: bool = False,
         monster_ai_state: str = "patrol",
+        real_distance: Optional[float] = None,
     ) -> None:
         """
         Modulates whistling volume, breathing, and footsteps in real-time:
@@ -81,15 +83,22 @@ class AudioManager:
         - Ambient Ducking: Lowers background ambience when listening closely to heavy breathing at a door.
         - Footsteps: Dynamic walk/run sounds when El Silbón stalks or chases the player.
         """
-        dist = math.hypot(
-            player_center[0] - monster_center[0],
-            player_center[1] - monster_center[1]
-        )
-        max_range = 2000
+        if real_distance is not None:
+            dist = real_distance
+        else:
+            dist = math.hypot(
+                player_center[0] - monster_center[0],
+                player_center[1] - monster_center[1]
+            )
+        max_range = 1800.0
         normalized = min(1.0, max(0.06, dist / max_range))
 
-        # Modulate whistle volume inversely proportional to distance (baseline audibility >= 0.22)
-        whistle_vol = max(0.1, normalized)
+        # Modulate whistle volume inversely proportional to distance (folklore paradox)
+        target_whistle_vol = max(0.08, normalized)
+
+        # Smooth volume interpolation to eliminate jarring audio cliffs across room boundaries
+        self.current_whistle_vol += (target_whistle_vol - self.current_whistle_vol) * min(1.0, dt * 5.0)
+        whistle_vol = self.current_whistle_vol
 
         ch_whistle = settings.AUDIO_CHANNELS.get("silbon_whistle")
         if ch_whistle:

@@ -425,16 +425,6 @@
                          "value":"door"
                         }, 
                         {
-                         "name":"is_barred",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"planks_remaining",
-                         "type":"int",
-                         "value":2
-                        }, 
-                        {
                          "name":"target_room",
                          "type":"string",
                          "value":"living_room"

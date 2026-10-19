@@ -100,7 +100,7 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
         ],
         "doors": [
             {"x": 0, "y": 96, "target_room_name": "kitchen", "target_spawn_x": 440, "target_spawn_y": 116, "width": 24, "height": 48, "render_graphic": False},
-            {"x": 488, "y": 96, "target_room_name": "living_room", "target_spawn_x": 48, "target_spawn_y": 192, "width": 24, "height": 48, "is_bolted": True, "render_graphic": False},
+            {"x": 488, "y": 96, "target_room_name": "living_room", "target_spawn_x": 48, "target_spawn_y": 192, "width": 24, "height": 48, "render_graphic": False},
         ],
         "patrol_waypoints": [(100, 120), (256, 160), (420, 120)],
         "items": [
@@ -115,7 +115,7 @@ TILED_ROOMS: Dict[str, Dict[str, Any]] = {
             {"spot_type": "wardrobe", "x": 432, "y": 48, "width": 48, "height": 48, "render_graphic": False, "is_solid": True},
         ],
         "doors": [
-            {"x": 0, "y": 180, "target_room_name": "dining_room", "target_spawn_x": 450, "target_spawn_y": 116, "width": 24, "height": 48, "is_bolted": True, "render_graphic": False},
+            {"x": 0, "y": 180, "target_room_name": "dining_room", "target_spawn_x": 450, "target_spawn_y": 116, "width": 24, "height": 48, "is_barred": True, "planks_remaining": 2, "render_graphic": False},
         ],
         "patrol_waypoints": [(120, 120), (360, 120)],
         "items": [],
