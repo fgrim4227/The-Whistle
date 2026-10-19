@@ -115,7 +115,7 @@ class PlayState(BaseState):
         self.player.command_bindings.dispatch(self.player, input_id, input_data)
 
     def _handle_throw(self) -> None:
-        if self.player.equipped_item in ("throwable"):
+        if self.player.equipped_item == "throwable":
             item_thrown = self.player.equipped_item
             px, py = self.player.get_center()
             self.projectiles.append(ThrowableProjectile(px, py, self.player.direction))
