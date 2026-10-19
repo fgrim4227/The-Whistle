@@ -89,8 +89,8 @@ BATTERY_DRAIN_RATE = 0.9  # Percentage per second while flashlight is ON
 BATTERY_RECHARGE_AMOUNT = 35.0  # Battery refill per picked-up battery item
 
 # Throw probabilities
-THROW_STUN_CHANCE = 0.8 # 75% chance to stun the monster
-THROW_BERSERK_CHANCE = 0.2  # 25% chance to enrage the monster
+THROW_STUN_CHANCE = 0.8  # 80% chance to stun the monster
+THROW_BERSERK_CHANCE = 0.2  # 20% chance to enrage the monster
 
 # Global color definitions (RGB)
 COLOR_BLACK = (0, 0, 0)
@@ -101,13 +101,6 @@ COLOR_SILBON_RED = (184, 2, 0)  # Hex #b80200 from jumpscare artwork
 COLOR_GOLD = (230, 190, 40)
 COLOR_GRAY = (120, 120, 130)
 COLOR_DARK_BLUE = (12, 12, 22)
-COLOR_FLASHLIGHT = (255, 250, 220)
-COLOR_MONSTER_EYES = (255, 25, 20)
-
-# Light radii (world px), tunable here for quick testing without touching
-# LightingSystem itself.
-FLASHLIGHT_LIGHT_RADIUS = 92.0
-MONSTER_EYE_LIGHT_RADIUS = 0
 
 
 pygame.font.init()

@@ -3,7 +3,6 @@ import random
 from typing import Optional, Tuple
 
 import settings
-from src.commands import CHASE
 from src.systems import Pathfinding
 from src.states.entity.monster.MonsterBaseState import MonsterBaseState
 

@@ -11,6 +11,7 @@ from src.i18n import t, toggle_language, get_language
 from gale.state import BaseState
 from src.systems.AudioManager import AudioManager
 from src.systems.LightingSystem import LightingSystem
+from src.ui.TitleWhistlerEffect import TitleWhistlerEffect
 
 class StartState(BaseState):
     def __init__(self, state_machine) -> None:
@@ -21,6 +22,7 @@ class StartState(BaseState):
         self.fog_timer = 0.0
         self.audio = AudioManager()
         self.lighting = LightingSystem()
+        self.whistler_effect = TitleWhistlerEffect()
 
     def enter(self, *args, **kwargs) -> None:
         self.selected_index = 0
@@ -71,16 +73,12 @@ class StartState(BaseState):
         self.fog_timer += dt
         if self.audio.update_title_audio(dt):
             self.lighting.trigger_thunder_flash()
+            self.whistler_effect.trigger_surge()
+        self.whistler_effect.update(dt)
 
     def render(self, surface: pygame.Surface) -> None:
-        surface.fill((0,0,0))
-        bg = settings.TEXTURES.get("title_bg")
-        if bg:
-            bg = pygame.transform.scale(bg, (settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
-            surface.blit(bg, (0, 0))
-        else:
-            surface.fill(settings.COLOR_DARK_BLUE)
-
+        surface.fill((0, 0, 0))
+        self.whistler_effect.render(surface)
         self.lighting.render_title_screen(surface, 0.016)
 
         alpha_pulse = int(180 + 75 * math.sin(self.fog_timer * 3.0))
@@ -104,7 +102,7 @@ class StartState(BaseState):
             t("menu_start"),
             f"{t('menu_language')} [{get_language().upper()}]",
             t("menu_instructions"),
-            "Credits",
+            t("menu_credits"),
             t("menu_quit"),
         ]
 

@@ -1,10 +1,9 @@
 """
 MinigameFactory: Factory pattern implementation for creating minigames.
 Decouples interaction definitions and gameplay states from concrete minigame classes.
-Allows registering new minigames dynamically (Open/Closed Principle).
 """
 
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, Optional, Type
 from src.minigames.BaseMinigame import BaseMinigame
 from src.minigames.LockpickMinigame import LockpickMinigame
 from src.minigames.SafeMinigame import SafeMinigame
@@ -26,16 +25,6 @@ class MinigameFactory:
         "fuse_box": FuseBoxMinigame,
         "keypad": KeypadMinigame,
     }
-
-    @classmethod
-    def register(cls, minigame_type: str, minigame_cls: Type[BaseMinigame]) -> None:
-        """Registers a new minigame class under a unique identifier."""
-        cls._registry[minigame_type.lower()] = minigame_cls
-
-    @classmethod
-    def get_registered_types(cls) -> List[str]:
-        """Returns a list of all currently registered minigame identifiers."""
-        return list(cls._registry.keys())
 
     @classmethod
     def create(

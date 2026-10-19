@@ -254,8 +254,14 @@ def find_path(
     waypoints = [
         (gx * CELL_SIZE + CELL_SIZE / 2.0, gy * CELL_SIZE + CELL_SIZE / 2.0) for gx, gy in cell_path
     ]
-    if goal_is_standable:
+    if goal_is_standable and waypoints:
         waypoints[-1] = goal
+
+    # If the first waypoint is where the entity already stands, advance past it
+    # so path consumers don't cycle in place on their own current position.
+    while waypoints and math.hypot(waypoints[0][0] - start[0], waypoints[0][1] - start[1]) < 10.0:
+        waypoints.pop(0)
+
     return waypoints
 
 

@@ -50,9 +50,9 @@ class HUD:
         if hasattr(player, "equipped_item") and player.equipped_item:
             equipped = player.equipped_item
             name = t(f"item_{equipped}") if equipped else t("hud_none")
-            badge_text = f"Mano: {name}" if not settings.IS_ENGLISH else f"Hand: {name}"
+            badge_text = f"{t('hand_equipped')}{name}"
             badge_surf = settings.FONTS["small"].render(badge_text, True, settings.COLOR_GOLD)
-            sub_text = "(G: Soltar objeto)" if not settings.IS_ENGLISH else "(G: Drop item)"
+            sub_text = t("drop_item")
             sub_surf = settings.FONTS.get("hud", settings.FONTS["small"]).render(sub_text, True, (160, 155, 140))
 
             w = max(badge_surf.get_width(), sub_surf.get_width()) + 14
@@ -67,7 +67,7 @@ class HUD:
             surface.blit(badge_surf, (bg_box.centerx - badge_surf.get_width() // 2, box_y + 3))
             surface.blit(sub_surf, (bg_box.centerx - sub_surf.get_width() // 2, box_y + badge_surf.get_height() + 3))
         else:
-            empty_text = "Mano: Vacía" if not settings.IS_ENGLISH else "Hand: Empty"
+            empty_text = t("hand_empty")
             empty_surf = settings.FONTS["small"].render(empty_text, True, (140, 140, 140))
             box_x = settings.VIRTUAL_WIDTH - empty_surf.get_width() - 18
             box_y = 8
@@ -76,7 +76,7 @@ class HUD:
             pygame.draw.rect(surface, (70, 70, 70), bg_box, width=1, border_radius=4)
             surface.blit(empty_surf, (bg_box.centerx - empty_surf.get_width() // 2, box_y + 3))
 
-        # 4. Contextual interaction prompt at bottom center
+        # 3. Contextual interaction prompt at bottom center
         if prompt_text:
             p_surf = settings.FONTS["small"].render(prompt_text, True, settings.COLOR_WHITE)
             bg_rect = p_surf.get_rect(center=(settings.VIRTUAL_WIDTH // 2, settings.VIRTUAL_HEIGHT - 18))
@@ -85,6 +85,6 @@ class HUD:
             pygame.draw.rect(surface, (150, 130, 75), padded_rect, width=1, border_radius=4)
             surface.blit(p_surf, bg_rect)
 
-        # 6. Character thoughts & NPC dialogue banner (rendered on top of lighting)
+        # 4. Character thoughts & NPC dialogue banner (rendered on top of lighting)
         player.render_thought(surface, prompt_active=bool(prompt_text))
 

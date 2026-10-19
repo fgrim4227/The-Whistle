@@ -91,7 +91,7 @@ class NoteState(BaseState):
         if self.attached_item:
             att_y = paper_rect.bottom - 42
             item_name = t(f"item_{self.attached_item}")
-            att_badge = f"[+] Adjunto en la hoja: {item_name}" if not settings.IS_ENGLISH else f"[+] Taped to page: {item_name}"
+            att_badge = f"{t('note_with_object')} {item_name}"
             att_surf = settings.FONTS["small"].render(att_badge, True, (130, 85, 20))
             att_rect = att_surf.get_rect(centerx=paper_rect.centerx, top=att_y)
             pygame.draw.rect(surface, (245, 235, 210), att_rect.inflate(10, 4), border_radius=2)

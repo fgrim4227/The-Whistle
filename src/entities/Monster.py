@@ -146,12 +146,6 @@ class Monster(BaseEntity):
             self.change_state("stunned", duration=duration)
             return "stunned"
 
-    def get_eye_position(self) -> Tuple[float, float]:
-        """Returns the world coordinates of El Silbón's glowing eyes in his face under the hat."""
-        cx = self.x + self.width / 2.0
-        # For walk/patrol/chase (92x92 sheets), face is 39px above collision center (self.y + 22 - 39 = self.y - 17)
-        return (cx, self.y - 17.0)
-
     def get_facing(self) -> Tuple[float, float]:
         """
         The direction the monster is looking, as a unit vector. While it
@@ -312,20 +306,6 @@ class Monster(BaseEntity):
         self.vy = 0.0
         self.is_moving = False
 
-    def approach_directly(
-        self, target_x: float, target_y: float, obstacles: List[pygame.Rect], dt: float, arrival_dist: float = 10.0
-    ) -> bool:
-        """
-        Walks straight toward a point with no pathfinding at all, and
-        reports whether it's close enough now to call that arrival. A
-        plain building block for any state that either doesn't need to
-        route around anything, or wants a fallback for when routing
-        couldn't find a way there.
-        """
-        self.move_towards(target_x, target_y, obstacles, dt)
-        mx, my = self.get_collision_center()
-        return math.hypot(target_x - mx, target_y - my) < arrival_dist
-
     def update_ai(self, player, house, dt: float) -> None:
         self.state_machine.current.process_ai(house, player, dt)
 
@@ -336,7 +316,20 @@ class Monster(BaseEntity):
     def get_collision_rect(self, x: float = None, y: float = None) -> pygame.Rect:
         rx = self.x if x is None else x
         ry = self.y if y is None else y
-        return pygame.Rect(int(rx), int(ry + 16), self.width, self.height - 16)
+        # Feet collision box for overhead top-down perspective, preventing
+        # snagging against table edges, furniture corners, and narrow doorways.
+        return pygame.Rect(int(rx + 2), int(ry + 20), self.width - 4, self.height - 20)
+
+    def get_catch_rect(self) -> pygame.Rect:
+        """
+        Returns the reach/grab hitbox for catching the player and triggering jumpscare.
+        In aggressive pursuit states (chase, berserk), El Silbón lunges forward with his
+        long arms, inflating the reach box to ensure fair and responsive catches around tight furniture.
+        """
+        base = self.get_rect()
+        if self.ai_state in ("chase", "berserk"):
+            return base.inflate(20, 20)
+        return base.inflate(8, 8)
 
     def get_collision_center(self) -> Tuple[float, float]:
         rect = self.get_collision_rect()

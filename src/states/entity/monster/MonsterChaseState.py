@@ -31,8 +31,9 @@ class MonsterChaseState(MonsterBaseState):
         self.path = []
         self.path_index = 0
         self.path_target_x = None
-        self.monster.change_animation(f"run-{self.monster.direction}")
         self.path_target_y = None
+        self.repath_timer = 0.0
+        self.monster.change_animation(f"run-{self.monster.direction}")
 
     def process_ai(self, house, player, dt: float) -> None:
         player_room_name = house.current_room.name if house.current_room else "bedroom"
@@ -61,14 +62,15 @@ class MonsterChaseState(MonsterBaseState):
         obstacles = current_room.get_obstacles() if current_room else []
 
         # Recompute the route only when the remembered player position has
-        # actually moved, or the current one has been fully walked -- same
-        # convention as patrol/stalking/moving_to_door -- instead of asking
-        # for a brand new one every frame regardless of whether anything changed.
+        # actually moved, or after a repath cooldown elapses, avoiding
+        # per-frame repath oscillation when close to furniture.
         target_moved = (
             self.path_target_x is None
             or math.hypot(self.last_seen_x - self.path_target_x, self.last_seen_y - self.path_target_y) > REPATH_DIST
         )
-        if current_room and (target_moved or self.path_index >= len(self.path)):
+        self.repath_timer -= dt
+        should_repath = target_moved or (not self.path and self.repath_timer <= 0.0) or (self.repath_timer <= 0.0 and self.path_index >= len(self.path))
+        if current_room and should_repath:
             route_width, min_route_width = self.monster.get_route_widths()
             self.path = Pathfinding.find_path(
                 current_room, self.monster.get_collision_center(), (self.last_seen_x, self.last_seen_y),
@@ -76,8 +78,9 @@ class MonsterChaseState(MonsterBaseState):
             )
             self.path_index = 0
             self.path_target_x, self.path_target_y = self.last_seen_x, self.last_seen_y
+            self.repath_timer = 0.4
 
-        if self.path_index < len(self.path):
+        if self.path and self.path_index < len(self.path):
             step_x, step_y = self.path[self.path_index]
             self.monster.move_towards(step_x, step_y, obstacles, dt)
 
@@ -85,6 +88,5 @@ class MonsterChaseState(MonsterBaseState):
             if math.hypot(step_x - mx, step_y - my) < WAYPOINT_ARRIVAL_DIST:
                 self.path_index += 1
         else:
-            # No route found, or the route has been fully walked and the
-            # remaining distance to the target itself is what's left to close.
+            # Route walked or direct close pursuit: advance directly toward target
             self.monster.move_towards(self.last_seen_x, self.last_seen_y, obstacles, dt)

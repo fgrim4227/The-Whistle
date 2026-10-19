@@ -6,7 +6,7 @@ onto Room background surfaces, and extracts collisions, doors, hiding spots, and
 
 import json
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 import pygame
 
 import settings

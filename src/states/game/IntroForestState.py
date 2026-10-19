@@ -11,7 +11,7 @@ from gale.timer import Timer
 
 import settings
 from src.definitions import entity as entity_defs
-
+from src.i18n import t
 # How fast the player walks up into the clearing, in pixels per second.
 PLAYER_ENTRY_SPEED = 24.0
 
@@ -102,14 +102,14 @@ class IntroForestState(BaseState):
                 self.phase = "line1"
                 self.current_anim = self.player_animations.get("idle-down")
                 self.current_anim_key = self.player_textures.get("idle-down")
-                self.sub_text = "Qué raro, creí oír a alguien por aquí..." if not settings.IS_ENGLISH else "Strange, I thought I heard someone around here...."
+                self.sub_text = t("intro_forest_entering")
 
         elif self.phase == "line1":
             self.line_timer += dt
             if self.line_timer >= LINE_DISPLAY_DURATION:
                 self.line_timer = 0.0
                 self.phase = "line2"
-                self.sub_text = "Intentaré hacer una llamada..." if not settings.IS_ENGLISH else "I'll try to make a call..."
+                self.sub_text = t("intro_forest_line1")
                 settings.play_sound("whistle", volume=0.01, channel_name="silbon_whistle")
 
         elif self.phase == "line2":
@@ -152,11 +152,8 @@ class IntroForestState(BaseState):
         if self.phase == "blackout":
             surface.fill((0, 0, 0))
             font = settings.FONTS.get("medium", settings.FONTS["small"])
-            t1 = (
-                "Algo te ha intentado matar pero lograste sobrevivir." if not settings.IS_ENGLISH
-                else "Something tried to kill you, but you managed to survive."
-            )
-            t2 = "Despiertas en otro lugar..." if not settings.IS_ENGLISH else "You wake up somewhere else..."
+            t1 = t("intro_forest_blackout_t1")
+            t2 = t("intro_forest_blackout_t2")
             s1 = font.render(t1, True, (235, 235, 235))
             s2 = font.render(t2, True, (235, 235, 235))
             surface.blit(s1, (settings.VIRTUAL_WIDTH // 2 - s1.get_width() // 2, settings.VIRTUAL_HEIGHT // 2 - 14))
@@ -200,9 +197,7 @@ class IntroForestState(BaseState):
             pygame.draw.rect(surface, (120, 100, 60), bg_rect, width=1, border_radius=4)
             surface.blit(sub_surf, sub_rect)
 
-
-         # Skip indicator in top-right
         skip_f = settings.FONTS.get("hud", settings.FONTS["small"])
-        skip_text = "[ENTER: Omitir]" if not settings.IS_ENGLISH else "[ENTER: Skip]"
+        skip_text = t("intro_forest_skip")
         skip_surf = skip_f.render(skip_text, True, (160, 155, 140))
         surface.blit(skip_surf, (settings.VIRTUAL_WIDTH - skip_surf.get_width() - 10, 8))
