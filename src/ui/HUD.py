@@ -1,5 +1,5 @@
 """
-HUD module for rendering flashlight battery gauge, equipped item, prompts, and stealth indicators.
+HUD module for rendering battery and stamina gauges, equipped item, prompts, and stealth indicators.
 """
 
 import math
@@ -76,7 +76,31 @@ class HUD:
             pygame.draw.rect(surface, (70, 70, 70), bg_box, width=1, border_radius=4)
             surface.blit(empty_surf, (bg_box.centerx - empty_surf.get_width() // 2, box_y + 3))
 
-        # 3. Contextual interaction prompt at bottom center
+        # 3. Stamina bar (Down-Left)
+        stamina_w = 60
+        stamina_h = 10
+        stamina_x = 12
+        stamina_y = settings.VIRTUAL_HEIGHT - 22
+
+        pygame.draw.rect(surface, (40, 40, 40), (stamina_x, stamina_y, stamina_w, stamina_h), border_radius=2)
+        pygame.draw.rect(surface, (200, 200, 200), (stamina_x, stamina_y, stamina_w, stamina_h), width=1, border_radius=2)
+        stamina_pct = max(0.0, min(1.0, player.stamina / 100.0))
+        stamina_fill_w = int((stamina_w - 4) * stamina_pct)
+        if stamina_fill_w > 0:
+            pygame.draw.rect(
+                surface,
+                settings.COLOR_GOLD,
+                (stamina_x + 2, stamina_y + 2, stamina_fill_w, stamina_h - 4),
+            )
+
+        stamina_label = settings.FONTS["small"].render(
+            f"{t('hud_stamina')}: {int(player.stamina)}%",
+            True,
+            settings.COLOR_GOLD,
+        )
+        surface.blit(stamina_label, (stamina_x + stamina_w + 8, stamina_y - 1))
+
+        # 4. Contextual interaction prompt at bottom center
         if prompt_text:
             p_surf = settings.FONTS["small"].render(prompt_text, True, settings.COLOR_WHITE)
             bg_rect = p_surf.get_rect(center=(settings.VIRTUAL_WIDTH // 2, settings.VIRTUAL_HEIGHT - 18))
@@ -85,6 +109,5 @@ class HUD:
             pygame.draw.rect(surface, (150, 130, 75), padded_rect, width=1, border_radius=4)
             surface.blit(p_surf, bg_rect)
 
-        # 4. Character thoughts & NPC dialogue banner (rendered on top of lighting)
+        # 5. Character thoughts & NPC dialogue banner (rendered on top of lighting)
         player.render_thought(surface, prompt_active=bool(prompt_text))
-

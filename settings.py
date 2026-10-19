@@ -23,8 +23,8 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_UP, "move_up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "move_up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_DOWN, "move_down")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "move_down")
-input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LSHIFT, "run")
-input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RSHIFT, "run")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LCTRL, "run")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RCTRL, "run")
 
 # Survival actions
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_e, "interact")
@@ -80,13 +80,15 @@ GRID_ROWS = VIRTUAL_HEIGHT // TILE_SIZE  # 9
 
 # Gameplay and survival parameters
 PLAYER_SPEED = 69  # px/s
-PLAYER_RUN_SPEED = 80 # px/s
-MONSTER_PATROL_SPEED = 70.0  # px/s
+PLAYER_RUN_SPEED = 100 # px/s
+MONSTER_PATROL_SPEED = 80.0  # px/s
 MONSTER_CHASE_SPEED = 170.0  # px/s
 MONSTER_BERSERK_SPEED = 300  # px/s (+80% speed when enraged)
 
 BATTERY_DRAIN_RATE = 0.9  # Percentage per second while flashlight is ON
 BATTERY_RECHARGE_AMOUNT = 35.0  # Battery refill per picked-up battery item
+STAMINA_DRAIN_RATE = 20.0  # Percentage per second while Control is held
+STAMINA_RECHARGE_RATE = 12.0  # Percentage per second while Control is released
 
 # Throw probabilities
 THROW_STUN_CHANCE = 0.8  # 80% chance to stun the monster

@@ -68,7 +68,7 @@ class MonsterStalkingState(MonsterBaseState):
             self.confirm_timer += dt
 
             sustained_detection = self.confirm_timer >= CONFIRM_DETECTION_TIME
-            gave_away_by_running = player.is_running and self.monster.distance_to_player <= 160.0
+            gave_away_by_running = player.is_sprinting and self.monster.distance_to_player <= 160.0
             if sustained_detection or gave_away_by_running:
                 CHASE(self.monster)
                 return

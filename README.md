@@ -79,7 +79,7 @@ Andreas awakens alone in a pitch-black chamber, disoriented and clutching a flas
 | Action | Primary Key | Alternative / Secondary |
 | :--- | :--- | :--- |
 | **Move** | `W`, `A`, `S`, `D` | Arrow Keys (`↑`, `←`, `↓`, `→`) |
-| **Sprint** | `Left Shift` | `Right Shift` |
+| **Sprint** | `Left Control` | `Right Control` |
 | **Interact / Open / Hide** | `E` | `Space` |
 | **Toggle Flashlight** | `F` | — |
 | **Throw Equipped Item** | `Q` | `Space` (when holding throwable) |
@@ -207,7 +207,7 @@ Andreas despierta solo en una habitación en penumbra total, desorientado y con 
 | Acción | Tecla Principal | Tecla Alternativa |
 | :--- | :--- | :--- |
 | **Moverse** | `W`, `A`, `S`, `D` | Flechas Direccionales (`↑`, `←`, `↓`, `→`) |
-| **Correr (Sprint)** | `Shift Izquierdo` | `Shift Derecho` |
+| **Correr (Sprint)** | `Control Izquierdo` | `Control Derecho` |
 | **Interactuar / Abrir / Esconderse** | `E` | `Espacio` |
 | **Encender / Apagar Linterna** | `F` | — |
 | **Lanzar Objeto Equipado** | `Q` | `Espacio` (con arrojadizo) |

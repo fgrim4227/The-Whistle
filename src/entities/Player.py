@@ -1,7 +1,7 @@
 """
 Player class (Paramedic protagonist - Andreas).
 Manages directional movement with collisions, spritesheet animations,
-flashlight, battery consumption, stealth hiding state, and inner monologues.
+flashlight, battery and stamina consumption, stealth hiding state, and inner monologues.
 """
 
 from typing import Optional, List, Dict, Tuple
@@ -47,6 +47,7 @@ class Player(BaseEntity):
         super().__init__(x, y, width=width, height=height, speed=settings.PLAYER_SPEED)
         self.flashlight_on = True
         self.battery = 100.0
+        self.stamina = 100.0
         self.is_hidden = False
         self.current_hiding_spot = None
 
@@ -127,6 +128,10 @@ class Player(BaseEntity):
             return
         self.inventory = [item]
         self.selected_item_index = 0
+
+    @property
+    def is_sprinting(self) -> bool:
+        return self.is_running and self.stamina > 0.0
 
     def add_item(self, item: str) -> bool:
         """Adds or sets the single active item in hand."""
@@ -240,7 +245,7 @@ class Player(BaseEntity):
         self.held["move_right"] = bool(get_k(pygame.K_RIGHT) or get_k(pygame.K_d))
         self.held["move_up"] = bool(get_k(pygame.K_UP) or get_k(pygame.K_w))
         self.held["move_down"] = bool(get_k(pygame.K_DOWN) or get_k(pygame.K_s))
-        self.is_running = bool(get_k(pygame.K_LSHIFT) or get_k(pygame.K_RSHIFT))
+        self.is_running = bool(get_k(pygame.K_LCTRL) or get_k(pygame.K_RCTRL))
         self.is_moving = any(self.held.values())
         if not self.is_moving:
             self.vx = 0.0
@@ -277,10 +282,10 @@ class Player(BaseEntity):
         if self.is_moving:
             self.change_animation(f"walk-{self.direction}")
 
-        current_speed = settings.PLAYER_RUN_SPEED if self.is_running else self.speed
+        current_speed = settings.PLAYER_RUN_SPEED if self.is_sprinting else self.speed
 
         if self.is_moving:
-            step_interval = 0.25 if self.is_running else 0.44
+            step_interval = 0.25 if self.is_sprinting else 0.44
             self.step_timer += dt
             if self.step_timer >= step_interval:
                 self.step_timer = 0.0
@@ -315,6 +320,11 @@ class Player(BaseEntity):
             self.battery = max(0.0, self.battery - settings.BATTERY_DRAIN_RATE * dt)
             if self.battery <= 0.0:
                 self.flashlight_on = False
+
+        if self.is_running:
+            self.stamina = max(0.0, self.stamina - settings.STAMINA_DRAIN_RATE * dt)
+        else:
+            self.stamina = min(100.0, self.stamina + settings.STAMINA_RECHARGE_RATE * dt)
 
         # Thought display timer
         if self.thought_timer > 0.0:
