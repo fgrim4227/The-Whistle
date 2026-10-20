@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Unreleased
 
 ### Added
+- **2D Spatial Stereo Audio Panning (`src/systems/AudioManager.py`, `src/world/House.py`, `src/states/game/PlayState.py`, `settings.py`)**:
+  - Implemented continuous 2D horizontal stereo panning using Pygame's native `Channel.set_volume(left, right)`.
+  - Panning is calculated dynamically relative to the player's vertical axis (dx = source_x - player_x):
+    - When centered ($\Delta x = 0$), both audio channels deliver balanced audio (center gain 0.80).
+    - As the sound moves left or right, the volume rises smoothly in the respective ear (up to $1.0$) while attenuating the opposite ear down to a faint $6\%$ acoustic shadow threshold at ±260 px.
+    - Sources far to the left or right play almost exclusively on that ear, providing immersive directional hearing on headphones and stereo speakers.
+  - Physically accurate acoustic origin tracking:
+    - Same room: tracks El Silbón's exact coordinates.
+    - Across different rooms: Dijkstra pathfinding determines the doorway through which acoustic energy propagates into the player's room.
+    - Door listening: routes breathing cues directly to the targeted door frame.
+  - Applied in real-time with smooth transition lerping across El Silbón's whistle (`silbon_whistle`), footsteps (`silbon_footsteps`), and heavy breathing (`silbon_breath`).
 - **Title Screen Atmospheric Twitching & Jitter Effect (`src/ui/TitleWhistlerEffect.py`, `src/states/game/StartState.py`, `settings.py`)**:
   - Implemented dynamic FNaF-style jitter animation for El Silbón on the main menu, shifting across 8 directional offset frames (`Sprite-0005`..`Sprite-0008`, `up`, `down`, `left`, `right`, and idle base frames).
   - Features two distinct behavioral states: an eerie, subtle ambient twitch in the shadows during IDLE mode, and intense, violent twitching during lightning strikes and thunderclaps.

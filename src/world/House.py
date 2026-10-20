@@ -5,7 +5,7 @@ House class managing all cabin rooms, door interconnections, and Tiled JSON leve
 import heapq
 import math
 import os
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 import pygame
 
 from src.definitions import rooms as room_defs
@@ -145,29 +145,43 @@ class House:
         p1: Tuple[float, float],
         r2_name: str,
         p2: Tuple[float, float],
-    ) -> float:
+        return_source: bool = False,
+    ) -> Union[float, Tuple[float, Tuple[float, float]]]:
         """
         Computes the physically accurate acoustic/walking distance in pixels between
         two entities across the cabin, whether they reside in the same room or separate rooms.
         When entities are in different rooms, calculates the shortest path through the interconnecting
-        door network via Dijkstra search, summing intra-room paths and door spans for mathematically
-        continuous spatial audio.
+        door network via Dijkstra search, returning the path distance and the local acoustic origin
+        point (the doorway through which sound enters the player's room).
         """
         r1 = self.rooms.get(r1_name)
         r2 = self.rooms.get(r2_name)
         if not r1 or not r2:
-            return 1600.0
+            return (1600.0, p2) if return_source else 1600.0
 
         if r1 is r2 or r1_name == r2_name:
-            return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
+            d = math.hypot(p1[0] - p2[0], p1[1] - p2[1])
+            return (d, p2) if return_source else d
 
         # Dijkstra search across the room door graph
-        heap = [(0.0, r1.name, p1)]
-        dist_map = {r1.name: 0.0}
+        heap = []
+        dist_map = {}
         min_dist = float("inf")
+        best_origin: Optional[Tuple[float, float]] = None
+
+        # Start search with all doors leading out of the initial room (r1)
+        for door in r1.doors:
+            target_rm = self.rooms.get(door.target_room_name)
+            if not target_rm:
+                continue
+            door_pt = (door.x + door.width / 2.0, door.y + door.height / 2.0)
+            walk_to_door = math.hypot(p1[0] - door_pt[0], p1[1] - door_pt[1])
+            spawn_pt = (door.target_spawn_x, door.target_spawn_y)
+            dist_map[door.target_room_name] = walk_to_door
+            heapq.heappush(heap, (walk_to_door, door.target_room_name, spawn_pt, door_pt))
 
         while heap:
-            d, rname, curr_pt = heapq.heappop(heap)
+            d, rname, curr_pt, origin_pt = heapq.heappop(heap)
             if d > min_dist:
                 continue
             room = self.rooms.get(rname)
@@ -179,6 +193,7 @@ class House:
                 final_d = d + math.hypot(curr_pt[0] - p2[0], curr_pt[1] - p2[1])
                 if final_d < min_dist:
                     min_dist = final_d
+                    best_origin = origin_pt
                 continue
 
             for door in room.doors:
@@ -193,6 +208,8 @@ class House:
                 target_key = target_rm.name
                 if target_key not in dist_map or new_d < dist_map[target_key]:
                     dist_map[target_key] = new_d
-                    heapq.heappush(heap, (new_d, target_key, spawn_pt))
+                    heapq.heappush(heap, (new_d, target_key, spawn_pt, origin_pt))
 
-        return min_dist if min_dist != float("inf") else 1600.0
+        res_d = min_dist if min_dist != float("inf") else 1600.0
+        res_source = best_origin if best_origin is not None else p2
+        return (res_d, res_source) if return_source else res_d

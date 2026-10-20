@@ -315,12 +315,14 @@ class PlayState(BaseState):
         # Update dynamic audio system and proximity cues
         player_room_name = self.house.current_room.name if self.house.current_room else "living_room"
         monster_room_name = self.monster.current_room_name
-        real_dist = self.house.get_real_distance(
+        real_dist, acoustic_pos = self.house.get_real_distance(
             player_room_name,
             self.player.get_center(),
             monster_room_name,
             self.monster.get_center(),
+            return_source=True,
         )
+        sound_dx = acoustic_pos[0] - self.player.get_center()[0]
 
         self.audio.update(
             self.player.get_center(),
@@ -332,6 +334,7 @@ class PlayState(BaseState):
             monster_is_moving=self.monster.is_moving,
             monster_ai_state=self.monster.ai_state,
             real_distance=real_dist,
+            sound_dx=sound_dx,
         )
 
         # Update HUD and contextual action prompts

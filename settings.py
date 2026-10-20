@@ -196,11 +196,14 @@ def stop_channel(channel_name: str):
     if channel is not None:
         channel.stop()
 
-def set_channel_volume(channel_name: str, volume: float):
-    """Updates the volume of a specific audio channel in real-time."""
+def set_channel_volume(channel_name: str, volume: float, right_volume: float = None):
+    """Updates the volume of a specific audio channel in real-time, supporting stereo panning."""
     channel = AUDIO_CHANNELS.get(channel_name)
     if channel is not None:
-        channel.set_volume(volume)
+        if right_volume is not None:
+            channel.set_volume(volume, right_volume)
+        else:
+            channel.set_volume(volume)
 
 def stop_all_audio():
     """Stops playback on all active audio channels."""

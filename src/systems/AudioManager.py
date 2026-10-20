@@ -6,7 +6,7 @@ periodic folklore whistling, panicked breathing, and composite dual jumpscares.
 
 import math
 import random
-from typing import Optional
+from typing import Optional, Tuple
 
 import settings
 
@@ -18,6 +18,7 @@ class AudioManager:
         self.is_near_alert = False
         self.current_footstep_sound: Optional[str] = None
         self.current_whistle_vol: float = 0.5
+        self.current_sound_dx: float = 0.0
         
         # Cooldown timer for periodic whistling bursts (not continuous loops)
         self.whistle_cooldown = random.uniform(2.0, 6.0)
@@ -34,9 +35,40 @@ class AudioManager:
             track = track_name or self.ambient_tracks[self.current_ambient_idx]
             settings.play_music(track, loops=-1, volume=0.45, channel_name="ambience")
 
-    def play_silbon_whistle(self, volume: float = 0.5) -> None:
-        """Plays a single burst of the folklore whistle on its dedicated channel."""
+    @staticmethod
+    def calculate_stereo_volumes(
+        base_vol: float,
+        dx: float,
+        pan_span: float = 260.0,
+        min_leakage: float = 0.06,
+        center_gain: float = 0.80,
+    ) -> Tuple[float, float]:
+        """
+        Calculates left and right channel volumes based on horizontal offset dx
+        from the player's vertical axis:
+        - Far left (dx <= -pan_span): left ear = base_vol * 1.0, right ear = base_vol * min_leakage.
+        - Center (dx == 0): both ears = base_vol * center_gain.
+        - Far right (dx >= pan_span): right ear = base_vol * 1.0, left ear = base_vol * min_leakage.
+        """
+        norm = max(-1.0, min(1.0, dx / pan_span))
+        if norm >= 0:
+            # Panned right: right ear increases towards 1.0, left ear attenuates towards min_leakage
+            right_factor = center_gain + (1.0 - center_gain) * norm
+            left_factor = center_gain * (1.0 - norm) + min_leakage * norm
+        else:
+            # Panned left: left ear increases towards 1.0, right ear attenuates towards min_leakage
+            abs_norm = -norm
+            left_factor = center_gain + (1.0 - center_gain) * abs_norm
+            right_factor = center_gain * (1.0 - abs_norm) + min_leakage * abs_norm
+        return round(base_vol * left_factor, 3), round(base_vol * right_factor, 3)
+
+    def play_silbon_whistle(self, volume: float = 0.5, dx: float = 0.0) -> None:
+        """Plays a single burst of the folklore whistle on its dedicated channel with stereo panning."""
         settings.play_sound("whistle", loops=0, volume=volume, channel_name="silbon_whistle")
+        ch_whistle = settings.AUDIO_CHANNELS.get("silbon_whistle")
+        if ch_whistle:
+            left_v, right_v = self.calculate_stereo_volumes(volume, dx)
+            ch_whistle.set_volume(left_v, right_v)
 
     def update(
         self,
@@ -49,14 +81,16 @@ class AudioManager:
         monster_is_moving: bool = False,
         monster_ai_state: str = "patrol",
         real_distance: Optional[float] = None,
+        sound_dx: Optional[float] = None,
     ) -> None:
         """
-        Modulates whistling volume, breathing, and footsteps in real-time:
-        - Periodic Whistling: Plays periodically (every 14-24s) instead of an endless loop.
+        Modulates whistling volume, breathing, and footsteps in real-time with 2D stereo panning:
+        - Periodic Whistling: Plays periodically (every 2-6s) instead of an endless loop.
         - Folklore Paradox:
             * Farther real distance -> Louder perceived whistle (up to 0.85).
             * Closer real distance (< 80px) -> Faint whisper volume (down to 0.08).
-        - Breathing: Audible when monster is close (< 150px), player is hidden, or player listens at a door.
+        - Stereo Panning: Modulates left/right ear volume based on horizontal offset dx from player's axis.
+        - Breathing: Audible when monster is close (< 100px), player is hidden, or player listens at a door.
         - Ambient Ducking: Lowers background ambience when listening closely to heavy breathing at a door.
         - Footsteps: Dynamic walk/run sounds when El Silbón stalks or chases the player.
         """
@@ -73,27 +107,33 @@ class AudioManager:
         # Modulate whistle volume inversely proportional to distance (folklore paradox)
         target_whistle_vol = max(0.08, normalized)
 
-        # Smooth volume interpolation to eliminate jarring audio cliffs across room boundaries
+        # Smooth volume and stereo panning interpolation
         self.current_whistle_vol += (target_whistle_vol - self.current_whistle_vol) * min(1.0, dt * 5.0)
         whistle_vol = self.current_whistle_vol
+
+        target_dx = sound_dx if sound_dx is not None else (monster_center[0] - player_center[0])
+        self.current_sound_dx += (target_dx - self.current_sound_dx) * min(1.0, dt * 8.0)
+
+        # Compute stereo panning gains for El Silbón's whistle
+        whistle_left, whistle_right = self.calculate_stereo_volumes(whistle_vol, self.current_sound_dx)
 
         ch_whistle = settings.AUDIO_CHANNELS.get("silbon_whistle")
         if ch_whistle:
             if ch_whistle.get_busy():
-                # If whistle is currently playing, adjust its volume dynamically
-                ch_whistle.set_volume(whistle_vol)
+                # If whistle is currently playing, adjust its stereo volume dynamically
+                ch_whistle.set_volume(whistle_left, whistle_right)
             else:
                 # Count down cooldown towards next whistle burst
                 self.whistle_cooldown -= dt
                 if self.whistle_cooldown <= 0.0:
-                    self.play_silbon_whistle(volume=whistle_vol)
+                    self.play_silbon_whistle(volume=whistle_vol, dx=self.current_sound_dx)
                     # Next whistle burst interval
                     self.whistle_cooldown = random.uniform(2.0, 6.0)
 
         # Proximity alert flag for UI
         self.is_near_alert = (dist < 100.0 and monster_in_same_room)
 
-        # Ambient music volume ducking when listening closely at a door
+        # Ambient music volume ducking when listening closely at a door (centered ambient)
         ch_amb = settings.AUDIO_CHANNELS.get("ambience")
         if ch_amb:
             if not ch_amb.get_busy():
@@ -105,27 +145,27 @@ class AudioManager:
             else:
                 ch_amb.set_volume(0.45)
 
-        # Panicked or door-listening breathing modulation
+        # Panicked or door-listening breathing modulation with stereo panning
         ch_breath = settings.AUDIO_CHANNELS.get("silbon_breath")
         if ch_breath:
             if monster_in_same_room and (dist < 100):
                 breath_vol = max(0.3, (1.0 - min(1.0, dist / 180.0)) * 0.90)
+                breath_l, breath_r = self.calculate_stereo_volumes(breath_vol, self.current_sound_dx)
                 if not ch_breath.get_busy():
                     settings.play_sound("breathing", loops=-1, volume=breath_vol, channel_name="silbon_breath")
-                else:
-                    ch_breath.set_volume(breath_vol)
+                ch_breath.set_volume(breath_l, breath_r)
             elif door_listening_proximity > 0.05:
                 # Audible heavy breathing through wooden door
                 breath_vol = max(0.8, min(0.95, door_listening_proximity * 0.95))
+                breath_l, breath_r = self.calculate_stereo_volumes(breath_vol, self.current_sound_dx)
                 if not ch_breath.get_busy():
                     settings.play_sound("breathing", loops=-1, volume=breath_vol, channel_name="silbon_breath")
-                else:
-                    ch_breath.set_volume(breath_vol)
+                ch_breath.set_volume(breath_l, breath_r)
             else:
                 if ch_breath.get_busy():
                     settings.stop_channel("silbon_breath")
 
-        # Footstep & running sounds for El Silbón
+        # Footstep & running sounds for El Silbón with stereo panning
         ch_steps = settings.AUDIO_CHANNELS.get("silbon_footsteps")
         if ch_steps:
             should_play_steps = (
@@ -137,12 +177,12 @@ class AudioManager:
             if should_play_steps:
                 target_sound = "run_sound" if monster_ai_state in ("chase", "berserk") else "walk_sound"
                 step_vol = max(0.3, (1.0 - min(1.0, dist / 500)) * 0.85)
+                step_l, step_r = self.calculate_stereo_volumes(step_vol, self.current_sound_dx)
 
                 if self.current_footstep_sound != target_sound or not ch_steps.get_busy():
                     settings.play_sound(target_sound, loops=-1, volume=step_vol, channel_name="silbon_footsteps")
                     self.current_footstep_sound = target_sound
-                else:
-                    ch_steps.set_volume(step_vol)
+                ch_steps.set_volume(step_l, step_r)
             else:
                 if ch_steps.get_busy():
                     settings.stop_channel("silbon_footsteps")
