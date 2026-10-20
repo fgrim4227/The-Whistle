@@ -25,6 +25,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
 
         # HUD and Status
         "hud_battery": "Batería",
+        "hud_stamina": "Estamina",
         "hud_none": "Ninguno",
         
         # Items
@@ -213,6 +214,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
 
         # HUD and Status
         "hud_battery": "Battery",
+        "hud_stamina": "Stamina",
         "hud_none": "None",
         
         # Items
