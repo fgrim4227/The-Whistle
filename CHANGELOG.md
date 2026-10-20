@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Unreleased
 
 ### Added
+- **Discord Rich Presence Integration (`src/systems/DiscordManager.py`, `main.py`, `src/states/game/*`)**:
+  - Added real-time Discord Rich Presence via `pypresence` using Client ID `1561900878196252766`.
+  - Implemented a dedicated background daemon thread with rate-limiting, thread-safe payload syncing, and auto-reconnect fallback so the game never stutters, frame-drops, or crashes even if Discord is closed.
+  - Dynamically broadcasts game states:
+    - Main Menu: "En el menú principal", "Preparándose para entrar".
+    - Prologue: "Prólogo: El Camino del Llano" / "Prólogo: Bosque Oscuro".
+    - Cabin Exploration: Displays current room name ("Habitación: Sala Principal", "Habitación: Comedor", etc.) with elapsed survival time.
+    - Contextual Activity: Reflects real-time events such as hiding in wardrobes ("Escondido en las sombras 🤫"), being chased by El Silbón ("¡El Silbón lo está persiguiendo! 😱"), or solving puzzle mechanisms ("Descifrando mecanismo 🔐").
+    - Game Over & Victory: Broadcasts death to El Silbón or successful dawn escape.
 - **2D Spatial Stereo Audio Panning (`src/systems/AudioManager.py`, `src/world/House.py`, `src/states/game/PlayState.py`, `settings.py`)**:
   - Implemented continuous 2D horizontal stereo panning using Pygame's native `Channel.set_volume(left, right)`.
   - Panning is calculated dynamically relative to the player's vertical axis (dx = source_x - player_x):

@@ -12,6 +12,7 @@ import settings
 from src.i18n import t
 from gale.state import BaseState
 from src.systems.AudioManager import AudioManager
+from src.systems.DiscordManager import discord_rpc
 
 class GameOverState(BaseState):
     def __init__(self, state_machine) -> None:
@@ -54,6 +55,12 @@ class GameOverState(BaseState):
     def enter(self, *args, **kwargs) -> None:
         self.timer = 0.0
         self.audio.start_game_over_audio()
+        discord_rpc.update(
+            details="El Silbón reclamó otra víctima",
+            state="Fin del juego (Muerto) 💀",
+            small_image="dead",
+            small_text="Muerto",
+        )
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if not input_data.pressed:
             return

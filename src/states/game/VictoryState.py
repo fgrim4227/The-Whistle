@@ -8,12 +8,19 @@ from gale.input_handler import InputData
 import settings
 from src.i18n import t
 from gale.state import BaseState
+from src.systems.DiscordManager import discord_rpc
 
 
 class VictoryState(BaseState):
     def __init__(self, state_machine) -> None:
         super().__init__(state_machine)
         self.timer = 0.0
+        discord_rpc.update(
+            details="¡Logró escapar de la pesadilla! 🏆",
+            state="Sobrevivió a El Silbón",
+            small_image="escaped",
+            small_text="Escapó",
+        )
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if not input_data.pressed:

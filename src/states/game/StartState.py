@@ -12,6 +12,7 @@ from gale.state import BaseState
 from src.systems.AudioManager import AudioManager
 from src.systems.LightingSystem import LightingSystem
 from src.ui.TitleWhistlerEffect import TitleWhistlerEffect
+from src.systems.DiscordManager import discord_rpc
 
 class StartState(BaseState):
     def __init__(self, state_machine) -> None:
@@ -28,6 +29,12 @@ class StartState(BaseState):
         self.selected_index = 0
         self.show_instructions = False
         self.audio.start_title_audio()
+        discord_rpc.update(
+            details="En el menú principal",
+            state="Preparándose para entrar",
+            small_image="menu_icon",
+            small_text="Menú Principal",
+        )
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if not input_data.pressed:

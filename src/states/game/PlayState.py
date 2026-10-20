@@ -25,6 +25,7 @@ from src.world.GameObject import GameObject, ThrowableProjectile
 from src.systems.LightingSystem import LightingSystem
 from src.systems.AudioManager import AudioManager
 from src.systems.DirectorAI import DirectorAI
+from src.systems.DiscordManager import discord_rpc
 from src.ui.HUD import HUD
 from src.minigames.BaseMinigame import BaseMinigame
 from src.definitions.interactions import (
@@ -77,6 +78,7 @@ class PlayState(BaseState):
         self._was_catching: bool = False
         self._darkness_tween = None
         self._current_room_name: Optional[str] = None
+        self._discord_timer: float = 0.0
 
     def enter(self, *args, **kwargs) -> None:
         self.player.clear_held()
@@ -87,6 +89,14 @@ class PlayState(BaseState):
         self._current_room_name = self.house.current_room.name if self.house.current_room else None
         # Start atmospheric cabin ambient background music
         self.audio.start_ambient()
+        room_display = self.house.current_room.display_name if self.house.current_room else "Cabaña"
+        discord_rpc.update(
+            details="Sobreviviendo en la cabaña",
+            state=f"Habitación: {room_display}",
+            small_image="alive",
+            small_text="Con vida",
+            reset_timer=True,
+        )
 
     def exit(self) -> None:
         # Stop continuous channels on exit
@@ -336,6 +346,35 @@ class PlayState(BaseState):
             real_distance=real_dist,
             sound_dx=sound_dx,
         )
+
+        # Update Discord Rich Presence dynamically
+        self._discord_timer += dt
+        if self._discord_timer >= 2.5:
+            self._discord_timer = 0.0
+            r_name = self.house.current_room.display_name if self.house.current_room else "Cabaña"
+            if self.player.is_hidden:
+                d_text = "Escondido en las sombras 🤫"
+                s_img = "hiding"
+                s_txt = "Escondido"
+            elif monster_in_same_room and self.monster.ai_state in ("chase", "berserk"):
+                d_text = "¡El Silbón lo está persiguiendo! 😱"
+                s_img = "danger"
+                s_txt = "¡Peligro!"
+            elif self.active_minigame and self.active_minigame.is_active:
+                d_text = "Descifrando mecanismo 🔐"
+                s_img = "puzzle"
+                s_txt = "Acertijo"
+            else:
+                d_text = "Sobreviviendo en la cabaña"
+                s_img = "alive"
+                s_txt = "Con vida"
+
+            discord_rpc.update(
+                details=d_text,
+                state=f"Habitación: {r_name}",
+                small_image=s_img,
+                small_text=s_txt,
+            )
 
         # Update HUD and contextual action prompts
         self._update_contextual_prompt()

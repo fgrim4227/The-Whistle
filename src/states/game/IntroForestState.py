@@ -12,6 +12,7 @@ from gale.timer import Timer
 import settings
 from src.definitions import entity as entity_defs
 from src.i18n import t
+from src.systems.DiscordManager import discord_rpc
 # How fast the player walks up into the clearing, in pixels per second.
 PLAYER_ENTRY_SPEED = 24.0
 
@@ -66,6 +67,10 @@ class IntroForestState(BaseState):
     def enter(self, *args, **kwargs) -> None:
         self.time = 0.0
         self.phase = "entering"
+        discord_rpc.update(
+            details="Prólogo: Bosque Oscuro",
+            state="Huyendo de la silueta en los árboles",
+        )
         self.skipped = False
 
     def exit(self) -> None:

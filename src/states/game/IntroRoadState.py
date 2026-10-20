@@ -17,6 +17,7 @@ from gale.timer import Timer
 import settings
 from src.definitions import entity as entity_defs
 from src.i18n import t
+from src.systems.DiscordManager import discord_rpc
 
 PLANT_SPAWN_INTERVAL = 0.2
 
@@ -212,6 +213,11 @@ class IntroRoadState(BaseState):
     def enter(self, *args, **kwargs) -> None:
         self.time = 0.0
         self.speed = 145.0
+        discord_rpc.update(
+            details="Prólogo: El Camino del Llano",
+            state="Buscando refugio en la tormenta",
+            reset_timer=True,
+        )
         self.phase = "driving"
         self.skipped = False
         self.sub_text = t("intro_road_state_enter")
