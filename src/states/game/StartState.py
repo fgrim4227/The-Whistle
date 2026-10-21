@@ -144,15 +144,17 @@ class StartState(BaseState):
             t("inst_throw"),
             t("inst_objectives"),
             t("inst_pause"),
+            t("inst_run"),
             t("inst_fullscreen"),
             t("inst_exit"),
             "",
             t("inst_warning"),
             t("inst_back"),
+
         ]
 
         for idx, line in enumerate(lines):
-            color = settings.COLOR_GOLD if idx == 8 else settings.COLOR_WHITE
+            color = settings.COLOR_GOLD if idx == 10 else settings.COLOR_WHITE
             line_surf = settings.FONTS["small"].render(line, True, color)
             surface.blit(line_surf, (modal_rect.left + 25, modal_rect.top + 36 + idx * 16))
     def _render_credits(self, surface: pygame.Surface) -> None:

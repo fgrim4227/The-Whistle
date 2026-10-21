@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Unreleased
 
 ### Added
+### Added
+- **In-Game Pause Instructions Modal (`src/states/game/PauseState.py`, `src/i18n.py`)**:
+  - Added an accessible "Controles e Instrucciones" option to the Pause Menu ('P' key), allowing players to review control bindings mid-game without having to quit to the main menu.
+  - Displays the complete control modal (movement, flashlight, sprint, interactions, throwing, objectives, pause, fullscreen, exit) and dismisses on ENTER, ESC, interact, or P.
 - **Discord Rich Presence Integration (`src/systems/DiscordManager.py`, `main.py`, `src/states/game/*`)**:
   - Added real-time Discord Rich Presence via `pypresence` using Client ID `1561900878196252766`.
   - Implemented a dedicated background daemon thread with rate-limiting, thread-safe payload syncing, and auto-reconnect fallback so the game never stutters, frame-drops, or crashes even if Discord is closed.
@@ -37,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added line-of-sight raycasting (`clipline`) against room obstacles in `PlayState` to guarantee that inflated grabs never penetrate through solid walls or closed partitions.
 
 ### Changed
+### Changed
+- **Hidden Closet Breathing Volume Rebalance (`settings.py`, `src/states/entity/player/PlayerHidingState.py`)**:
+  - Calibrated `PLAYER_HIDDEN_BREATH_VOLUME` from `1.0` down to `0.35` on channel `player_hidden_breath`.
+  - Guarantees that Andreas's panicked breathing while hiding in wardrobes remains audible and atmospheric without overpowering or masking El Silbón's spatial footsteps, ambient rain, or directional whistling outside the closet.
 - **Top-Down Feet-Based Collision Box (`src/entities/Monster.py`)**:
   - Calibrated `Monster.get_collision_rect()` to `(rx + 2, ry + 20, width - 4, height - 20)`, aligning physical collision strictly to the entity's feet footprint. This prevents El Silbón from snagging his shoulders/torso on furniture edges, beds, safe corners, or doorways.
 - **Continuous Flashlight Directional Tweening (`src/entities/Player.py`, `src/systems/LightingSystem.py`)**:

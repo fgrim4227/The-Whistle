@@ -21,6 +21,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         # Pause Menu
         "pause_title": "PAUSA",
         "pause_resume": "Continuar",
+        "pause_instructions": "Controles e Instrucciones",
         "pause_menu": "Volver al Menú Principal",
 
         # HUD and Status
@@ -117,7 +118,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "inst_exit": "ESC cuando estas en el juego y aceptas la confirmacion",
         "inst_warning": "Atención: Cuando escuches el silbido lejano, ¡está muy cerca!",
         "inst_back": "Presiona ENTER para regresar",
-
+        "inst_run": "Manten CTRL para correr",
         # Confirmation Menu
         "confirm_quit_title": "¿SEGURO QUE DESEAS SALIR?",
         "menu_yes": "Sí",
@@ -213,6 +214,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         # Pause Menu
         "pause_title": "PAUSE",
         "pause_resume": "Resume",
+        "pause_instructions": "Controls & Instructions",
         "pause_menu": "Return to Main Menu",
 
         # HUD and Status
@@ -309,6 +311,7 @@ STRINGS: Dict[str, Dict[str, str]] = {
         "inst_exit": "ESC when you're in the game, then you confirm with yes",
         "inst_warning": "Warning: When the whistle sounds far away, HE IS NEAR!",
         "inst_back": "Press ENTER to return",
+        "inst_run": "Press CTRL to run",
         # Confirmation Menu
         "confirm_quit_title": "ARE YOU SURE YOU WANT TO QUIT?",
         "menu_yes": "Yes",
