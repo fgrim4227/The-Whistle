@@ -231,6 +231,7 @@ class Player(BaseEntity):
         self.is_hidden = False
         self.current_hiding_spot = None
         self.change_state("idle")
+        settings.stop_channel("player_hidden_breath")
 
     def clear_movement(self) -> None:
         """Completely halts movement and clears all held directional inputs, running status, and velocity."""

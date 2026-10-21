@@ -82,6 +82,7 @@ GRID_ROWS = VIRTUAL_HEIGHT // TILE_SIZE  # 9
 PLAYER_SPEED = 69  # px/s
 PLAYER_RUN_SPEED = 110 # px/s
 PLAYER_RUN_VOLUME = 0.2  # Running footsteps volume (0.0 to 1.0)
+PLAYER_HIDDEN_BREATH_VOLUME = 1.0  # Breathing volume while hiding (0.0 to 1.0)
 MONSTER_PATROL_SPEED = 80.0  # px/s
 MONSTER_CHASE_SPEED = 170.0  # px/s
 MONSTER_BERSERK_SPEED = 300  # px/s (+80% speed when enraged)
@@ -160,6 +161,7 @@ SOUNDS = {
     "bone_snap_3": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "game_over_screen" / "bone_crack_3.mp3"),
     "bone_snap_4": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sfx" / "game_over_screen" / "bone_crack_3.mp3"),
     "player_run": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "player_run.wav"),
+    "hidden_breathing": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "hidden_breathing.wav"),
 }
 # Dedicated Audio Channels (Ultimate Fantasy architecture pattern)
 AUDIO_CHANNELS = {
@@ -177,6 +179,7 @@ AUDIO_CHANNELS = {
     "thunder": pygame.mixer.Channel(11) if pygame.mixer.get_init() else None,
     "bones": pygame.mixer.Channel(12) if pygame.mixer.get_init() else None,
     "player_run": pygame.mixer.Channel(13) if pygame.mixer.get_init() else None,
+    "player_hidden_breath": pygame.mixer.Channel(14) if pygame.mixer.get_init() else None,
 }
 
 def play_sound(name: str, loops: int = 0, volume: float = 1.0, channel_name: str = None):
