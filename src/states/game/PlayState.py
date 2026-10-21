@@ -28,6 +28,7 @@ from src.systems.DirectorAI import DirectorAI
 from src.systems.DiscordManager import discord_rpc
 from src.ui.HUD import HUD
 from src.minigames.BaseMinigame import BaseMinigame
+from src.minigames.MinigameFactory import MinigameFactory
 from src.definitions.interactions import (
     ITEM_INTERACTIONS,
     interact_default_collectible,
@@ -44,6 +45,7 @@ class PlayState(BaseState):
         super().__init__(state_machine)
         self.house = House()
         self.active_minigame: Optional[BaseMinigame] = None
+        self.hide_cooldown = 0.0
 
         # Andreas spawns at the authored player_spawn in FirstRoom (defaulting to 94, 129)
         spawn_pos = (94.0, 129.0)
@@ -178,7 +180,10 @@ class PlayState(BaseState):
         # only decides whether it quietly starts walking over to check.
         for spot in room.hiding_spots:
             if interact_zone.colliderect(spot.get_rect()):
+                if self.hide_cooldown > 0.0:
+                    return
                 self.player.hide(spot)
+                self.active_minigame = MinigameFactory.create("breathing", self)
                 if self.monster.checks_hiding_spot(spot):
                     self.monster.change_state("catching", spot=spot)
                 return
@@ -197,6 +202,7 @@ class PlayState(BaseState):
                 return
 
     def update(self, dt: float) -> None:
+        self.hide_cooldown = max(0.0, self.hide_cooldown - dt)
         room = self.house.current_room
         if not room:
             return
@@ -283,6 +289,8 @@ class PlayState(BaseState):
             if self.player.is_hidden:
                 # El Silbón reached the hiding spot -- drag the player back
                 # out into the open right as the reveal starts.
+                if self.active_minigame:
+                    self.active_minigame.close()
                 self.player.exit_hide()
             if self._darkness_tween and not getattr(self._darkness_tween, "to_remove", False):
                 self._darkness_tween.remove()
@@ -428,7 +436,9 @@ class PlayState(BaseState):
         
         for spot in room.hiding_spots:
             if zone.colliderect(spot.get_rect()):
-                self.prompt_text = t("prompt_hide")
+                self.prompt_text = (
+                    t("prompt_hide_cooldown") if self.hide_cooldown > 0.0 else t("prompt_hide")
+                )
                 return
 
         for item in room.items:

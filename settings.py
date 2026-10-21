@@ -83,6 +83,7 @@ PLAYER_SPEED = 69  # px/s
 PLAYER_RUN_SPEED = 110 # px/s
 PLAYER_RUN_VOLUME = 0.2  # Running footsteps volume (0.0 to 1.0)
 PLAYER_HIDDEN_BREATH_VOLUME = 1.0  # Breathing volume while hiding (0.0 to 1.0)
+HIDE_RETRY_COOLDOWN = 3.0  # Seconds before hiding is available again after a breath-control failure
 MONSTER_PATROL_SPEED = 80.0  # px/s
 MONSTER_CHASE_SPEED = 170.0  # px/s
 MONSTER_BERSERK_SPEED = 300  # px/s (+80% speed when enraged)
