@@ -17,7 +17,7 @@ from src.systems.LightingSystem import LightingSystem
 
 # Ambient darkness alpha for the forest clearing (0.0 = fully clear, 255.0 = pitch black).
 # Modify this constant directly to calibrate the cutscene's darkness level.
-FOREST_DARKNESS_ALPHA: float = 210.0
+FOREST_DARKNESS_ALPHA: float = 190.0
 
 # How fast the player walks up into the clearing, in pixels per second.
 PLAYER_ENTRY_SPEED = 24.0
