@@ -16,6 +16,11 @@ import settings
 from src.definitions import entity as entity_defs
 from src.i18n import t
 from src.systems.DiscordManager import discord_rpc
+from src.systems.LightingSystem import LightingSystem
+
+# Ambient darkness alpha for the road drive (0.0 = fully clear, 255.0 = pitch black).
+# Modify this constant directly to calibrate the cutscene's darkness level.
+ROAD_DARKNESS_ALPHA: float = 190.0
 
 # The "driving" phase's fixed length and the "failing" phase's speed
 # falloff, mirrored from the phase timeline below.
@@ -40,6 +45,10 @@ class IntroRoadState(BaseState):
         self.bg_far_x: float = 0.0
         self.bg_mid_x: float = 0.0
         self.bg_close_x: float = 0.0
+
+        # Atmospheric lighting system
+        self.lighting = LightingSystem()
+        self.lighting.darkness_alpha = ROAD_DARKNESS_ALPHA
 
         # Assets (loaded first to calibrate dimensions)
         self._load_intro_assets()
@@ -158,6 +167,8 @@ class IntroRoadState(BaseState):
 
     def update(self, dt: float) -> None:
         self.time += dt
+        self.lighting.darkness_alpha = ROAD_DARKNESS_ALPHA
+        self.lighting.update(dt)
 
         # Update smoke particles (emanating from front hood)
         if self.smoke_active:
@@ -290,38 +301,6 @@ class IntroRoadState(BaseState):
         for tx in range(-self.road_tile_w, settings.VIRTUAL_WIDTH + self.road_tile_w, self.road_tile_w):
             surface.blit(self.road_tile, (tx + round(self.road_x), road_y))
 
-        # Headlights beam (projecting forward onto dark road)
-        if self.speed > 0.0 or self.phase in ("driving", "failing", "stopped", "player_exit"):
-            light_beam = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            car_w = self.car_surf.get_width()
-            car_h = self.car_surf.get_height()
-            p_front = (self.car_x + car_w - 4, self.car_y + car_h // 2 + self.car_shake - 8)
-            pygame.draw.polygon(
-                light_beam,
-                (255, 245, 180, 45),
-                self._headlight_cone_points(p_front, 190, 26.6),
-            )
-            pygame.draw.polygon(
-                light_beam,
-                (255, 245, 180, 100),
-                self._headlight_cone_points(p_front, 130, 21.7),
-            )
-            surface.blit(light_beam, (0, 0))
-
-            light_beam2 = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            p_front2 = (self.car_x + car_w - 4, self.car_y + car_h // 2 + self.car_shake + 8)
-            pygame.draw.polygon(
-                light_beam2,
-                (255, 245, 180, 45),
-                self._headlight_cone_points(p_front2, 190, 26.6),
-            )
-            pygame.draw.polygon(
-                light_beam2,
-                (255, 245, 180, 100),
-                self._headlight_cone_points(p_front2, 130, 21.7),
-            )
-            surface.blit(light_beam2, (0, 0))
-
         # Car vehicle
         surface.blit(self.car_surf, (round(self.car_x), round(self.car_y + self.car_shake)))
 
@@ -346,10 +325,43 @@ class IntroRoadState(BaseState):
         # Smoke particles (from engine hood)
         self.smoke_particles.render(surface)
 
-        # Ambient night darkness vignette
-        darkness = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-        darkness.fill((6, 8, 14, 130))
-        surface.blit(darkness, (0, 0))
+        # Headlights geometry: carve out darkness so the road in front is clear
+        headlight_carve = []
+        headlight_cones = []
+        if self.speed > 0.0 or self.phase in ("driving", "failing", "stopped", "player_exit"):
+            car_w = self.car_surf.get_width()
+            car_h = self.car_surf.get_height()
+            p_front1 = (self.car_x + car_w - 4, self.car_y + car_h // 2 + self.car_shake - 8)
+            p_front2 = (self.car_x + car_w - 4, self.car_y + car_h // 2 + self.car_shake + 8)
+
+            cone1_outer = self._headlight_cone_points(p_front1, 190, 26.6)
+            cone1_inner = self._headlight_cone_points(p_front1, 130, 21.7)
+            cone2_outer = self._headlight_cone_points(p_front2, 190, 26.6)
+            cone2_inner = self._headlight_cone_points(p_front2, 130, 21.7)
+
+            # Polygons and alphas carved out of the ambient darkness
+            headlight_carve = [
+                (cone1_outer, 180),
+                (cone1_inner, 255),
+                (cone2_outer, 180),
+                (cone2_inner, 255),
+            ]
+            headlight_cones = [
+                (cone1_outer, (255, 245, 180, 45)),
+                (cone1_inner, (255, 245, 180, 100)),
+                (cone2_outer, (255, 245, 180, 45)),
+                (cone2_inner, (255, 245, 180, 100)),
+            ]
+
+        # Atmospheric night darkness overlay via LightingSystem
+        self.lighting.render(surface, player=None, custom_light_polygons=headlight_carve)
+
+        # Draw headlights beam over the scene (unaffected and radiant over the illuminated road)
+        if headlight_cones:
+            light_beam = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
+            for pts, color in headlight_cones:
+                pygame.draw.polygon(light_beam, color, pts)
+            surface.blit(light_beam, (0, 0))
 
         # Subtitles & HUD skip prompt
         if self.sub_text:
@@ -365,6 +377,4 @@ class IntroRoadState(BaseState):
         skip_f = settings.FONTS.get("hud", settings.FONTS["small"])
         skip_text = t("intro_forest_skip")
         skip_surf = skip_f.render(skip_text, True, (160, 155, 140))
-        surface.blit(skip_surf, (settings.VIRTUAL_WIDTH - skip_surf.get_width() - 10, 8))
-
         surface.blit(skip_surf, (settings.VIRTUAL_WIDTH - skip_surf.get_width() - 10, 8))

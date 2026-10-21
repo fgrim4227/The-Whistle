@@ -13,6 +13,12 @@ import settings
 from src.definitions import entity as entity_defs
 from src.i18n import t
 from src.systems.DiscordManager import discord_rpc
+from src.systems.LightingSystem import LightingSystem
+
+# Ambient darkness alpha for the forest clearing (0.0 = fully clear, 255.0 = pitch black).
+# Modify this constant directly to calibrate the cutscene's darkness level.
+FOREST_DARKNESS_ALPHA: float = 210.0
+
 # How fast the player walks up into the clearing, in pixels per second.
 PLAYER_ENTRY_SPEED = 24.0
 
@@ -44,6 +50,10 @@ class IntroForestState(BaseState):
         self.monster_y: float = 0.0
         self.monster_current_anim = None
         self.monster_current_anim_key = None
+
+        # Atmospheric lighting system
+        self.lighting = LightingSystem()
+        self.lighting.darkness_alpha = FOREST_DARKNESS_ALPHA
 
         self._load_assets()
 
@@ -96,6 +106,8 @@ class IntroForestState(BaseState):
 
     def update(self, dt: float) -> None:
         self.time += dt
+        self.lighting.darkness_alpha = FOREST_DARKNESS_ALPHA
+        self.lighting.update(dt)
 
         if self.current_anim:
             self.current_anim.update(dt)
@@ -192,6 +204,9 @@ class IntroForestState(BaseState):
                     surface, entity_defs.PLAYER_FALLBACK_COLOR,
                     (round(self.player_x), round(self.player_y), *entity_defs.PLAYER_SIZE),
                 )
+
+        # Ambient darkness overlay via LightingSystem
+        self.lighting.render(surface, player=None)
 
         if self.sub_text:
             font = settings.FONTS.get("dialogue", settings.FONTS["small"])

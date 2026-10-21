@@ -89,6 +89,7 @@ class LightingSystem:
         monster: Optional[Any] = None,
         camera_offset: Tuple[int, int] = (0, 0),
         dt: float = 0.0,
+        custom_light_polygons: Optional[Any] = None,
     ) -> None:
         """
         Renders the darkness layer, carving out the player's flashlight cone / ambient halo.
@@ -103,7 +104,12 @@ class LightingSystem:
         self.darkness_surface.fill((8, 8, 14, alpha_val))
         self.light_mask.fill((0, 0, 0, 0))
 
-        # 2. Carve player ambient halo and directional flashlight cone
+        # 2. Carve custom light polygons (e.g. vehicle headlights)
+        if custom_light_polygons:
+            for pts, carve_alpha in custom_light_polygons:
+                pygame.draw.polygon(self.light_mask, (0, 0, 0, carve_alpha), pts)
+
+        # 3. Carve player ambient halo and directional flashlight cone
         if player and not getattr(player, "is_hidden", False):
             px, py = player.get_center()
             spx = px - ox
