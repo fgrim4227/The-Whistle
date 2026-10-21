@@ -87,7 +87,7 @@ MONSTER_BERSERK_SPEED = 300  # px/s (+80% speed when enraged)
 
 BATTERY_DRAIN_RATE = 0.9  # Percentage per second while flashlight is ON
 BATTERY_RECHARGE_AMOUNT = 35.0  # Battery refill per picked-up battery item
-STAMINA_DRAIN_RATE = 20.0  # Percentage per second while Control is held
+STAMINA_DRAIN_RATE = 45.0  # Percentage per second while Control is held
 STAMINA_RECHARGE_RATE = 12.0  # Percentage per second while Control is released
 
 # Throw probabilities
