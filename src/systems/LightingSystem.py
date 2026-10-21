@@ -52,7 +52,7 @@ class LightingSystem:
 
         # Single simple faint circular glow for the player (no multi-layer rings or stepped diffusion)
         self.player_ambient_radius: int = 23
-        self.player_ambient_alpha: int = 10
+        self.player_ambient_alpha: int = 30
 
         self.flashlight_origin_offset: Dict[str, Tuple[int, int]] = {
             "up": (0, 0),

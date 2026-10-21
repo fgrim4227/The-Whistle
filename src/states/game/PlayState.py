@@ -101,6 +101,7 @@ class PlayState(BaseState):
     def exit(self) -> None:
         # Stop continuous channels on exit
         settings.stop_channel("silbon_breath")
+        settings.stop_channel("player_run")
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if self.active_minigame and self.active_minigame.is_active:
@@ -402,6 +403,7 @@ class PlayState(BaseState):
         if self.active_minigame:
             self.active_minigame.close()
         settings.stop_channel("silbon_footsteps")
+        settings.stop_channel("player_run")
         settings.stop_channel("minigame")
         self.audio.current_footstep_sound = None
         self.state_machine.push(GameOverState(self.state_machine))

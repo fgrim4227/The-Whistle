@@ -56,6 +56,7 @@ class Player(BaseEntity):
         self.selected_item_index: int = 0
 
         self.is_running = False
+        self.actually_moved = False
         self.step_timer = 0.0
         self.footstep_taken = False
 
@@ -131,7 +132,19 @@ class Player(BaseEntity):
 
     @property
     def is_sprinting(self) -> bool:
-        return self.is_running and self.stamina > 0.0
+        return (
+            self.is_running
+            and self.stamina > 0.0
+            and self.is_moving
+            and not self.is_hidden
+        )
+
+    @property
+    def is_actually_running(self) -> bool:
+        return (
+            self.is_sprinting
+            and getattr(self, "actually_moved", False)
+        )
 
     def add_item(self, item: str) -> bool:
         """Adds or sets the single active item in hand."""
@@ -207,10 +220,12 @@ class Player(BaseEntity):
         self.thought_timer = duration
 
     def hide(self, spot) -> None:
+        self.clear_movement()
         self.is_hidden = True
         self.current_hiding_spot = spot
         self.flashlight_on = False
         self.change_state("hiding")
+        settings.stop_channel("player_run")
 
     def exit_hide(self) -> None:
         self.is_hidden = False
@@ -223,12 +238,14 @@ class Player(BaseEntity):
             self.held[key] = False
         self.is_running = False
         self.is_moving = False
+        self.actually_moved = False
         self.vx = 0.0
         self.vy = 0.0
         self.step_timer = 0.0
         self.footstep_taken = False
         self.interact_requested = False
         self.throw_requested = False
+        settings.stop_channel("player_run")
         if not self.is_hidden:
             self.change_state("idle")
             if self.direction:
@@ -252,6 +269,8 @@ class Player(BaseEntity):
             self.vy = 0.0
             self.step_timer = 0.0
             self.footstep_taken = False
+            self.actually_moved = False
+            settings.stop_channel("player_run")
             if not self.is_hidden:
                 self.change_state("idle")
                 if self.direction:
@@ -259,6 +278,7 @@ class Player(BaseEntity):
 
     def update_movement(self, obstacles: List[pygame.Rect], dt: float) -> None:
         if self.is_hidden:
+            self.actually_moved = False
             return
 
         dx = 0.0
@@ -300,6 +320,7 @@ class Player(BaseEntity):
             dy *= inv
 
         # Collision resolution per axis on character feet
+        old_x, old_y = self.x, self.y
         new_x = self.x + dx * current_speed * dt
         feet_rect_x = pygame.Rect(int(new_x), int(self.y + 16), 16, 16)
         if not any(feet_rect_x.colliderect(obs) for obs in obstacles):
@@ -309,6 +330,8 @@ class Player(BaseEntity):
         feet_rect_y = pygame.Rect(int(self.x), int(new_y + 16), 16, 16)
         if not any(feet_rect_y.colliderect(obs) for obs in obstacles):
             self.y = new_y
+
+        self.actually_moved = (self.x != old_x or self.y != old_y)
 
     def update(self, dt: float) -> None:
         # Update active animation frame
@@ -321,10 +344,21 @@ class Player(BaseEntity):
             if self.battery <= 0.0:
                 self.flashlight_on = False
 
-        if self.is_running:
+        # Stamina consumption & recovery:
+        # Only drains when actively running and moving forward.
+        if self.is_actually_running:
             self.stamina = max(0.0, self.stamina - settings.STAMINA_DRAIN_RATE * dt)
-        else:
+        elif not self.is_running or not self.is_moving:
             self.stamina = min(100.0, self.stamina + settings.STAMINA_RECHARGE_RATE * dt)
+
+        # Player running audio management:
+        ch = settings.AUDIO_CHANNELS.get("player_run")
+        if self.is_actually_running:
+            if ch and not ch.get_busy():
+                settings.play_sound("player_run", loops=-1, volume=settings.PLAYER_RUN_VOLUME, channel_name="player_run")
+        else:
+            if ch and ch.get_busy():
+                settings.stop_channel("player_run")
 
         # Thought display timer
         if self.thought_timer > 0.0:
